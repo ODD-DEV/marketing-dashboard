@@ -279,8 +279,8 @@
     border-collapse: collapse;
     font-size: 13px;
   }
-  #metaFunnelWeeklyTable {
-    min-width: 1100px;
+  #metaFunnelWeeklyTable, #tiktokFunnelWeeklyTable {
+    min-width: 1200px;
   }
   /* 가로 스크롤 힌트: 스크롤바 항상 표시 */
   .scroll-hint {
@@ -315,6 +315,22 @@
     opacity: 0.6;
     pointer-events: none;
   }
+  /* Funnel 주간상세 — Funnel/주간 열 고정 */
+  .sticky-table th:nth-child(1), .sticky-table td:nth-child(1) {
+    position: sticky; left: 0; z-index: 2;
+    background: #1a1d23;
+    min-width: 80px; max-width: 80px;
+  }
+  .sticky-table th:nth-child(2), .sticky-table td:nth-child(2) {
+    position: sticky; left: 80px; z-index: 2;
+    background: #1a1d23;
+    min-width: 120px; max-width: 120px;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.4);
+  }
+  .sticky-table thead th:nth-child(1),
+  .sticky-table thead th:nth-child(2) { z-index: 3; background: #1a1d23; }
+  .sticky-table tr[style*="font-weight:700"] td:nth-child(1),
+  .sticky-table tr[style*="font-weight:700"] td:nth-child(2) { background: #1e2128; }
   th {
     text-align: left;
     padding: 10px 12px;
@@ -609,7 +625,7 @@
     <div class="chart-card full scroll-fade" style="margin-top:24px;margin-bottom:24px;" id="metaFunnelWeeklyWrap">
       <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Meta — Funnel 주간 상세</div>
       <div class="scroll-hint">
-        <table id="metaFunnelWeeklyTable">
+        <table id="metaFunnelWeeklyTable" class="sticky-table">
           <thead>
             <tr><th>Funnel</th><th>주간</th><th>Spend</th><th>Views</th><th>Clicks</th><th>CTR</th><th>CPC</th><th>Profile Visits</th><th>Follows</th><th>Follow CPA</th><th>3s+ Views Rate</th><th>View→PV CVR</th><th>3s+→PV CVR</th></tr>
           </thead>
@@ -702,10 +718,10 @@
       </div>
     </div>
 
-    <!-- TikTok TOF 퍼널 카드 -->
-    <div class="section-title">TikTok — Funnel 상세 (TOF)</div>
+    <!-- TikTok TOF/MOF/BOF 퍼널 카드 -->
+    <div class="section-title">TikTok — Funnel 상세 (TOF / MOF / BOF)</div>
     <div class="funnel-grid" id="tiktokFunnelGrid">
-      <div class="funnel-card tof" style="max-width:100%;">
+      <div class="funnel-card tof">
         <div class="funnel-label">TOF (Top of Funnel)</div>
         <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
         <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
@@ -718,17 +734,56 @@
         <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
         <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
         <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
-        <div class="funnel-stat-row"><span class="label">Profile → Follow CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card mof">
+        <div class="funnel-label">MOF (Middle of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card bof">
+        <div class="funnel-label">BOF (Bottom of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
       </div>
     </div>
 
     <!-- TikTok Funnel 주간 상세 -->
-    <div class="chart-card full" style="margin-top:24px;margin-bottom:24px;" id="tiktokFunnelWeeklyWrap">
-      <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok TOF — 주간 상세</div>
-      <div style="overflow-x:auto;">
-        <table id="tiktokFunnelWeeklyTable">
+    <div class="chart-card full scroll-fade" style="margin-top:24px;margin-bottom:24px;" id="tiktokFunnelWeeklyWrap">
+      <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok — Funnel 주간 상세</div>
+      <div class="scroll-hint">
+        <table id="tiktokFunnelWeeklyTable" class="sticky-table">
           <thead>
-            <tr><th>주간</th><th>Spend</th><th>Views</th><th>Reach</th><th>Profile Visits</th><th>Follows</th><th>Follow CPA</th><th>2s+ Views</th><th>2s+ Rate</th></tr>
+            <tr><th>Funnel</th><th>주간</th><th>Spend</th><th>Views</th><th>Reach</th><th>PV</th><th>Follows</th><th>Follow CPA</th><th>2s+ Views</th><th>2s+ Rate</th><th>3s+→PV CVR</th><th>6s+ Rate</th><th>50% Rate</th><th>100% Rate</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -1859,49 +1914,96 @@ function updateTiktokForPeriod() {
   if (tkpis[4]) { tkpis[4].querySelector('.kpi-value').textContent = fn(Math.round(video2s)); tkpis[4].querySelector('.kpi-sub').textContent = 'View Rate ' + viewRate.toFixed(0) + '%'; }
   if (tkpis[5]) { tkpis[5].querySelector('.kpi-value').textContent = fn(Math.round(likes)); tkpis[5].querySelector('.kpi-sub').textContent = 'Comments ' + fn(Math.round(comments)); }
 
-  // TikTok TOF 퍼널 카드
-  const cards = document.querySelectorAll('#tiktokFunnelGrid .funnel-card');
-  if (cards[0] && ts['Expense']) {
-    const card = cards[0];
-    card.querySelector('.funnel-stat-value').textContent = '$' + fn(spend, 2);
+  // TikTok TOF/MOF/BOF 퍼널 카드
+  const tkSections = [S.tiktokTOF || {}, S.tiktokMOF || {}, S.tiktokBOF || {}];
+  const tkCards = document.querySelectorAll('#tiktokFunnelGrid .funnel-card');
+  tkSections.forEach((sec, idx) => {
+    if (!tkCards[idx]) return;
+    const card = tkCards[idx];
+    const s = getSelectedSum(sec['Expense']);
+    const v = getSelectedSum(sec['View']);
+    const r = getSelectedSum(sec['Reach']);
+    const p = getSelectedSum(sec['Profile visit']);
+    const f = getSelectedSum(sec['Follow']);
+    const v2s = getSelectedSum(sec['2s+ video views'] || sec['3s+ video views']);
+    const lk = getSelectedSum(sec['Content like']);
+    const cm = getSelectedSum(sec['Content comment']);
+    const sh = getSelectedSum(sec['Content share']);
+    const v3s = getSelectedSum(sec['3s+ video views'] || sec['2s+ video views']);
+    const v6s = getSelectedSum(sec['6s+ video views']);
+    const v50 = getSelectedSum(sec['50% video views']);
+    const v100 = getSelectedSum(sec['100% video views']);
+    card.querySelector('.funnel-stat-value').textContent = s > 0 ? '$' + fn(s, 2) : '—';
     const rows = card.querySelectorAll('.funnel-stat-row span:last-child');
-    const fCVR = pv > 0 ? (follows / pv * 100).toFixed(1) + '%' : '—';
     const vals = [
-      fn(Math.round(views)),
-      fn(Math.round(reach)) || '—',
-      fn(Math.round(pv)),
-      fn(Math.round(follows)),
-      follows > 0 ? '$' + (spend / follows).toFixed(2) : '—',
-      fn(Math.round(video2s)),
-      viewRate.toFixed(0) + '%',
-      fn(Math.round(likes)),
-      fn(Math.round(comments)),
-      fn(Math.round(shares)),
-      fCVR
+      fn(Math.round(v)), fn(Math.round(r)), fn(Math.round(p)), fn(Math.round(f)),
+      f > 0 ? '$' + (s / f).toFixed(2) : '—',
+      fn(Math.round(v2s)), v > 0 ? (v2s / v * 100).toFixed(0) + '%' : '—',
+      fn(Math.round(lk)), fn(Math.round(cm)), fn(Math.round(sh)),
+      v3s > 0 ? (p / v3s * 100).toFixed(2) + '%' : '—',
+      v > 0 ? (v6s / v * 100).toFixed(1) + '%' : '—',
+      v > 0 ? (v50 / v * 100).toFixed(1) + '%' : '—',
+      v > 0 ? (v100 / v * 100).toFixed(1) + '%' : '—'
     ];
     vals.forEach((val, i) => { if (rows[i]) rows[i].textContent = val || '—'; });
-  }
+  });
 
-  // ---- TikTok TOF 주간 상세 테이블 ----
+  // ---- TikTok Funnel 주간 상세 테이블 (Meta와 동일 그리드) ----
   const tkFwTable = document.querySelector('#tiktokFunnelWeeklyTable tbody');
-  if (tkFwTable && ts['Expense']) {
+  if (tkFwTable) {
     const weekNames = ['W1 (2/8-14)','W2 (2/15-21)','W3 (2/22-28)','W4 (3/1-7)','W5 (3/8-14)'];
+    const funnelNames = ['TOF','MOF','BOF'];
+    const funnelColors = ['var(--tof-color)','var(--mof-color)','var(--bof-color)'];
     let html = '';
-    for (let wi = 0; wi < 5; wi++) {
-      const isSelected = selectedWeeks.includes(wi);
-      const dimStyle = isSelected ? '' : ' style="opacity:0.35;"';
-      const wSpend = pn(ts['Expense'][WCOLS[wi]]) || 0;
-      const wViews = pn(ts['View']?.[WCOLS[wi]]) || 0;
-      const wReach = pn(ts['Reach']?.[WCOLS[wi]]) || 0;
-      const wPV = pn(ts['Profile visit']?.[WCOLS[wi]]) || 0;
-      const wFollows = pn(ts['Follow']?.[WCOLS[wi]]) || 0;
-      const wFCPA = wFollows > 0 ? '$' + (wSpend / wFollows).toFixed(2) : '—';
-      const w2s = pn((ts['2s+ video views'] || ts['3s+ video views'])?.[WCOLS[wi]]) || 0;
-      const w2sRate = wViews > 0 ? (w2s / wViews * 100).toFixed(0) + '%' : '—';
-      html += `<tr${dimStyle}><td>${weekNames[wi]}</td><td>$${fn(wSpend,2)}</td><td>${fn(Math.round(wViews))}</td><td>${fn(Math.round(wReach))}</td><td>${fn(Math.round(wPV))}</td><td>${fn(Math.round(wFollows))}</td><td>${wFCPA}</td><td>${fn(Math.round(w2s))}</td><td>${w2sRate}</td></tr>`;
-    }
-    // 합계
-    html += `<tr style="font-weight:700;border-top:2px solid var(--border);"><td>합계</td><td>$${fn(spend,2)}</td><td>${fn(Math.round(views))}</td><td>${fn(Math.round(reach))}</td><td>${fn(Math.round(pv))}</td><td>${fn(Math.round(follows))}</td><td>${follows > 0 ? '$'+(spend/follows).toFixed(2) : '—'}</td><td>${fn(Math.round(video2s))}</td><td>${viewRate.toFixed(0)}%</td></tr>`;
+    tkSections.forEach((sec, fi) => {
+      if (!sec['Expense']) { /* 데이터 없어도 빈 행 생성 */
+        for (let wi = 0; wi < 5; wi++) {
+          const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : '';
+          const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid var(--border);' : '';
+          const bt = borderTop ? ` style="${borderTop}"` : '';
+          html += `<tr style="opacity:0.25;"><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td></tr>`;
+        }
+        html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);opacity:0.25;"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td colspan="12">데이터 없음</td></tr>`;
+        return;
+      }
+      for (let wi = 0; wi < 5; wi++) {
+        const isSelected = selectedWeeks.includes(wi);
+        const dimStyle = isSelected ? '' : ' style="opacity:0.35;"';
+        const wS = pn(sec['Expense'][WCOLS[wi]]) || 0;
+        const wV = pn(sec['View']?.[WCOLS[wi]]) || 0;
+        const wR = pn(sec['Reach']?.[WCOLS[wi]]) || 0;
+        const wPV = pn(sec['Profile visit']?.[WCOLS[wi]]) || 0;
+        const wF = pn(sec['Follow']?.[WCOLS[wi]]) || 0;
+        const wFCPA = wF > 0 ? '$' + (wS / wF).toFixed(2) : '—';
+        const w2s = pn((sec['2s+ video views'] || sec['3s+ video views'])?.[WCOLS[wi]]) || 0;
+        const w2sRate = wV > 0 ? (w2s / wV * 100).toFixed(0) + '%' : '—';
+        const w3s2PV = sec['3s+ to Profile visit CVR'] ? (sec['3s+ to Profile visit CVR'][WCOLS[wi]] || '—') : '—';
+        const w6sRate = sec['6s+ video views rate'] ? (sec['6s+ video views rate'][WCOLS[wi]] || '—') : '—';
+        const w50Rate = sec['50% video views rate'] ? (sec['50% video views rate'][WCOLS[wi]] || '—') : '—';
+        const w100Rate = sec['100% video views rate'] ? (sec['100% video views rate'][WCOLS[wi]] || '—') : '—';
+        const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : '';
+        const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid var(--border);' : '';
+        const bt = borderTop ? ` style="${borderTop}"` : '';
+        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>$${fn(wS,2)}</td><td${bt}>${fn(Math.round(wV))}</td><td${bt}>${fn(Math.round(wR))}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wF))}</td><td${bt}>${wFCPA}</td><td${bt}>${fn(Math.round(w2s))}</td><td${bt}>${w2sRate}</td><td${bt}>${w3s2PV}</td><td${bt}>${w6sRate}</td><td${bt}>${w50Rate}</td><td${bt}>${w100Rate}</td></tr>`;
+      }
+      // 소계
+      const tS = getSelectedSum(sec['Expense']);
+      const tV = getSelectedSum(sec['View']);
+      const tR = getSelectedSum(sec['Reach']);
+      const tPV = getSelectedSum(sec['Profile visit']);
+      const tF = getSelectedSum(sec['Follow']);
+      const t2s = getSelectedSum(sec['2s+ video views'] || sec['3s+ video views']);
+      const t2sRate = tV > 0 ? (t2s / tV * 100).toFixed(0) + '%' : '—';
+      const t3sV = getSelectedSum(sec['3s+ video views'] || sec['2s+ video views']);
+      const t3s2PV = t3sV > 0 ? (tPV / t3sV * 100).toFixed(2) + '%' : '—';
+      const t6s = getSelectedSum(sec['6s+ video views']);
+      const t6sRate = tV > 0 ? (t6s / tV * 100).toFixed(1) + '%' : '—';
+      const t50 = getSelectedSum(sec['50% video views']);
+      const t50Rate = tV > 0 ? (t50 / tV * 100).toFixed(1) + '%' : '—';
+      const t100 = getSelectedSum(sec['100% video views']);
+      const t100Rate = tV > 0 ? (t100 / tV * 100).toFixed(1) + '%' : '—';
+      html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td>$${fn(tS,2)}</td><td>${fn(Math.round(tV))}</td><td>${fn(Math.round(tR))}</td><td>${fn(Math.round(tPV))}</td><td>${fn(Math.round(tF))}</td><td>${tF > 0 ? '$'+(tS/tF).toFixed(2) : '—'}</td><td>${fn(Math.round(t2s))}</td><td>${t2sRate}</td><td>${t3s2PV}</td><td>${t6sRate}</td><td>${t50Rate}</td><td>${t100Rate}</td></tr>`;
+    });
     tkFwTable.innerHTML = html;
   }
 }
