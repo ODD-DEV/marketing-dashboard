@@ -279,6 +279,42 @@
     border-collapse: collapse;
     font-size: 13px;
   }
+  #metaFunnelWeeklyTable {
+    min-width: 1100px;
+  }
+  /* 가로 스크롤 힌트: 스크롤바 항상 표시 */
+  .scroll-hint {
+    overflow-x: auto !important;
+    position: relative;
+  }
+  .scroll-hint::-webkit-scrollbar {
+    height: 6px;
+  }
+  .scroll-hint::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+  }
+  .scroll-hint::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+  }
+  .scroll-hint::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.35);
+  }
+  .scroll-fade {
+    position: relative;
+  }
+  .scroll-fade::after {
+    content: '→ 스크롤';
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    pointer-events: none;
+  }
   th {
     text-align: left;
     padding: 10px 12px;
@@ -570,12 +606,12 @@
     </div>
 
     <!-- Meta Funnel 주간 상세 테이블 -->
-    <div class="chart-card full" style="margin-top:24px;margin-bottom:24px;" id="metaFunnelWeeklyWrap">
+    <div class="chart-card full scroll-fade" style="margin-top:24px;margin-bottom:24px;" id="metaFunnelWeeklyWrap">
       <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Meta — Funnel 주간 상세</div>
-      <div style="overflow-x:auto;">
+      <div class="scroll-hint">
         <table id="metaFunnelWeeklyTable">
           <thead>
-            <tr><th>Funnel</th><th>주간</th><th>Spend</th><th>Views</th><th>Clicks</th><th>CTR</th><th>CPC</th><th>Profile Visits</th><th>Follows</th><th>Follow CPA</th></tr>
+            <tr><th>Funnel</th><th>주간</th><th>Spend</th><th>Views</th><th>Clicks</th><th>CTR</th><th>CPC</th><th>Profile Visits</th><th>Follows</th><th>Follow CPA</th><th>3s+ Views Rate</th><th>View→PV CVR</th><th>3s+→PV CVR</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -1754,6 +1790,7 @@ function updateMetaForPeriod() {
     let html = '';
     sections.forEach((sec, fi) => {
       if (!sec['Expense']) return;
+      const hasCVR = fi < 2; // TOF(0), MOF(1)만 CVR 컬럼 표시
       for (let wi = 0; wi < 5; wi++) {
         const isSelected = selectedWeeks.includes(wi);
         const dimStyle = isSelected ? '' : ' style="opacity:0.35;"';
@@ -1765,9 +1802,16 @@ function updateMetaForPeriod() {
         const wPV = pn(sec['Profile visit']?.[WCOLS[wi]]) || 0;
         const wFollows = pn(sec['Follow']?.[WCOLS[wi]]) || 0;
         const wFCPA = wFollows > 0 ? '$' + (wSpend / wFollows).toFixed(2) : '—';
+        const w3sRate = sec['3s+ video views rate'] ? (sec['3s+ video views rate'][WCOLS[wi]] || '—') : '—';
+        const wV2PV = sec['View to Profile visit CVR(%)'] ? (sec['View to Profile visit CVR(%)'][WCOLS[wi]] || '—') : '—';
+        const w3s2PV = sec['3s+ to Profile visit CVR(%)'] ? (sec['3s+ to Profile visit CVR(%)'][WCOLS[wi]] || '—') : '—';
         const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : '';
         const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid var(--border);' : '';
-        html += `<tr${dimStyle}><td style="${borderTop}">${fLabel}</td><td style="${borderTop}">${weekNames[wi]}</td><td style="${borderTop}">$${fn(wSpend,2)}</td><td style="${borderTop}">${fn(Math.round(wViews))}</td><td style="${borderTop}">${fn(Math.round(wClicks))}</td><td style="${borderTop}">${wCTR}</td><td style="${borderTop}">${wCPC}</td><td style="${borderTop}">${fn(Math.round(wPV))}</td><td style="${borderTop}">${fn(Math.round(wFollows))}</td><td style="${borderTop}">${wFCPA}</td></tr>`;
+        const bt = borderTop ? ` style="${borderTop}"` : '';
+        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>$${fn(wSpend,2)}</td><td${bt}>${fn(Math.round(wViews))}</td><td${bt}>${fn(Math.round(wClicks))}</td><td${bt}>${wCTR}</td><td${bt}>${wCPC}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wFollows))}</td><td${bt}>${wFCPA}</td>`;
+        if (hasCVR) html += `<td${bt}>${w3sRate}</td><td${bt}>${wV2PV}</td><td${bt}>${w3s2PV}</td>`;
+        else html += `<td${bt}>—</td><td${bt}>—</td><td${bt}>—</td>`;
+        html += '</tr>';
       }
       // 소계 행
       const tSpend = getSelectedSum(sec['Expense']);
@@ -1775,7 +1819,12 @@ function updateMetaForPeriod() {
       const tClicks = getSelectedSum(sec['Click']);
       const tPV = getSelectedSum(sec['Profile visit']);
       const tFollows = getSelectedSum(sec['Follow']);
-      html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td>$${fn(tSpend,2)}</td><td>${fn(Math.round(tViews))}</td><td>${fn(Math.round(tClicks))}</td><td>${tViews > 0 ? (tClicks/tViews*100).toFixed(1)+'%' : '—'}</td><td>${tClicks > 0 ? '$'+(tSpend/tClicks).toFixed(2) : '—'}</td><td>${fn(Math.round(tPV))}</td><td>${fn(Math.round(tFollows))}</td><td>${tFollows > 0 ? '$'+(tSpend/tFollows).toFixed(2) : '—'}</td></tr>`;
+      const t3sV = getSelectedSum(sec['3s+ video views']);
+      const t3sRate = tViews > 0 ? (t3sV / tViews * 100).toFixed(1) + '%' : '—';
+      const tV2PV = tViews > 0 ? (tPV / tViews * 100).toFixed(2) + '%' : '—';
+      const t3s2PV = t3sV > 0 ? (tPV / t3sV * 100).toFixed(2) + '%' : '—';
+      const cvrCells = hasCVR ? `<td>${t3sRate}</td><td>${tV2PV}</td><td>${t3s2PV}</td>` : '<td>—</td><td>—</td><td>—</td>';
+      html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td>$${fn(tSpend,2)}</td><td>${fn(Math.round(tViews))}</td><td>${fn(Math.round(tClicks))}</td><td>${tViews > 0 ? (tClicks/tViews*100).toFixed(1)+'%' : '—'}</td><td>${tClicks > 0 ? '$'+(tSpend/tClicks).toFixed(2) : '—'}</td><td>${fn(Math.round(tPV))}</td><td>${fn(Math.round(tFollows))}</td><td>${tFollows > 0 ? '$'+(tSpend/tFollows).toFixed(2) : '—'}</td>${cvrCells}</tr>`;
     });
     fwTable.innerHTML = html;
   }
