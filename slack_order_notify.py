@@ -101,7 +101,7 @@ def send_slack(order):
     amount = order.get("amount_total", 0)
     customer = (order.get("partner_id") or [0, ""])[1]
     ch = order.get("channel_type") or ""
-    ch_label = "Amazon" if ch == "amazon" else "TikTok"
+    ch_label = "Amazon" if ch == "amazon" else "TikTok Shop"
     message = f"신규 주문 발생!!!\n{order_num} - {amount}$\n{customer}\n{ch_label}"
 
     payload = json.dumps({"text": message}).encode()
