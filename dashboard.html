@@ -1859,8 +1859,22 @@ function updateOverviewForPeriod() {
     chart.update();
   });
 
+  // Channel Spend 비율 — 선택된 기간에 맞춰 Funnel별 세분화
   if (charts.spendPie) {
-    charts.spendPie.data.datasets[0].data = [metaSpend, tkSpend];
+    const mt = S.metaTOF || {}, mm = S.metaMOF || {}, mb = S.metaBOF || {};
+    const tt = S.tiktokTOF || {}, tm = S.tiktokMOF || {}, tb = S.tiktokBOF || {};
+    const segs = [
+      { label: 'Meta TOF', val: getSelectedSum(mt['Expense']), color: '#38bdf8' },
+      { label: 'Meta MOF', val: getSelectedSum(mm['Expense']), color: '#a78bfa' },
+      { label: 'Meta BOF', val: getSelectedSum(mb['Expense']), color: '#f97316' },
+      { label: 'TikTok TOF', val: getSelectedSum(tt['Expense']), color: '#ff3b5c' },
+      { label: 'TikTok MOF', val: getSelectedSum(tm['Expense']), color: '#fb923c' },
+      { label: 'TikTok BOF', val: getSelectedSum(tb['Expense']), color: '#fbbf24' },
+    ].filter(s => s.val > 0);
+    const total = segs.reduce((a, s) => a + s.val, 0) || 1;
+    charts.spendPie.data.labels = segs.map(s => `${s.label} — $${fn(Math.round(s.val))} (${(s.val/total*100).toFixed(1)}%)`);
+    charts.spendPie.data.datasets[0].data = segs.map(s => s.val);
+    charts.spendPie.data.datasets[0].backgroundColor = segs.map(s => s.color);
     charts.spendPie.update();
   }
 
@@ -2080,6 +2094,47 @@ function updateTiktokForPeriod() {
     vals.forEach((val, i) => { if (rows[i]) rows[i].textContent = val || '—'; });
   });
 
+  // ---- TikTok Video Completion Funnel — 기간에 맞춰 동적 업데이트 ----
+  if (charts.tiktokVideo) {
+    const tv2s  = getSelectedSum(ts['2s+ video views'] || ts['3s+ video views']);
+    const tv25  = getSelectedSum(ts['25% video views']);
+    const tv50  = getSelectedSum(ts['50% video views']);
+    const tv75  = getSelectedSum(ts['75% video views']);
+    const tv100 = getSelectedSum(ts['100% video views']);
+    const tvViews = getSelectedSum(ts['View']) || 1;
+    charts.tiktokVideo.data.datasets[0].data = [tv2s, tv25, tv50, tv75, tv100];
+    charts.tiktokVideo.data.labels = [
+      `2s+ (${tvViews > 1 ? Math.round(tv2s/tvViews*100) : 0}%)`,
+      `25% (${tvViews > 1 ? Math.round(tv25/tvViews*100) : 0}%)`,
+      `50% (${tvViews > 1 ? Math.round(tv50/tvViews*100) : 0}%)`,
+      `75% (${tvViews > 1 ? Math.round(tv75/tvViews*100) : 0}%)`,
+      `100% (${tvViews > 1 ? Math.round(tv100/tvViews*100) : 0}%)`
+    ];
+    charts.tiktokVideo.options.plugins.tooltip = {
+      callbacks: { label: function(ctx) {
+        return ctx.parsed.y.toLocaleString() + ' views (' + (tvViews > 1 ? Math.round(ctx.parsed.y/tvViews*100) : 0) + '%)';
+      }}
+    };
+    charts.tiktokVideo.update();
+  }
+
+  // ---- TikTok Engagement — 기간에 맞춰 동적 업데이트 ----
+  if (charts.tiktokEngagement) {
+    const eLikes = getSelectedSum(ts['Content like']);
+    const eComments = getSelectedSum(ts['Content comment']);
+    const eSaves = getSelectedSum(ts['Content save']);
+    const eShares = getSelectedSum(ts['Content share']);
+    const eTotal = eLikes + eComments + eSaves + eShares || 1;
+    charts.tiktokEngagement.data.labels = [
+      `Likes — ${fn(Math.round(eLikes))} (${(eLikes/eTotal*100).toFixed(1)}%)`,
+      `Comments — ${fn(Math.round(eComments))} (${(eComments/eTotal*100).toFixed(1)}%)`,
+      `Saves — ${fn(Math.round(eSaves))} (${(eSaves/eTotal*100).toFixed(1)}%)`,
+      `Shares — ${fn(Math.round(eShares))} (${(eShares/eTotal*100).toFixed(1)}%)`
+    ];
+    charts.tiktokEngagement.data.datasets[0].data = [eLikes, eComments, eSaves, eShares];
+    charts.tiktokEngagement.update();
+  }
+
   // ---- TikTok Funnel 주간 상세 테이블 (Meta와 동일 그리드) ----
   const tkFwTable = document.querySelector('#tiktokFunnelWeeklyTable tbody');
   if (tkFwTable) {
@@ -2251,15 +2306,25 @@ function updateFunnelForPeriod() {
     ];
     charts.funnelVideoRate.update();
   }
-  // Video Funnel (TOF)
+  // Video Funnel (TOF) — 기간에 맞춰 동적 업데이트
   if (charts.videoFunnel && mt['3s+ video views']) {
-    charts.videoFunnel.data.datasets[0].data = [
-      getSelectedSum(mt['3s+ video views']),
-      getSelectedSum(mt['25% video views']),
-      getSelectedSum(mt['50% video views']),
-      getSelectedSum(mt['75% video views']),
-      getSelectedSum(mt['95% video views'])
+    const vf3s  = getSelectedSum(mt['3s+ video views']);
+    const vf25  = getSelectedSum(mt['25% video views']);
+    const vf50  = getSelectedSum(mt['50% video views']);
+    const vf75  = getSelectedSum(mt['75% video views']);
+    const vf95  = getSelectedSum(mt['95% video views']);
+    const vfBase = vf3s || 1;
+    charts.videoFunnel.data.datasets[0].data = [vf3s, vf25, vf50, vf75, vf95];
+    charts.videoFunnel.data.labels = [
+      `3s+ (100%)`,
+      `25% (${Math.round(vf25/vfBase*100)}%)`,
+      `50% (${Math.round(vf50/vfBase*100)}%)`,
+      `75% (${Math.round(vf75/vfBase*100)}%)`,
+      `95% (${Math.round(vf95/vfBase*100)}%)`
     ];
+    charts.videoFunnel.options.plugins.tooltip.callbacks.label = function(ctx) {
+      return ctx.parsed.y.toLocaleString() + ' views (' + Math.round(ctx.parsed.y/vfBase*100) + '%)';
+    };
     charts.videoFunnel.update();
   }
 
