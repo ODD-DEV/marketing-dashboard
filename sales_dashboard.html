@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ODD. Global Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* ODD. Dashboard V6 — Apple iPhone 17e–inspired
+   Black layered · Apple gray text hierarchy · Bold layout */
+
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/57868cb6368acd8f.woff2') format('woff2');font-weight:300;font-display:swap}
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/77de016475a91854.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/9387036ea37689ec.woff2') format('woff2');font-weight:600;font-display:swap}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+:root{
+  /* Apple-inspired gray scale on black — HIGH VISIBILITY */
+  --bg:#000;--bg-raised:#1d1d1f;--bg-card:#1d1d1f;
+  --border:rgba(255,255,255,.12);--border-h:rgba(255,255,255,.2);
+  /* Text hierarchy: Apple standard for dark backgrounds */
+  --t1:#f5f5f7;        /* primary — headlines, key values */
+  --t2:#d1d1d6;        /* secondary — body text, readable */
+  --t3:#a1a1a6;        /* tertiary — labels, captions — CLEARLY VISIBLE */
+  --t4:#86868b;        /* quaternary — least important but still legible */
+  --t5:#6e6e73;        /* placeholder level */
+  /* Accent */
+  --red:#bf2026;--red-light:#d4343a;--red-dim:rgba(191,32,38,.1);--red-glow:rgba(191,32,38,.25);--red-border:rgba(191,32,38,.25);
+  --green:#30d158;--orange:#ff9f0a;--pink:#ff375f;--purple:#bf5af2;--yellow:#ffd60a;--blue:#0a84ff;
+  /* Fonts */
+  --serif:'EditorsNote','Georgia','Times New Roman',serif;
+  --sans:'Pretendard',-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  --ease:cubic-bezier(.25,.46,.45,.94);--r:16px;--r-s:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:#000}
+body{font-family:var(--sans);background:#000;color:var(--t2);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+::selection{background:var(--red);color:#fff}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+/* ═══ Nav ═══ */
+.nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
+.nav-inner{max-width:1120px;margin:0 auto;padding:0 28px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.nav-left{display:flex;align-items:center;gap:14px}
+.logo{font-family:var(--sans);font-size:21px;color:var(--t1);letter-spacing:-.3px;font-weight:700}
+.logo-dot{color:var(--red)}
+.logo-img{height:18px;width:auto;object-fit:contain;display:block}
+.nav-title{font-size:12px;color:var(--t4);font-weight:400;padding-left:14px;border-left:1px solid rgba(255,255,255,.12);letter-spacing:.5px}
+.live-badge{font-size:7px;font-weight:600;color:var(--red);background:var(--red-dim);border:1px solid var(--red-border);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
+.nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4)}
+.refresh-btn{padding:5px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--t3);cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;font-family:var(--sans)}
+.refresh-btn:hover{border-color:rgba(255,255,255,.3);color:var(--t1);background:rgba(255,255,255,.05)}
+.refresh-btn.loading{opacity:.3;pointer-events:none}
+.status-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.status-live{background:var(--green);box-shadow:0 0 6px rgba(48,209,88,.5)}
+.status-cached{background:var(--orange);box-shadow:0 0 5px rgba(255,159,10,.4)}
+.status-error{background:var(--red);box-shadow:0 0 5px rgba(191,32,38,.5)}
+
+/* ═══ Main ═══ */
+main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
+
+/* ═══ Tabs ═══ */
+.tabs-area{padding:28px 0 0}
+.month-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.month-tab{padding:10px 22px;border-radius:100px;border:none;background:transparent;color:var(--t4);cursor:pointer;font-size:15px;font-weight:500;transition:all .2s;font-family:var(--sans)}
+.month-tab:hover{color:var(--t2);background:rgba(255,255,255,.06)}
+.month-tab.active{background:var(--red);color:#fff;font-weight:600}
+.month-tab.all-tab{color:var(--t3)}
+.month-tab.all-tab:hover{color:var(--t2)}
+.month-tab.all-tab.active{background:var(--red);color:#fff}
+.week-tabs{display:flex;gap:3px;flex-wrap:wrap;align-items:center;margin-top:8px;justify-content:center}
+.week-tab{padding:4px 12px;border-radius:100px;border:none;background:transparent;color:var(--t5);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s;font-family:var(--sans)}
+.week-tab:hover{color:var(--t3);background:rgba(255,255,255,.05)}
+.week-tab.active{background:var(--red-dim);color:var(--red);font-weight:600}
+
+/* ═══ Hero KPI — Apple-style centered hero ═══ */
+/* Sticky summary wrapper */
+.summary-sticky{position:sticky;top:48px;z-index:90;background:#000;padding-bottom:8px}
+.summary-sticky::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:24px;background:linear-gradient(to bottom,#000,transparent);pointer-events:none;z-index:89}
+
+.hero-kpi{
+  text-align:center;
+  padding:56px 40px 48px;
+  margin:0;
+  position:relative;
+  animation:fadeUp .7s var(--ease) both;
+}
+.hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.hero-kpi-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t3);letter-spacing:.5px;margin-bottom:20px}
+.hero-kpi-tag::before{content:'';width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block}
+.hero-kpi-value{font-family:var(--sans);font-size:clamp(64px,10vw,108px);color:var(--t1);line-height:1;letter-spacing:-2px;font-weight:700;transform:scaleX(.97);transform-origin:center}
+.hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400}
+
+/* ═══ Metric Tiles — Apple feature grid ═══ */
+.metric-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
+.m-tile{background:var(--bg-raised);padding:32px 24px;transition:all .35s var(--ease);position:relative;cursor:default}
+.m-tile::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(191,32,38,.08) 0%,transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
+.m-tile:hover{background:#2c2c2e}
+.m-tile:hover::after{opacity:1}
+.m-tile:hover .m-tile-value{color:var(--t1) !important}
+.m-tile-label{font-size:12px;color:var(--t4);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:12px}
+.m-tile-value{font-family:var(--sans);font-size:36px;line-height:1;letter-spacing:-1px;font-weight:700;transition:color .3s;animation:countUp .5s var(--ease) both}
+.m-tile-sub{font-size:13px;color:var(--t4);margin-top:10px;line-height:1.5}
+.m-tile-sub b{color:var(--t3);font-weight:600}
+
+/* ═══ Content Sections — Apple full-width blocks ═══ */
+.content-section{padding:56px 0 0;animation:fadeUp .5s var(--ease) both;position:relative;z-index:1;background:#000}
+.section-tag{font-size:14px;font-weight:600;color:var(--red);letter-spacing:.5px;margin-bottom:8px}
+.section-heading{font-family:var(--sans);font-size:32px;color:var(--t1);font-weight:500;letter-spacing:-.5px;margin-bottom:32px;line-height:1.2}
+.section-head-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+.section-head-row .section-heading{margin-bottom:0}
+.toggle-hint{font-size:13px;color:var(--t4);font-weight:500;cursor:pointer;transition:color .2s}
+.toggle-hint:hover{color:var(--t2)}
+
+/* ═══ Cards — Elevated surface ═══ */
+.card{background:var(--bg-raised);border-radius:var(--r);padding:28px;border:none;transition:background .2s}
+.card:hover{background:#242426}
+.section{margin-bottom:16px}
+
+/* ═══ Titles (JS) ═══ */
+.section-title{font-size:20px;font-weight:600;color:var(--t1);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card-title{font-size:12px;font-weight:600;color:var(--t4);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-transform:uppercase;letter-spacing:1px}
+.card-title .ct-sub{font-size:13px;color:var(--t4);font-weight:400;text-transform:none;letter-spacing:0}
+.section-group{margin-bottom:16px}
+.section-group-head{font-size:12px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;padding-bottom:12px;display:inline-flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);width:100%}
+.section-group-head::before{content:'';width:6px;height:6px;background:var(--red);border-radius:50%;flex-shrink:0}
+.section-group-head .badge{text-transform:none;letter-spacing:0}
+
+/* ═══ Badges ═══ */
+.badge{background:rgba(255,255,255,.06);padding:4px 12px;border-radius:100px;font-size:12px;color:var(--t3);font-weight:500;border:none}
+.badge-review{background:rgba(255,159,10,.12);color:var(--orange);padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.sub-badge-first{background:rgba(48,209,88,.1);color:var(--green);padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap}
+.sub-badge-nth{background:rgba(191,90,242,.1);color:var(--purple);padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap}
+
+/* ═══ Sublabels ═══ */
+.chart-sublabel{font-size:12px;color:var(--t4);margin:24px 0 14px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.chart-sublabel.red{color:var(--red)}
+
+/* ═══ Layout ═══ */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.two-col>.card{display:flex;flex-direction:column}
+.two-col>.card .table-wrap{flex:1;max-height:none !important}
+.two-col>.card .funnel{flex:1}
+.two-col>.card .donut-wrap{flex:1;display:flex;align-items:center;justify-content:center;gap:28px;margin:12px 0}
+.two-col>.card .chart-sublabel~div{flex-shrink:0}
+.two-col>.card .stats-box{margin-top:auto;flex-shrink:0}
+.two-col>.card .card-title{flex-shrink:0}
+.two-col>#regionChart .region-bar-row:last-of-type{margin-bottom:auto}
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:8px 0}
+
+/* ═══ Tables — Apple clean style ═══ */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:12px 14px;font-size:11px;color:var(--t4);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:600;background:rgba(255,255,255,.03)}
+td{padding:12px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t2);transition:background .15s}
+tr:hover td{background:rgba(255,255,255,.03)}
+.text-right{text-align:right}.text-center{text-align:center}
+.table-wrap{max-height:500px;overflow-y:auto;overflow-x:auto;border-radius:var(--r);background:var(--bg-raised)}
+.table-wrap th{position:sticky;top:0;z-index:1;background:var(--bg-raised);backdrop-filter:blur(12px)}
+.compact-tbl{width:100%}.compact-tbl th,.compact-tbl td{padding:10px 12px;font-size:13px}
+
+/* ═══ Bar Charts ═══ */
+.bar-container{display:flex;align-items:center;gap:12px;margin:6px 0}
+.bar-label{min-width:110px;font-size:13px;color:var(--t3);text-align:right;font-weight:500}
+.bar{height:38px;border-radius:10px;display:flex;align-items:center;padding-left:14px;font-size:13px;color:#fff;font-weight:600;min-width:2px;transition:width 1.4s cubic-bezier(.16,1,.3,1),filter .2s,transform .2s;position:relative;overflow:hidden}
+.bar::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,transparent 50%);border-radius:inherit;pointer-events:none}
+.bar:hover{filter:brightness(1.15);transform:scaleY(1.05)}
+.bar-shopify{background:linear-gradient(135deg,#28a745,#30d158)}
+.bar-amazon{background:linear-gradient(135deg,#e08c00,#ff9f0a)}
+.bar-tiktok{background:linear-gradient(135deg,#d4293f,#ff375f)}
+
+/* ═══ Stat Rows ═══ */
+.stat-row{display:flex;justify-content:space-between;padding:11px 0;font-size:14px}
+.stat-row+.stat-row{border-top:1px solid rgba(255,255,255,.05)}
+.stat-row .label{color:var(--t3)}.stat-row .val{font-weight:600;letter-spacing:-.2px;color:var(--t2)}
+.highlight-review{background:rgba(255,159,10,.04)}
+
+/* ═══ Funnel ═══ */
+.funnel{display:flex;flex-direction:column;gap:10px}
+.funnel-step{display:flex;align-items:center;gap:18px;padding:22px 24px;border-radius:var(--r);transition:all .25s;cursor:default;background:rgba(255,255,255,.04)}
+.funnel-step:hover{background:rgba(255,255,255,.07);transform:translateX(3px)}
+.funnel-step .step-count{font-family:var(--sans);font-size:40px;font-weight:700;min-width:50px;letter-spacing:-1px}
+.funnel-step .step-count.green{color:var(--green)}
+.funnel-step .step-count.pink{color:var(--pink)}
+.funnel-step .step-label{font-size:15px;font-weight:500;color:var(--t2)}
+.dur-badge{font-size:11px;padding:4px 10px;border-radius:100px;font-weight:600}
+.dur-short{background:rgba(255,55,95,.1);color:var(--pink)}
+.dur-mid{background:rgba(255,159,10,.1);color:var(--orange)}
+.dur-long{background:rgba(48,209,88,.08);color:var(--green)}
+
+/* ═══ Loading — Apple-style ═══ */
+.loading-overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:20px}
+.loading-overlay::before{content:'';width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--t3);border-radius:50%;animation:spin .7s linear infinite}
+.loading-overlay span{font-size:13px;color:var(--t4);font-weight:500}
+.hidden{display:none}
+
+/* ═══ Donut ═══ */
+.donut-wrap{display:flex;align-items:center;gap:36px;justify-content:center;margin:20px 0;padding:16px 0}
+.donut-svg{flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:14px}
+.donut-legend-item{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:400;color:var(--t2)}
+.donut-legend-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+
+/* ═══ Region ═══ */
+.region-bar-row{display:flex;align-items:center;gap:10px;margin:5px 0;transition:transform .15s}
+.region-bar-row:hover{transform:translateX(3px)}
+.region-bar-label{min-width:110px;font-size:13px;color:var(--t3);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.region-bar-fill{height:30px;border-radius:8px;display:flex;align-items:center;padding-left:10px;font-size:12px;color:#fff;font-weight:600;min-width:2px;transition:width 1.4s cubic-bezier(.16,1,.3,1),filter .2s;position:relative;overflow:hidden}
+.region-bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,transparent 50%);pointer-events:none}
+.region-bar-fill:hover{filter:brightness(1.1)}
+.region-bar-count{font-size:12px;color:var(--t4);min-width:36px;text-align:right}
+.region-bar-pct{font-size:12px;color:var(--t2);min-width:42px;text-align:right;font-weight:600}
+.region-other-row{cursor:pointer}
+
+/* ═══ Tooltip ═══ */
+.region-tooltip-fixed{display:none;position:fixed;background:rgba(29,29,31,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;z-index:9999;min-width:300px;max-height:400px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.region-tooltip-title{font-size:12px;font-weight:600;color:var(--t3);margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.region-tooltip-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px}
+.region-tooltip-item .rt-name{color:var(--t2);flex:1;font-weight:400}
+.region-tooltip-item .rt-cnt{color:var(--t3);min-width:40px;text-align:center}
+.region-tooltip-item .rt-rev{color:var(--t1);font-weight:600;min-width:60px;text-align:right}
+
+/* ═══ Colors ═══ */
+.green{color:var(--green)}.blue{color:var(--blue)}.purple{color:var(--purple)}.orange{color:var(--orange)}.red{color:var(--red)}.yellow{color:var(--yellow)}.pink{color:var(--pink)}
+.stats-box{margin-top:16px;padding:16px 20px;background:rgba(255,255,255,.03);border-radius:var(--r-s)}
+
+/* ═══ Toggle View Button ═══ */
+.toggle-view-btn{padding:5px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--t3);cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;font-family:var(--sans)}
+.toggle-view-btn:hover{border-color:rgba(255,255,255,.3);color:var(--t1);background:rgba(255,255,255,.05)}
+.toggle-view-btn.active{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+
+/* ═══ Line Chart ═══ */
+.line-chart-container{position:relative;width:100%}
+.line-chart-svg{width:100%;display:block}
+.line-chart-legend{display:flex;gap:18px;justify-content:flex-end;margin-top:0;padding:10px 4px 0;flex-wrap:wrap}
+.line-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t3);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.line-chart-legend-dot{width:16px;height:1.5px;border-radius:1px;opacity:.7}
+
+/* ═══ Buyer Detail Section ═══ */
+.buyer-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.buyer-search{flex:1;min-width:200px;padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t1);font-size:14px;font-family:var(--sans);outline:none;transition:border-color .2s}
+.buyer-search:focus{border-color:var(--red-border);background:rgba(255,255,255,.06)}
+.buyer-search::placeholder{color:var(--t5)}
+.buyer-filter-select{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t2);font-size:13px;font-family:var(--sans);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.buyer-filter-select:focus{border-color:var(--red-border)}
+.buyer-filter-select option{background:#1d1d1f;color:var(--t2)}
+.buyer-result-count{font-size:12px;color:var(--t4);margin-bottom:8px}
+
+/* ═══ Footer ═══ */
+.footer-text{text-align:center;padding:48px 0 32px;color:var(--t5);font-size:12px;letter-spacing:.3px}
+
+@media(max-width:900px){
+  .two-col{grid-template-columns:1fr}
+  .metric-tiles{grid-template-columns:repeat(2,1fr)}
+  .hero-kpi-value{font-size:56px !important}
+  .hero-kpi{padding:48px 20px 40px}
+  main,.nav-inner{padding-left:20px;padding-right:20px}
+  .section-heading{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay"><span>Loading</span></div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <img src="/odd_logo_white.png" class="logo-img" alt="ODD.">
+      <span class="nav-title">Global Dashboard</span>
+      <span class="live-badge">LIVE</span>
+    </div>
+    <div class="nav-right">
+      <span id="dataStatus"></span>
+      <button class="refresh-btn" id="refreshBtn" onclick="doRefresh()">&#8635; Refresh</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="tabs-area">
+    <div class="month-tabs" id="monthTabs"></div>
+    <div class="week-tabs" id="weekTabs"></div>
+  </div>
+
+  <div class="summary-sticky" id="summaryCards"></div>
+
+  <section class="content-section">
+    <div class="section-tag">Weekly</div>
+    <div class="section-head-row" style="cursor:pointer" onclick="toggleWeekly()">
+      <h2 class="section-heading">주간 매출 추이</h2>
+      <span class="badge">일~토 기준</span>
+      <span id="weeklyToggle" class="toggle-hint">&#9654; 펼치기</span>
+    </div>
+    <div id="weeklyWrap" style="display:none">
+      <div class="card" id="weeklyChart" style="margin-bottom:16px;padding:28px 28px 20px"></div>
+      <div class="table-wrap" id="weeklyTable" style="max-height:none"></div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Monthly</div>
+    <div class="section-head-row">
+      <h2 class="section-heading">월별 매출 비교</h2>
+      <button class="toggle-view-btn" id="monthlyViewBtn" onclick="toggleMonthlyView()">Table</button>
+    </div>
+    <div class="card" id="monthlyChart" style="margin-bottom:16px;padding:28px 28px 20px"></div>
+    <div id="monthlyTable" style="display:none"></div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Channels</div>
+    <h2 class="section-heading">채널 분석</h2>
+    <div class="card" id="channelTable" style="margin-bottom:16px"></div>
+    <div class="card" id="channelBars"></div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Demographics</div>
+    <h2 class="section-heading">구매자 분석</h2>
+    <div class="two-col">
+      <div class="card" id="genderChart"></div>
+      <div class="card" id="regionChart"></div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Subscriptions</div>
+    <h2 class="section-heading">구독 트래킹</h2>
+    <div class="two-col" style="margin-bottom:24px">
+      <div class="card" id="subFunnel"></div>
+      <div class="card" id="subActive"></div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-title">전체 구매자 상세 <span class="ct-sub" id="buyerBadge"></span></div>
+      <div class="buyer-filters" id="buyerFilters">
+        <input type="text" class="buyer-search" id="buyerSearch" placeholder="구매자명, 지역, 채널 등 검색..." oninput="filterBuyers()">
+        <select class="buyer-filter-select" id="buyerChFilter" onchange="filterBuyers()"><option value="">전체 채널</option><option value="shopify">Shopify</option><option value="tiktok_shop">TikTok</option><option value="amazon">Amazon</option></select>
+        <select class="buyer-filter-select" id="buyerGenderFilter" onchange="filterBuyers()"><option value="">전체 성별</option><option value="F">여성</option><option value="M">남성</option><option value="U">미식별</option></select>
+        <select class="buyer-filter-select" id="buyerKitFilter" onchange="filterBuyers()"><option value="">전체 제품</option><option value="5day">5-day</option><option value="30day">30-day</option></select>
+        <select class="buyer-filter-select" id="buyerRegionFilter" onchange="filterBuyers()"><option value="">전체 지역</option></select>
+      </div>
+      <div class="buyer-result-count" id="buyerResultCount"></div>
+      <div class="table-wrap" id="buyerTable" style="max-height:500px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">구독 취소자 상세 <span class="ct-sub" id="cancelBadge"></span></div>
+      <div class="table-wrap" id="cancelledTable"></div>
+      <div class="stats-box" id="cancelStats"></div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Reviews</div>
+    <div class="section-head-row" style="cursor:pointer" onclick="toggleReview()">
+      <h2 class="section-heading">리뷰건 상세</h2>
+      <span class="badge">Google Sheet 자동 매칭</span>
+      <span id="reviewToggle" class="toggle-hint">&#9654; 펼치기</span>
+    </div>
+    <div id="reviewWrap" style="display:none">
+      <div class="table-wrap" id="reviewTable" style="max-height:500px"></div>
+    </div>
+  </section>
+
+  <div class="footer-text" id="footer"></div>
+</main>
+<div class="region-tooltip-fixed" id="regionTooltip"></div>
+
+<script src="data.js" onerror="window.EMBEDDED_DATA=null"></script>
+<script>
+let DATA=null,selectedMonths=new Set(),selectedWeek=null;
+const ALL_MONTHS=[];
+const CH_LABELS={shopify:"Shopify (D2C)",tiktok_shop:"TikTok",amazon:"Amazon"};
+const CH_COLORS={shopify:"#30d158",tiktok_shop:"#ff375f",amazon:"#ff9f0a"};
+var activeSubs=[],cancelledSubs=[],subNameList=[],subCcMap={};
+
+function loadSubscriptionData(){if(!DATA)return;var rawActive=(DATA.recharge_active||[]).map(s=>({n:s.n,amt:s.amt,next:s.next,email:s.email||'',next_raw:s.next_raw||'',created:s.created||'',cc:s.cc||1}));cancelledSubs=(DATA.recharge_cancelled||[]).map(s=>({n:s.n,email:s.email||'',reason:s.reason||'',created:s.created||'',cancelled:s.cancelled||'',days:s.days||0,cc:s.cc||1}));activeSubs=[];rawActive.forEach(s=>{if(!s.next||s.next==='-'||s.next===''){cancelledSubs.push({n:s.n,email:s.email,reason:'다음 결제일 없음',created:s.created,cancelled:'',days:0,cc:s.cc})}else{activeSubs.push(s)}});subNameList=[];subCcMap={};[...activeSubs,...cancelledSubs].forEach(s=>{var k=s.n.toLowerCase().trim();subNameList.push(k);subCcMap[k]=s.cc})}
+function getKit(p){return p<80?'5day':'30day'}
+function levenshtein(a,b){var m=a.length,n=b.length;if(!m)return n;if(!n)return m;var p=[],c=[];for(var j=0;j<=n;j++)p[j]=j;for(var i=1;i<=m;i++){c[0]=i;for(var j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));var t=p;p=c;c=t}return p[n]}
+function fuzzyNameMatch(name,nameList){var lower=name.toLowerCase().trim().replace(/\s+/g,' ');var oP=lower.split(' ');return nameList.some(function(rn){var rP=rn.split(' ');if(lower===rn)return true;if(rP.length>=2&&lower.indexOf(rP[0])>=0&&lower.indexOf(rP[rP.length-1])>=0)return true;if(oP.length>=2&&rn.indexOf(oP[0])>=0&&rn.indexOf(oP[oP.length-1])>=0)return true;if(oP.length===1&&oP[0].length>=3&&rP[0]===oP[0])return true;if(oP.length>=2&&rP.length>=2){var oF=oP[0],rF=rP[0],oL=oP[oP.length-1],rL=rP[rP.length-1];if(oF===rF&&oL.length>=3&&rL.length>=3&&oL.substring(0,3)===rL.substring(0,3))return true;if(oF.length>=3&&rF.length>=3&&oF.substring(0,3)===rF.substring(0,3)&&oL===rL)return true;if(oL===rL&&oL.length>=5)return true;if(oF.length>=3&&rF.length>=3&&oL.length>=3&&rL.length>=3&&oL.substring(0,3)===rL.substring(0,3)&&levenshtein(oF,rF)<=2)return true;if(oF===rF&&oL.length>=4&&rL.length>=4&&levenshtein(oL,rL)<=2)return true}if(oP.length===1&&oP[0].length>=4&&rP[0].length>=4&&levenshtein(oP[0],rP[0])<=2)return true;return false})}
+function isSub(o){return o.ch==='shopify'&&getKit(o.t)==='30day'&&fuzzyNameMatch(o.c,subNameList)}
+function getSubCc(o){if(!o._sub)return 0;var l=o.c.toLowerCase().trim();if(subCcMap[l])return subCcMap[l];for(var n in subCcMap)if(fuzzyNameMatch(l,[n]))return subCcMap[n];return 1}
+async function loadData(){try{const r=await fetch('/api/data');if(r.ok){const d=await r.json();if(d.orders)return{data:d,source:'server'}}}catch{}try{const r=await fetch('data.json');if(r.ok){const d=await r.json();if(d.orders)return{data:d,source:'file'}}}catch{}if(window.EMBEDDED_DATA&&window.EMBEDDED_DATA.orders)return{data:window.EMBEDDED_DATA,source:'embedded'};return null}
+async function doRefresh(){const b=document.getElementById('refreshBtn');b.classList.add('loading');b.textContent='↻ 갱신 중...';try{const r=await fetch('/api/refresh');const j=await r.json();if(j.ok){const l=await loadData();if(l){DATA=l.data;initMonths();render();updateStatus(l.source)}}else alert('갱신 실패: '+(j.error||'Unknown'))}catch(e){alert('server.py가 실행 중인지 확인하세요.')}b.classList.remove('loading');b.textContent='↻ Refresh'}
+function updateStatus(s){const e=document.getElementById('dataStatus');if(!DATA){e.innerHTML='<span class="status-dot status-error"></span> 데이터 없음';return}const t=DATA.updated_at,a=t?timeAgo(new Date(t)):'?',d=s==='server'?'status-live':'status-cached';e.innerHTML='<span class="status-dot '+d+'"></span> '+a+' 갱신 · '+DATA.orders.length+'건'}
+function timeAgo(d){const s=(Date.now()-d.getTime())/1000;if(s<60)return'방금';if(s<3600)return Math.floor(s/60)+'분 전';if(s<86400)return Math.floor(s/3600)+'시간 전';return Math.floor(s/86400)+'일 전'}
+function getMonth(d){return d?d.substring(0,7):''}
+function fmtMon(y){var p=y.split('-');return(p[0]==='2025'?"'25 ":"'26 ")+parseInt(p[1])+'월'}
+function $(a){return'$'+Math.round(a).toLocaleString()}
+function getWeekSunday(d){var x=new Date(d+'T12:00:00');x.setDate(x.getDate()-x.getDay());return x.toISOString().substring(0,10)}
+function fmtWeek(s){var a=new Date(s+'T12:00:00'),b=new Date(a);b.setDate(b.getDate()+6);return(a.getMonth()+1)+'/'+a.getDate()+' ~ '+(b.getMonth()+1)+'/'+b.getDate()}
+function isReview(n,c){if(!n||!DATA)return false;if(c==='amazon'){var l=(DATA.amazon_review_names&&DATA.amazon_review_names.length>0)?DATA.amazon_review_names:DATA.review_names;return l?fuzzyNameMatch(n,l):false}if(c==='tiktok_shop'){var l=(DATA.tiktok_review_names&&DATA.tiktok_review_names.length>0)?DATA.tiktok_review_names:DATA.review_names;return l?fuzzyNameMatch(n,l):false}return false}
+function isValid(o){return o.t>=5&&o.s!=='cancel'}
+function toggleWeekly(){var e=document.getElementById('weeklyWrap'),t=document.getElementById('weeklyToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='▾ 접기'}else{e.style.display='none';t.innerHTML='▸ 펼치기'}}
+var monthlyViewMode='chart';
+function toggleMonthlyView(){var ch=document.getElementById('monthlyChart'),tb=document.getElementById('monthlyTable'),btn=document.getElementById('monthlyViewBtn');if(monthlyViewMode==='chart'){monthlyViewMode='table';ch.style.display='none';tb.style.display='';btn.textContent='Chart';btn.classList.add('active')}else{monthlyViewMode='chart';ch.style.display='';tb.style.display='none';btn.textContent='Table';btn.classList.remove('active')}}
+function toggleReview(){var e=document.getElementById('reviewWrap'),t=document.getElementById('reviewToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='▾ 접기'}else{e.style.display='none';t.innerHTML='▸ 펼치기'}}
+var isAllMode=true;
+function initMonths(){var m={};DATA.orders.forEach(o=>{if(o.d)m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().forEach(v=>ALL_MONTHS.push(v));isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
+function renderMonthTabs(){var c=document.getElementById('monthTabs'),h='<button class="month-tab all-tab '+(isAllMode?'active':'')+'" data-m="all">전체</button>';ALL_MONTHS.forEach(m=>{var a=!isAllMode&&selectedMonths.has(m);h+='<button class="month-tab '+(a?'active':'')+'" data-m="'+m+'">'+fmtMon(m)+'</button>'});c.innerHTML=h;c.querySelectorAll('.month-tab').forEach(b=>{b.addEventListener('click',()=>{var m=b.dataset.m;if(m==='all'){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}else{if(isAllMode){isAllMode=false;selectedMonths=new Set([m])}else{if(selectedMonths.has(m)){selectedMonths.delete(m);if(!selectedMonths.size){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}}else selectedMonths.add(m)}}selectedWeek=null;renderMonthTabs();renderWeekTabs();render()})})}
+function getWeeksInMonth(ym){var w={};DATA.orders.forEach(o=>{if(o.d&&isValid(o)&&getMonth(o.d)===ym){var s=getWeekSunday(o.d);w[s]=(w[s]||0)+1}});return Object.keys(w).sort()}
+function renderWeekTabs(){var c=document.getElementById('weekTabs');if(selectedMonths.size!==1){c.innerHTML='';selectedWeek=null;return}var mo=Array.from(selectedMonths)[0],wk=getWeeksInMonth(mo);if(!wk.length){c.innerHTML='';return}var h='<span style="font-size:11px;color:var(--t4);letter-spacing:.5px;font-weight:600;margin-right:4px">주간:</span><button class="week-tab '+(!selectedWeek?'active':'')+'" data-w="all">전체</button>';wk.forEach(w=>{h+='<button class="week-tab '+(selectedWeek===w?'active':'')+'" data-w="'+w+'">'+fmtWeek(w)+'</button>'});c.innerHTML=h;c.querySelectorAll('.week-tab').forEach(b=>{b.addEventListener('click',()=>{var w=b.dataset.w;selectedWeek=(w==='all'||selectedWeek===w)?null:w;renderWeekTabs();render()})})}
+function getFiltered(){return DATA.orders.filter(o=>isValid(o)&&selectedMonths.has(getMonth(o.d))&&(!selectedWeek||getWeekSunday(o.d)===selectedWeek))}
+
+function render(){
+  if(!DATA)return;loadSubscriptionData();
+  var f=getFiltered();f.forEach(o=>{o._rev=isReview(o.c,o.ch);o._kit=getKit(o.t);o._sub=isSub(o);o._subCc=o._sub?getSubCc(o):0});
+  var chs=['shopify','tiktok_shop','amazon'],st={};
+  chs.forEach(c=>{st[c]={rev:0,cnt:0,k5:{cnt:0,rev:0,subCnt:0,subRev:0,subFirstCnt:0,subFirstRev:0,subRenewCnt:0,subRenewRev:0,revCnt:0,revRev:0},k30:{cnt:0,rev:0,subCnt:0,subRev:0,subFirstCnt:0,subFirstRev:0,subRenewCnt:0,subRenewRev:0,revCnt:0,revRev:0}}});
+  f.forEach(o=>{var s=st[o.ch];if(!s)return;s.rev+=o.t;s.cnt++;var k=o._kit==='5day'?s.k5:s.k30;k.cnt++;k.rev+=o.t;if(o._sub){k.subCnt++;k.subRev+=o.t;if(o._subCc<=1){k.subFirstCnt++;k.subFirstRev+=o.t}else{k.subRenewCnt++;k.subRenewRev+=o.t}}else if(o._rev){k.revCnt++;k.revRev+=o.t}});
+  var gT=0,gC=0,tRR=0,tRC=0,tSC=0,t5={cnt:0,rev:0},t30={cnt:0,rev:0};
+  chs.forEach(c=>{var v=st[c];gT+=v.rev;gC+=v.cnt;t5.cnt+=v.k5.cnt;t5.rev+=v.k5.rev;t30.cnt+=v.k30.cnt;t30.rev+=v.k30.rev;tRR+=v.k5.revRev+v.k30.revRev;tRC+=v.k5.revCnt+v.k30.revCnt;tSC+=v.k5.subCnt+v.k30.subCnt});
+  var rT=gT-tRR;
+  renderSummary(st,gT,gC,tRR,tRC,rT,t5,t30,tSC);renderDemographics(f);renderWeekly(f);renderWeeklyChart(f);renderMonthly();renderMonthlyChart();renderChannel(st,gT,rT);renderReview(f);renderSubscriptions();renderBuyerDetail(f);renderCancelled();
+  document.getElementById('footer').textContent='ERP '+(DATA.total_erp_orders||'?')+'건 · 판매 '+DATA.orders.length+'건 · 유효 '+gC+'건 · '+(DATA.updated_at||'?').substring(0,16);
+}
+
+function renderSummary(st,gT,gC,tRR,tRC,rT,t5,t30,tSC){
+  var sh=st.shopify,tt=st.tiktok_shop,am=st.amazon,shS=sh.k5.subCnt+sh.k30.subCnt;
+  var aR=isAllMode?(DATA.amazon_review_entries||(DATA.amazon_review_names||[]).length):(am.k5.revCnt+am.k30.revCnt);
+  var tR=isAllMode?(DATA.tiktok_review_entries||(DATA.tiktok_review_names||[]).length):(tt.k5.revCnt+tt.k30.revCnt);
+  /* Filter cancelled subs by selected period */
+  var filteredCancel=cancelledSubs.filter(function(s){if(!s.cancelled)return false;var cm=getMonth(s.cancelled);return selectedMonths.has(cm)&&(!selectedWeek||getWeekSunday(s.cancelled)===selectedWeek)});
+  document.getElementById('summaryCards').innerHTML=
+    '<div class="hero-kpi"><div class="hero-kpi-tag">Overview</div><div class="hero-kpi-value">'+$(gT)+'</div><div class="hero-kpi-sub">전체 매출 · '+gC+'건 · 5day '+t5.cnt+' / 30day '+t30.cnt+'</div></div>'+
+    '<div class="metric-tiles">'+
+    '<div class="m-tile"><div class="m-tile-label">리뷰 제외</div><div class="m-tile-value" style="color:var(--t1)">'+$(rT)+'</div><div class="m-tile-sub">리뷰 '+tRC+'건 (-'+$(tRR)+')</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">Shopify</div><div class="m-tile-value" style="color:var(--green)">'+$(sh.rev)+'</div><div class="m-tile-sub">'+sh.cnt+'건 · 5d:'+sh.k5.cnt+' 30d:'+sh.k30.cnt+(shS?' · 구독:<b>'+shS+'</b>':'')+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">Amazon</div><div class="m-tile-value" style="color:var(--orange)">'+$(am.rev)+'</div><div class="m-tile-sub">'+am.cnt+'건 · 5d:'+am.k5.cnt+' 30d:'+am.k30.cnt+(aR?' · 리뷰:<b>'+aR+'</b>':'')+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">TikTok</div><div class="m-tile-value" style="color:var(--pink)">'+$(tt.rev)+'</div><div class="m-tile-sub">'+tt.cnt+'건 · 5d:'+tt.k5.cnt+' 30d:'+tt.k30.cnt+(tR?' · 리뷰:<b>'+tR+'</b>':'')+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label" style="color:var(--red)">활성 구독</div><div class="m-tile-value" style="color:var(--red)">'+activeSubs.length+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">명</span></div><div class="m-tile-sub">$'+activeSubs.reduce((s,a)=>s+a.amt,0)+'/월 · 취소 '+filteredCancel.length+'명</div></div>'+
+    '</div>';
+}
+
+function renderWeekly(f){
+  var w={};f.forEach(o=>{var s=getWeekSunday(o.d);if(!w[s])w[s]={shopify:0,tiktok_shop:0,amazon:0,total:0,review:0,reviewCnt:0,count:0,k5:0,k30:0,k5r:0,k30r:0,subFirst:0,subRenew:0};var x=w[s];x[o.ch]=(x[o.ch]||0)+o.t;x.total+=o.t;x.count++;if(o._kit==='5day')x.k5++;else x.k30++;if(o._rev){x.review+=o.t;x.reviewCnt++;if(o._kit==='5day')x.k5r++;else x.k30r++}if(o._sub){if(o._subCc<=1)x.subFirst++;else x.subRenew++}});
+  var s=Object.entries(w).sort((a,b)=>b[0].localeCompare(a[0]));
+  var h='<table style="min-width:800px"><thead><tr><th>주차</th><th class="text-right">Shopify</th><th class="text-right">Amazon</th><th class="text-right">TikTok</th><th class="text-right">합계</th><th class="text-center" style="font-size:9px">5d</th><th class="text-center" style="font-size:9px">30d</th><th class="text-center" style="font-size:9px;color:var(--green)">첫구독</th><th class="text-center" style="font-size:9px;color:var(--purple)">기존구독</th><th class="text-center" style="color:var(--yellow);font-size:9px">리뷰</th><th class="text-right">실매출</th><th class="text-center">건수</th></tr></thead><tbody>';
+  var T={sh:0,am:0,tt:0,total:0,rev:0,revCnt:0,cnt:0,k5:0,k30:0,k5r:0,k30r:0,subFirst:0,subRenew:0};
+  s.forEach(([ws,d])=>{var n=d.total-d.review;h+='<tr><td style="font-size:12px;white-space:nowrap">'+fmtWeek(ws)+'</td><td class="text-right green">'+(d.shopify?$(d.shopify):'-')+'</td><td class="text-right orange">'+(d.amazon?$(d.amazon):'-')+'</td><td class="text-right pink">'+(d.tiktok_shop?$(d.tiktok_shop):'-')+'</td><td class="text-right" style="font-weight:600;color:var(--t1)">'+$(d.total)+'</td><td class="text-center">'+d.k5+(d.k5r?'<span style="color:var(--yellow);font-size:10px"> ('+d.k5r+')</span>':'')+'</td><td class="text-center">'+d.k30+(d.k30r?'<span style="color:var(--yellow);font-size:10px"> ('+d.k30r+')</span>':'')+'</td><td class="text-center" style="color:var(--green)">'+(d.subFirst||'-')+'</td><td class="text-center" style="color:var(--purple)">'+(d.subRenew||'-')+'</td><td class="text-center yellow">'+(d.reviewCnt?d.reviewCnt+'건':'-')+'</td><td class="text-right green" style="font-weight:600">'+$(n)+'</td><td class="text-center" style="color:var(--t4)">'+d.count+'</td></tr>';T.sh+=d.shopify||0;T.am+=d.amazon||0;T.tt+=d.tiktok_shop||0;T.total+=d.total;T.rev+=d.review;T.revCnt+=d.reviewCnt;T.cnt+=d.count;T.k5+=d.k5;T.k30+=d.k30;T.k5r+=d.k5r;T.k30r+=d.k30r;T.subFirst+=d.subFirst;T.subRenew+=d.subRenew});
+  h+='<tr style="font-weight:600;border-top:1px solid var(--border-h)"><td>합계</td><td class="text-right green">'+$(T.sh)+'</td><td class="text-right orange">'+$(T.am)+'</td><td class="text-right pink">'+$(T.tt)+'</td><td class="text-right" style="color:var(--t1)">'+$(T.total)+'</td><td class="text-center">'+T.k5+(T.k5r?'<span style="color:var(--yellow);font-size:10px"> ('+T.k5r+')</span>':'')+'</td><td class="text-center">'+T.k30+(T.k30r?'<span style="color:var(--yellow);font-size:10px"> ('+T.k30r+')</span>':'')+'</td><td class="text-center" style="color:var(--green)">'+(T.subFirst||'-')+'</td><td class="text-center" style="color:var(--purple)">'+(T.subRenew||'-')+'</td><td class="text-center yellow">'+T.revCnt+'건</td><td class="text-right green">'+$(T.total-T.rev)+'</td><td class="text-center" style="color:var(--t4)">'+T.cnt+'</td></tr></tbody></table>';
+  document.getElementById('weeklyTable').innerHTML=h;
+}
+
+function renderMonthly(){
+  var a=DATA.orders.filter(isValid),m={};ALL_MONTHS.forEach(v=>{m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,review:0,cnt:0}});a.forEach(o=>{var v=getMonth(o.d);if(!m[v])return;m[v][o.ch]=(m[v][o.ch]||0)+o.t;m[v].total+=o.t;m[v].cnt++;if(isReview(o.c,o.ch))m[v].review+=o.t});
+  var h='<table><thead><tr><th>월</th><th class="text-right">Shopify</th><th class="text-right">Amazon</th><th class="text-right">TikTok</th><th class="text-right">합계</th><th class="text-right">리뷰</th><th class="text-right">실매출</th><th class="text-center">건수</th></tr></thead><tbody>';
+  ALL_MONTHS.forEach(v=>{var d=m[v],ac=isAllMode||selectedMonths.has(v);h+='<tr style="'+(ac?'background:rgba(255,255,255,.03)':'opacity:.35')+'"><td style="font-weight:'+(ac?600:400)+';color:'+(ac?'var(--t1)':'var(--t4)')+'">'+fmtMon(v)+'</td><td class="text-right green">'+(d.shopify?$(d.shopify):'-')+'</td><td class="text-right orange">'+(d.amazon?$(d.amazon):'-')+'</td><td class="text-right pink">'+(d.tiktok_shop?$(d.tiktok_shop):'-')+'</td><td class="text-right" style="font-weight:600;color:var(--t1)">'+$(d.total)+'</td><td class="text-right" style="color:var(--orange)">'+(d.review?'-'+$(d.review):'-')+'</td><td class="text-right green">'+$(d.total-d.review)+'</td><td class="text-center" style="color:var(--t3)">'+d.cnt+'</td></tr>'});
+  h+='</tbody></table>';document.getElementById('monthlyTable').innerHTML=h;
+}
+
+function renderDemographics(f){
+  var gC={F:0,M:0,U:0},gR={F:0,M:0,U:0},gB={};['shopify','tiktok_shop','amazon'].forEach(c=>{gB[c]={F:0,M:0,U:0}});
+  f.forEach(o=>{var g=o.g||'U';gC[g]++;gR[g]+=o.t;if(gB[o.ch])gB[o.ch][g]++});
+  var tot=gC.F+gC.M+gC.U;if(!tot){document.getElementById('genderChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:40px">데이터 없음</div>';return}
+  var R=80,r=54,cx=90,cy=90,segs=[{l:'여성',c:gC.F,r:gR.F,co:'#ff375f'},{l:'남성',c:gC.M,r:gR.M,co:'#0a84ff'},{l:'미식별',c:gC.U,r:gR.U,co:'#6e6e73'}].filter(s=>s.c>0);
+  var svg='<svg viewBox="0 0 180 180" class="donut-svg" width="160" height="160">',sa=-90;
+  segs.forEach(seg=>{var p=seg.c/tot,a=p*360,ea=sa+a,la=a>180?1:0,sr=sa*Math.PI/180,er=ea*Math.PI/180;var x1=cx+R*Math.cos(sr),y1=cy+R*Math.sin(sr),x2=cx+R*Math.cos(er),y2=cy+R*Math.sin(er),x3=cx+r*Math.cos(er),y3=cy+r*Math.sin(er),x4=cx+r*Math.cos(sr),y4=cy+r*Math.sin(sr);if(segs.length===1){svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="'+seg.co+'"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#1d1d1f"/>'}else svg+='<path d="M'+x1+','+y1+' A'+R+','+R+' 0 '+la+' 1 '+x2+','+y2+' L'+x3+','+y3+' A'+r+','+r+' 0 '+la+' 0 '+x4+','+y4+' Z" fill="'+seg.co+'" opacity=".85" style="transition:opacity .2s" onmouseover="this.setAttribute(\'opacity\',\'1\')" onmouseout="this.setAttribute(\'opacity\',\'.85\')"/>';sa=ea});
+  svg+='<text x="'+cx+'" y="'+cy+'" text-anchor="middle" dominant-baseline="central" fill="#f5f5f7" font-size="30" font-weight="700" font-family="Pretendard, Helvetica Neue, sans-serif" letter-spacing="-1">'+tot+'</text></svg>';
+  var leg='<div class="donut-legend">';segs.forEach(s=>{var p=Math.round(s.c/tot*100);leg+='<div class="donut-legend-item"><span class="donut-legend-dot" style="background:'+s.co+'"></span><span>'+s.l+' <b style="color:var(--t1)">'+s.c+'</b>건 ('+p+'%) · '+$(s.r)+'</span></div>'});leg+='</div>';
+  var cg='<div class="chart-sublabel">채널별 성별</div>';
+  ['shopify','tiktok_shop','amazon'].forEach(c=>{var d=gB[c],t=d.F+d.M+d.U;if(!t)return;var fP=Math.round(d.F/t*100),mP=Math.round(d.M/t*100),uP=100-fP-mP;cg+='<div style="display:flex;align-items:center;gap:10px;margin:7px 0"><span style="min-width:100px;font-size:13px;color:'+CH_COLORS[c]+';text-align:right;font-weight:600">'+CH_LABELS[c].split(' ')[0]+'</span><div style="flex:1;display:flex;height:30px;border-radius:8px;overflow:hidden">';if(d.F)cg+='<div style="width:'+fP+'%;background:#ff375f;display:flex;align-items:center;padding-left:7px;font-size:11px;color:#fff;font-weight:600">'+(fP>=20?fP+'%':'')+'</div>';if(d.M)cg+='<div style="width:'+mP+'%;background:#0a84ff;display:flex;align-items:center;padding-left:7px;font-size:11px;color:#fff;font-weight:600">'+(mP>=15?mP+'%':'')+'</div>';if(d.U)cg+='<div style="width:'+uP+'%;background:#3a3a3c"></div>';cg+='</div><span style="font-size:11px;color:var(--t3);min-width:26px;text-align:right;font-weight:600">'+t+'</span></div>'});
+  document.getElementById('genderChart').innerHTML='<div class="card-title">성별 분포</div><div class="donut-wrap">'+svg+leg+'</div>'+cg;
+
+  var sC={},sR={},hR=0;f.forEach(o=>{var s=o.st||'';if(s){hR++;sC[s]=(sC[s]||0)+1;sR[s]=(sR[s]||0)+o.t}});
+  var so=Object.entries(sC).sort((a,b)=>b[1]-a[1]),mx=so.length?so[0][1]:1;
+  var rc=['#bf2026','#0a84ff','#30d158','#ff9f0a','#ff375f','#bf5af2','#5ac8fa','#ff6961','#5e5ce6','#2dd4bf','#e879f9','#fb923c'];
+  var rH='<div class="card-title">지역 분포 <span class="ct-sub">('+hR+'/'+f.length+'건)</span></div>';
+  if(!so.length){rH+='<div style="color:var(--t4);text-align:center;padding:30px">마켓플레이스 주문에만 지역 데이터 포함</div>'}else{
+    so.slice(0,12).forEach((e,i)=>{var s=e[0],cn=e[1],p=Math.round(cn/mx*100),rp=hR?(cn/hR*100).toFixed(1):'0.0',co=rc[i%rc.length],rv=sR[s]||0;rH+='<div class="region-bar-row"><span class="region-bar-label">'+s+'</span><div style="flex:1"><div class="region-bar-fill" style="width:'+p+'%;background:'+co+'">'+(p>25?cn+'건':'')+'</div></div><span class="region-bar-count">'+(p<=25?cn+'건':'')+' '+$(rv)+'</span><span class="region-bar-pct">'+rp+'%</span></div>'});
+    if(so.length>12){var os=so.slice(12),oc=0,or=0;os.forEach(e=>{oc+=e[1];or+=sR[e[0]]||0});var op=hR?(oc/hR*100).toFixed(1):'0.0';rH+='<div class="region-bar-row region-other-row" id="regionOtherRow"><span class="region-bar-label" style="color:var(--t4)">기타 ('+os.length+'개 주) ⓘ</span><div style="flex:1"><div class="region-bar-fill" style="width:'+Math.round(oc/mx*100)+'%;background:#3a3a3c">'+oc+'건</div></div><span class="region-bar-count">'+$(or)+'</span><span class="region-bar-pct">'+op+'%</span></div>';var tH='<div class="region-tooltip-title">기타 지역 상세 ('+os.length+'개 주)</div>';os.forEach(e=>{var sN=e[0],sC2=e[1],sRv=sR[sN]||0,sP=hR?(sC2/hR*100).toFixed(1):'0.0';tH+='<div class="region-tooltip-item"><span class="rt-name">'+sN+'</span><span class="rt-cnt">'+sC2+'건</span><span class="rt-rev">'+$(sRv)+'</span><span style="color:var(--t4);font-size:11px;min-width:36px;text-align:right;font-weight:600">'+sP+'%</span></div>'});window._regionTooltipHtml=tH}
+    var nR=f.length-hR;if(nR>0)rH+='<div style="margin-top:8px;font-size:12px;color:var(--t4)">'+nR+'건 지역 미확인</div>'}
+  document.getElementById('regionChart').innerHTML=rH;
+  var oR=document.getElementById('regionOtherRow'),tt2=document.getElementById('regionTooltip');
+  if(oR&&tt2&&window._regionTooltipHtml){tt2.innerHTML=window._regionTooltipHtml;oR.addEventListener('mouseenter',e=>{var r2=oR.getBoundingClientRect();tt2.style.display='block';tt2.style.left=(r2.left+r2.width/2-140)+'px';var t2=r2.top-tt2.offsetHeight-10;if(t2<10)t2=r2.bottom+10;tt2.style.top=t2+'px'});oR.addEventListener('mouseleave',()=>tt2.style.display='none');tt2.addEventListener('mouseenter',()=>tt2.style.display='block');tt2.addEventListener('mouseleave',()=>tt2.style.display='none')}
+}
+
+function renderChannel(st,gT,rT){
+  var chs=['shopify','tiktok_shop','amazon'];
+  var h='<div class="card-title">채널별 제품 현황 <span class="ct-sub">선택 기간</span></div><div class="table-wrap" style="max-height:none"><table class="compact-tbl"><thead><tr><th>채널</th><th>제품</th><th class="text-center">전체</th><th class="text-center">일반</th><th class="text-center" style="color:var(--green)">첫구독</th><th class="text-center" style="color:var(--purple)">기존구독</th><th class="text-center" style="color:var(--orange)">리뷰</th><th class="text-right">총매출</th><th class="text-right">실매출</th></tr></thead><tbody>';
+  var gC2=0,gR2=0,gSF=0,gSR=0,gRC=0,gRA=0,gRl=0;
+  chs.forEach(c=>{var s=st[c];[{l:'5-day',k:s.k5},{l:'30-day',k:s.k30}].forEach((it,i)=>{var k=it.k,rc=k.cnt-k.subCnt-k.revCnt,nr=k.rev-k.revRev;var sf=k.subFirstCnt?'<span style="color:var(--green)">'+k.subFirstCnt+'</span><div style="font-size:10px;color:var(--green)">'+$(k.subFirstRev)+'</div>':'<span style="color:var(--t5)">-</span>';var sr=k.subRenewCnt?'<span style="color:var(--purple)">'+k.subRenewCnt+'</span><div style="font-size:10px;color:var(--purple)">'+$(k.subRenewRev)+'</div>':'<span style="color:var(--t5)">-</span>';var rv=k.revCnt?'<span style="color:var(--orange)">'+k.revCnt+'</span><div style="font-size:10px;color:var(--orange)">'+$(k.revRev)+'</div>':'<span style="color:var(--t5)">-</span>';h+='<tr>';if(!i)h+='<td rowspan="2" style="color:'+CH_COLORS[c]+';font-weight:600;vertical-align:middle;border-right:1px solid var(--border)">'+CH_LABELS[c]+'</td>';h+='<td style="color:var(--t3)">'+it.l+'</td><td class="text-center">'+k.cnt+'</td><td class="text-center">'+rc+'</td><td class="text-center">'+sf+'</td><td class="text-center">'+sr+'</td><td class="text-center">'+rv+'</td><td class="text-right" style="color:var(--t2)">'+$(k.rev)+'</td><td class="text-right green">'+$(nr)+'</td></tr>';gC2+=k.cnt;gR2+=rc;gSF+=k.subFirstCnt;gSR+=k.subRenewCnt;gRC+=k.revCnt;gRA+=k.rev;gRl+=nr})});
+  h+='<tr style="font-weight:600;border-top:1px solid var(--border-h)"><td colspan="2" style="color:var(--t1)">합계</td><td class="text-center" style="color:var(--t1)">'+gC2+'</td><td class="text-center">'+gR2+'</td><td class="text-center" style="color:var(--green)">'+(gSF||'-')+'</td><td class="text-center" style="color:var(--purple)">'+(gSR||'-')+'</td><td class="text-center" style="color:var(--orange)">'+(gRC||'-')+'</td><td class="text-right" style="color:var(--t1)">'+$(gRA)+'</td><td class="text-right green">'+$(gRl)+'</td></tr></tbody></table></div>';
+  document.getElementById('channelTable').innerHTML=h;
+
+  var mR=Math.max(...chs.map(c=>st[c].rev))||1;
+  var b='<div class="card-title">매출 비중</div><div style="padding:2px 0">';
+  chs.forEach(c=>{var s=st[c],p=gT>0?(s.rev/gT*100).toFixed(0):0;b+='<div class="bar-container"><div class="bar-label">'+CH_LABELS[c]+'</div><div class="bar bar-'+(c==='tiktok_shop'?'tiktok':c)+'" style="width:'+(s.rev/mR*85).toFixed(0)+'%">'+$(s.rev)+' ('+p+'%)</div></div>'});
+  b+='</div><div class="chart-sublabel red">리뷰 제외</div>';
+  var mN=Math.max(...chs.map(c=>{var s=st[c];return s.rev-s.k5.revRev-s.k30.revRev}))||1;
+  chs.forEach(c=>{var s=st[c],n=s.rev-s.k5.revRev-s.k30.revRev,np=rT>0?(n/rT*100).toFixed(0):0;b+='<div class="bar-container"><div class="bar-label">'+CH_LABELS[c]+'</div><div class="bar bar-'+(c==='tiktok_shop'?'tiktok':c)+'" style="width:'+(n/mN*85).toFixed(0)+'%">'+$(n)+' ('+np+'%)</div></div>'});
+  b+='<div class="chart-sublabel">채널별 제품 매출</div>';
+  var chGrad5={shopify:'linear-gradient(135deg,#1e8e3e,#30d158)',tiktok_shop:'linear-gradient(135deg,#d4293f,#ff375f)',amazon:'linear-gradient(135deg,#c67600,#ff9f0a)'};
+  var chGrad30={shopify:'linear-gradient(135deg,#28a745,#4ade80)',tiktok_shop:'linear-gradient(135deg,#e84060,#ff6b80)',amazon:'linear-gradient(135deg,#e08c00,#ffb340)'};
+  chs.forEach(c=>{var s=st[c],m=Math.max(s.k5.rev,s.k30.rev)||1;b+='<div style="font-size:11px;color:'+CH_COLORS[c]+';margin:8px 0 3px;font-weight:600;letter-spacing:.3px">'+CH_LABELS[c]+'</div><div class="bar-container"><div class="bar-label">5-day</div><div class="bar" style="background:'+chGrad5[c]+';width:'+(s.k5.rev/m*80).toFixed(0)+'%">'+$(s.k5.rev)+' ('+s.k5.cnt+'건)</div></div><div class="bar-container"><div class="bar-label">30-day</div><div class="bar" style="background:'+chGrad30[c]+';width:'+(s.k30.rev/m*80).toFixed(0)+'%">'+$(s.k30.rev)+' ('+s.k30.cnt+'건)</div></div>'});
+  document.getElementById('channelBars').innerHTML=b;
+}
+
+function renderReview(f){
+  var rv=f.filter(o=>o._rev),nr=f.filter(o=>!o._rev);rv.sort((a,b)=>b.d.localeCompare(a.d));var r5=0,r30=0,r5r=0,r30r=0;
+  var h='<table><thead><tr><th>상태</th><th>고객명</th><th>채널</th><th class="text-center">제품</th><th class="text-right">금액</th><th>날짜</th></tr></thead><tbody>',mn={};
+  rv.forEach(o=>{var kl=o._kit==='5day'?'5day':'30day',kc=o._kit==='5day'?'var(--red)':'var(--pink)';if(o._kit==='5day'){r5++;r5r+=o.t}else{r30++;r30r+=o.t}mn[o.c.toLowerCase().trim()]=true;h+='<tr class="highlight-review"><td><span class="badge-review">매칭</span></td><td style="color:var(--t1)">'+o.c+'</td><td style="color:'+CH_COLORS[o.ch]+';font-size:12px;font-weight:500">'+CH_LABELS[o.ch]+'</td><td class="text-center"><span style="color:'+kc+';font-size:11px;font-weight:600">'+kl+'</span></td><td class="text-right" style="color:var(--t1)">$'+o.t.toFixed(2)+'</td><td style="font-size:12px;color:var(--t3)">'+o.d.substring(5)+'</td></tr>'});
+  var uh='',uc=0,an=[].concat(DATA.amazon_review_names||[],DATA.tiktok_review_names||[]),se={};
+  an.forEach(rn=>{if(se[rn])return;se[rn]=true;var im=false;for(var k in mn)if(k===rn||fuzzyNameMatch(k,[rn])){im=true;break}if(!im){var cl=(DATA.amazon_review_names||[]).indexOf(rn)>=0?'Amazon':'TikTok',cc=cl==='Amazon'?'var(--orange)':'var(--pink)';uc++;uh+='<tr style="opacity:.45"><td><span style="background:var(--red-dim);color:var(--red);padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600">시트</span></td><td>'+rn+'</td><td style="color:'+cc+';font-size:12px">'+cl+'</td><td class="text-center" style="color:var(--t5)">-</td><td class="text-right" style="color:var(--t5)">-</td><td style="color:var(--t5)">시트</td></tr>'}});
+  h+=uh+'</tbody></table>';
+  var aS2=(DATA.amazon_review_names||[]).length,tS2=(DATA.tiktok_review_names||[]).length,aE2=DATA.amazon_review_entries||aS2,tE2=DATA.tiktok_review_entries||tS2;
+  h+='<div class="stats-box"><div class="stat-row"><span class="label">시트 리뷰어 (Amazon)</span><span class="val orange">'+aS2+'명 ('+aE2+'건)</span></div><div class="stat-row"><span class="label">시트 리뷰어 (TikTok)</span><span class="val pink">'+tS2+'명 ('+tE2+'건)</span></div><div class="stat-row"><span class="label">ERP 매칭</span><span class="val orange">'+rv.length+'건 (5d:'+r5+' / 30d:'+r30+')</span></div><div class="stat-row"><span class="label">미매칭</span><span class="val purple">'+uc+'명</span></div><div class="stat-row"><span class="label">리뷰 매출</span><span class="val orange">'+$(rv.reduce((s,o)=>s+o.t,0))+' (5d:'+$(r5r)+' / 30d:'+$(r30r)+')</span></div><div class="stat-row"><span class="label">일반 주문</span><span class="val green">'+nr.length+'건 · '+$(nr.reduce((s,o)=>s+o.t,0))+'</span></div></div>';
+  document.getElementById('reviewTable').innerHTML=h;
+}
+
+function renderSubscriptions(){
+  var tS=activeSubs.length+cancelledSubs.length,rR=tS?Math.round(activeSubs.length/tS*100):0,cR=tS?Math.round(cancelledSubs.length/tS*100):0;
+  var aS=activeSubs.concat(cancelledSubs),tF=aS.filter(s=>s.cc<=1).length,tRn=aS.length-tF;
+  document.getElementById('subFunnel').innerHTML=
+    '<div class="card-title">구독 퍼널 <span class="ct-sub">ReCharge API</span></div><div class="funnel">'+
+    '<div class="funnel-step"><div class="step-count" style="color:var(--red)">'+tS+'</div><div><div class="step-label" style="color:var(--t1)">전체 구독</div><div style="font-size:13px;color:var(--t3);margin-top:2px">첫구독 '+tF+' · 재결제 '+tRn+'</div></div></div>'+
+    '<div class="funnel-step"><div class="step-count green">'+activeSubs.length+'</div><div><div class="step-label">현재 활성</div></div></div>'+
+    '<div class="funnel-step"><div class="step-count pink">'+cancelledSubs.length+'</div><div><div class="step-label">구독 취소</div></div></div></div>'+
+    '<div class="stats-box"><div class="stat-row"><span class="label">유지율</span><span class="val green">'+rR+'% ('+activeSubs.length+'/'+tS+')</span></div><div class="stat-row"><span class="label">이탈률</span><span class="val pink">'+cR+'% ('+cancelledSubs.length+'/'+tS+')</span></div><div class="stat-row"><span class="label">월 구독 매출</span><span class="val" style="color:var(--red)">$'+activeSubs.reduce((s,a)=>s+a.amt,0)+'/월</span></div></div>';
+  var sa=activeSubs.slice().sort((a,b)=>{if(!a.next_raw)return 1;if(!b.next_raw)return-1;return a.next_raw.localeCompare(b.next_raw)});
+  var fC=activeSubs.filter(s=>s.cc<=1).length,rC=activeSubs.length-fC;
+  var ah='<div class="card-title">활성 구독 <span class="ct-sub">'+activeSubs.length+'명 · <span style="color:var(--green)">첫 '+fC+'</span> · <span style="color:var(--purple)">재 '+rC+'</span></span></div><div class="table-wrap"><table><thead><tr><th>고객</th><th class="text-center">회차</th><th class="text-right">금액</th><th class="text-center">다음결제</th></tr></thead><tbody>';
+  sa.forEach(s=>{var nc='';if(s.next_raw){var du=Math.round((new Date(s.next_raw)-new Date())/86400000);if(du<=3)nc=' style="color:var(--pink);font-weight:600"';else if(du<=7)nc=' style="color:var(--orange)"'}var cb=s.cc<=1?'<span class="sub-badge-first">첫구독</span>':'<span class="sub-badge-nth">'+s.cc+'번째</span>';ah+='<tr><td style="color:var(--t1)">'+s.n+'</td><td class="text-center">'+cb+'</td><td class="text-right" style="color:var(--t1)">$'+s.amt+'</td><td class="text-center"'+nc+'>'+s.next+'</td></tr>'});
+  ah+='</tbody></table></div>';document.getElementById('subActive').innerHTML=ah;
+}
+
+function renderCancelled(){
+  var h='<table><thead><tr><th>고객명</th><th class="text-center">회차</th><th class="text-center">구독일</th><th class="text-center">취소일</th><th class="text-center">기간</th><th>사유</th></tr></thead><tbody>',tD=0,sD=0,lC=0,cF=0;
+  cancelledSubs.forEach(s=>{var d=s.days||0;tD+=d;if(!d)sD++;if(d>=30)lC++;if(s.cc<=1)cF++;var dt,dc;if(!d){dt='당일';dc='dur-short'}else if(d<30){dt=d+'일';dc='dur-mid'}else{dt=d+'일 ('+Math.round(d/30)+'개월)';dc='dur-long'}var cb=s.cc<=1?'<span class="sub-badge-first">첫구독</span>':'<span class="sub-badge-nth">'+s.cc+'번째</span>';var rs=(s.reason||'-').replace('I already have more than I need','충분').replace('This is too expensive','가격').replace('This was created by accident','실수').replace('I want to try a different product','다른제품').replace('Other reason','기타').replace('no reason','-');h+='<tr><td style="color:var(--t1)">'+s.n+'</td><td class="text-center">'+cb+'</td><td class="text-center" style="font-size:12px">'+(s.created||'-')+'</td><td class="text-center" style="font-size:12px">'+(s.cancelled||'-')+'</td><td class="text-center"><span class="dur-badge '+dc+'">'+dt+'</span></td><td style="font-size:12px;color:var(--t3)">'+rs+'</td></tr>'});
+  h+='</tbody></table>';document.getElementById('cancelledTable').innerHTML=h;document.getElementById('cancelBadge').textContent=cancelledSubs.length+'명';
+  var av=cancelledSubs.length?Math.round(tD/cancelledSubs.length):0;
+  document.getElementById('cancelStats').innerHTML='<div class="stat-row"><span class="label">평균 구독 기간</span><span class="val pink">'+av+'일</span></div><div class="stat-row"><span class="label">첫구독 취소</span><span class="val pink">'+cF+'명'+(cancelledSubs.length?' ('+Math.round(cF/cancelledSubs.length*100)+'%)':'')+'</span></div><div class="stat-row"><span class="label">당일 취소</span><span class="val pink">'+sD+'명'+(cancelledSubs.length?' ('+Math.round(sD/cancelledSubs.length*100)+'%)':'')+'</span></div><div class="stat-row"><span class="label">1개월+ 유지</span><span class="val orange">'+lC+'명</span></div>';
+}
+
+var AUTO_REFRESH_MS=300000,autoRefreshTimer=null;
+async function autoRefreshData(){try{var l=await loadData();if(l&&l.data.updated_at!==(DATA&&DATA.updated_at)){DATA=l.data;initMonths();render();updateStatus(l.source)}}catch(e){}}
+function startAutoRefresh(){if(autoRefreshTimer)clearInterval(autoRefreshTimer);autoRefreshTimer=setInterval(autoRefreshData,AUTO_REFRESH_MS)}
+
+(async function(){var l=await loadData(),o=document.getElementById('loadingOverlay');if(l){DATA=l.data;initMonths();render();updateStatus(l.source);o.classList.add('hidden');startAutoRefresh()}else{o.querySelector('span').textContent='데이터가 없습니다.';updateStatus(null)}})();
+
+/* Metric tile mouse-follow glow */
+document.addEventListener('mousemove',function(e){
+  document.querySelectorAll('.m-tile').forEach(function(tile){
+    var r=tile.getBoundingClientRect();
+    tile.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    tile.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+/* ═══ SVG Area Chart — Premium layered glass style ═══ */
+function buildLineChart(labels,datasets,opts){
+  opts=opts||{};
+  var W=opts.width||900,H=opts.height||300,padL=48,padR=16,padT=24,padB=40;
+  var cW=W-padL-padR,cH=H-padT-padB;
+  var allVals=[];datasets.forEach(function(ds){ds.data.forEach(function(v){allVals.push(v)})});
+  var maxV=Math.max.apply(null,allVals)||1;
+  var mag=Math.pow(10,Math.floor(Math.log10(maxV)));
+  maxV=Math.ceil(maxV/mag*1.2)*mag;
+  var n=labels.length;if(n<2)return'<div style="color:var(--t4);text-align:center;padding:30px">Insufficient data</div>';
+  function getX(i){return padL+(i/(n-1))*cW}
+  function getY(v){return padT+cH-(v/maxV)*cH}
+  function monotonePath(pts){
+    if(pts.length<2)return'M'+pts[0].x+','+pts[0].y;
+    var N=pts.length,dx=[],dy=[],m=[],tk=[];
+    for(var i=0;i<N-1;i++){dx[i]=pts[i+1].x-pts[i].x;dy[i]=pts[i+1].y-pts[i].y;m[i]=dx[i]?dy[i]/dx[i]:0}
+    tk[0]=m[0];
+    for(var i=1;i<N-1;i++){if(m[i-1]*m[i]<=0)tk[i]=0;else{var a=dx[i-1]+dx[i];tk[i]=3*a/((a+dx[i])/m[i-1]+(a+dx[i-1])/m[i])}}
+    tk[N-1]=m[N-2];
+    var d='M'+pts[0].x.toFixed(1)+','+pts[0].y.toFixed(1);
+    for(var i=0;i<N-1;i++){
+      var h=dx[i]/3;
+      d+=' C'+(pts[i].x+h).toFixed(1)+','+(pts[i].y+tk[i]*h).toFixed(1)+' '+(pts[i+1].x-h).toFixed(1)+','+(pts[i+1].y-tk[i+1]*h).toFixed(1)+' '+pts[i+1].x.toFixed(1)+','+pts[i+1].y.toFixed(1);
+    }
+    return d;
+  }
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">';
+  /* Defs — glow filters + gradients */
+  svg+='<defs>';
+  datasets.forEach(function(ds,di){
+    svg+='<filter id="glow_'+ds.id+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="'+(di===0?4:3)+'" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  });
+  svg+='</defs>';
+  /* Subtle grid — very faint */
+  var gs=4,baseY=padT+cH;
+  for(var g=1;g<=gs;g++){
+    var gv=Math.round(maxV/gs*g),gy=getY(gv);
+    svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(255,255,255,.07)" stroke-width="0.5" stroke-dasharray="3,4"/>';
+    svg+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" fill="rgba(255,255,255,.32)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">$'+(gv>=1000?(gv/1000).toFixed(1)+'k':gv)+'</text>';
+  }
+  svg+='<line x1="'+padL+'" y1="'+baseY+'" x2="'+(W-padR)+'" y2="'+baseY+'" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>';
+  /* X labels */
+  var ls=Math.max(1,Math.floor(n/9));
+  for(var i=0;i<n;i++){if(i%ls===0||i===n-1)svg+='<text x="'+getX(i)+'" y="'+(H-8)+'" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">'+labels[i]+'</text>'}
+  /* ── Area fills: soft vertical gradient fading to transparent ── */
+  var fillCfg=[
+    {top:.20,mid:.06,bot:0},
+    {top:.15,mid:.04,bot:0},
+    {top:.12,mid:.03,bot:0},
+    {top:.10,mid:.02,bot:0}
+  ];
+  for(var di=datasets.length-1;di>=0;di--){
+    var ds=datasets[di],fc=fillCfg[Math.min(di,fillCfg.length-1)];
+    var pts=[];for(var i=0;i<n;i++)pts.push({x:getX(i),y:getY(ds.data[i])});
+    var d=monotonePath(pts);
+    var areaD=d+' L'+pts[n-1].x+','+baseY+' L'+pts[0].x+','+baseY+' Z';
+    svg+='<defs><linearGradient id="ag_'+ds.id+'" x1="0" y1="0" x2="0" y2="1">';
+    svg+='<stop offset="0%" stop-color="'+ds.color+'" stop-opacity="'+fc.top+'"/>';
+    svg+='<stop offset="50%" stop-color="'+ds.color+'" stop-opacity="'+fc.mid+'"/>';
+    svg+='<stop offset="100%" stop-color="'+ds.color+'" stop-opacity="'+fc.bot+'"/>';
+    svg+='</linearGradient></defs>';
+    svg+='<path d="'+areaD+'" fill="url(#ag_'+ds.id+')" />';
+  }
+  /* ── Lines: thin with subtle glow ── */
+  for(var di=datasets.length-1;di>=0;di--){
+    var ds=datasets[di];
+    var pts=[];for(var i=0;i<n;i++)pts.push({x:getX(i),y:getY(ds.data[i])});
+    var d=monotonePath(pts);
+    var sw=di===0?1.5:1;
+    var lo=di===0?'.85':di===1?'.6':'.45';
+    /* Glow line underneath */
+    svg+='<path d="'+d+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(sw+2)+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+(parseFloat(lo)*.3).toFixed(2)+'" filter="url(#glow_'+ds.id+')"/>';
+    /* Main crisp line */
+    svg+='<path d="'+d+'" fill="none" stroke="'+ds.color+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+lo+'"/>';
+  }
+  svg+='</svg>';
+  var leg='<div class="line-chart-legend">';
+  datasets.forEach(function(ds){
+    leg+='<div class="line-chart-legend-item"><span class="line-chart-legend-dot" style="background:'+ds.color+'"></span>'+ds.label+'</div>';
+  });
+  leg+='</div>';
+  return'<div class="line-chart-container">'+svg+leg+'</div>';
+}
+
+/* ═══ Weekly Curve Chart ═══ */
+function renderWeeklyChart(f){
+  var w={};f.forEach(function(o){var s=getWeekSunday(o.d);if(!w[s])w[s]={shopify:0,tiktok_shop:0,amazon:0,total:0,net:0};var x=w[s];x[o.ch]=(x[o.ch]||0)+o.t;x.total+=o.t;if(o._rev)x.net-=o.t;});
+  Object.keys(w).forEach(function(k){w[k].net=w[k].total+w[k].net});
+  var sorted=Object.entries(w).sort(function(a,b){return a[0].localeCompare(b[0])});
+  if(sorted.length<2){document.getElementById('weeklyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">주간 데이터 부족</div>';return}
+  var labels=sorted.map(function(e){return fmtWeek(e[0]).replace(' ~ ','~')});
+  var datasets=[
+    {id:'wk_total',label:'Total',color:'#f5f5f7',data:sorted.map(function(e){return e[1].total})},
+    {id:'wk_shopify',label:'Shopify',color:'#30d158',data:sorted.map(function(e){return e[1].shopify})},
+    {id:'wk_amazon',label:'Amazon',color:'#ff9f0a',data:sorted.map(function(e){return e[1].amazon})},
+    {id:'wk_tiktok',label:'TikTok',color:'#ff375f',data:sorted.map(function(e){return e[1].tiktok_shop})}
+  ];
+  document.getElementById('weeklyChart').innerHTML=buildLineChart(labels,datasets);
+}
+
+/* ═══ Monthly Curve Chart ═══ */
+function renderMonthlyChart(){
+  var a=DATA.orders.filter(isValid),m={};
+  ALL_MONTHS.forEach(function(v){m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,net:0}});
+  a.forEach(function(o){var v=getMonth(o.d);if(!m[v])return;m[v][o.ch]=(m[v][o.ch]||0)+o.t;m[v].total+=o.t;if(isReview(o.c,o.ch))m[v].net-=o.t});
+  ALL_MONTHS.forEach(function(v){m[v].net=m[v].total+m[v].net});
+  if(ALL_MONTHS.length<2){document.getElementById('monthlyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">월간 데이터 부족</div>';return}
+  var labels=ALL_MONTHS.map(function(v){return fmtMon(v)});
+  var datasets=[
+    {id:'mo_total',label:'Total',color:'#f5f5f7',data:ALL_MONTHS.map(function(v){return m[v].total})},
+    {id:'mo_shopify',label:'Shopify',color:'#30d158',data:ALL_MONTHS.map(function(v){return m[v].shopify})},
+    {id:'mo_amazon',label:'Amazon',color:'#ff9f0a',data:ALL_MONTHS.map(function(v){return m[v].amazon})},
+    {id:'mo_tiktok',label:'TikTok',color:'#ff375f',data:ALL_MONTHS.map(function(v){return m[v].tiktok_shop})}
+  ];
+  document.getElementById('monthlyChart').innerHTML=buildLineChart(labels,datasets);
+}
+
+/* ═══ Buyer Detail Section ═══ */
+var _buyerData=[];
+function renderBuyerDetail(f){
+  _buyerData=f.map(function(o){return{name:o.c,ch:o.ch,gender:o.g||'U',kit:o._kit,total:o.t,date:o.d,state:o.st||'',rev:o._rev,sub:o._sub}});
+  /* Populate region filter */
+  var regions={},rSel=document.getElementById('buyerRegionFilter');
+  f.forEach(function(o){if(o.st)regions[o.st]=true});
+  var rOpts='<option value="">전체 지역</option>';
+  Object.keys(regions).sort().forEach(function(r){rOpts+='<option value="'+r+'">'+r+'</option>'});
+  rSel.innerHTML=rOpts;
+  filterBuyers();
+}
+function filterBuyers(){
+  var q=(document.getElementById('buyerSearch').value||'').toLowerCase().trim();
+  var chF=document.getElementById('buyerChFilter').value;
+  var gF=document.getElementById('buyerGenderFilter').value;
+  var kF=document.getElementById('buyerKitFilter').value;
+  var rF=document.getElementById('buyerRegionFilter').value;
+  var filtered=_buyerData.filter(function(b){
+    if(chF&&b.ch!==chF)return false;
+    if(gF&&b.gender!==gF)return false;
+    if(kF&&b.kit!==kF)return false;
+    if(rF&&b.state!==rF)return false;
+    if(q){
+      var searchStr=(b.name+' '+b.ch+' '+(b.gender==='F'?'여성':b.gender==='M'?'남성':'미식별')+' '+b.kit+' '+b.state+' '+b.date).toLowerCase();
+      if(searchStr.indexOf(q)<0)return false;
+    }
+    return true;
+  });
+  filtered.sort(function(a,b){return b.date.localeCompare(a.date)});
+  var gL={F:'여성',M:'남성',U:'미식별'};
+  document.getElementById('buyerBadge').textContent=filtered.length+'건 / 전체 '+_buyerData.length+'건';
+  document.getElementById('buyerResultCount').textContent='검색 결과: '+filtered.length+'건';
+  var h='<table><thead><tr><th>고객명</th><th class="text-center">채널</th><th class="text-center">제품</th><th class="text-center">성별</th><th class="text-center">지역</th><th class="text-right">금액</th><th class="text-center">날짜</th><th class="text-center">유형</th></tr></thead><tbody>';
+  filtered.slice(0,200).forEach(function(b){
+    var chColor=CH_COLORS[b.ch]||'var(--t3)';
+    var typeTag=b.rev?'<span class="badge-review">리뷰</span>':b.sub?'<span class="sub-badge-first">구독</span>':'<span style="font-size:11px;color:var(--t4)">일반</span>';
+    h+='<tr><td style="color:var(--t1)">'+b.name+'</td><td class="text-center" style="color:'+chColor+';font-size:12px;font-weight:500">'+CH_LABELS[b.ch]+'</td><td class="text-center"><span style="font-size:11px;font-weight:600;color:'+(b.kit==='5day'?'var(--red)':'var(--pink)')+'">'+b.kit+'</span></td><td class="text-center" style="color:'+(b.gender==='F'?'var(--pink)':b.gender==='M'?'var(--blue)':'var(--t4)')+'">'+gL[b.gender]+'</td><td class="text-center" style="font-size:12px;color:var(--t3)">'+(b.state||'-')+'</td><td class="text-right" style="color:var(--t1)">$'+b.total.toFixed(2)+'</td><td class="text-center" style="font-size:12px;color:var(--t3)">'+b.date.substring(5)+'</td><td class="text-center">'+typeTag+'</td></tr>';
+  });
+  if(filtered.length>200)h+='<tr><td colspan="8" style="text-align:center;color:var(--t4);padding:16px">상위 200건만 표시 (전체 '+filtered.length+'건)</td></tr>';
+  h+='</tbody></table>';
+  document.getElementById('buyerTable').innerHTML=h;
+}
+
+/* Count-up animation for dollar values and plain numbers */
+function animateCountUp(){
+  var els=document.querySelectorAll('.hero-kpi-value,.m-tile-value');
+  els.forEach(function(el){
+    var text=el.textContent.trim();
+    var match=text.match(/^\$?([\d,]+)/);
+    if(!match)return;
+    var target=parseInt(match[1].replace(/,/g,''));
+    if(isNaN(target)||target===0)return;
+    var prefix=text.startsWith('$')?'$':'';
+    var suffix=text.replace(/^\$?[\d,]+/,'');
+    var duration=900;
+    var startTime=null;
+    function easeOut(t){return 1-Math.pow(1-t,3)}
+    function step(ts){
+      if(!startTime)startTime=ts;
+      var p=Math.min((ts-startTime)/duration,1);
+      var val=Math.round(easeOut(p)*target);
+      el.textContent=prefix+val.toLocaleString()+suffix;
+      if(p<1)requestAnimationFrame(step);
+    }
+    el.textContent=prefix+'0'+suffix;
+    requestAnimationFrame(step);
+  });
+  /* Funnel step count-up */
+  document.querySelectorAll('.funnel-step .step-count').forEach(function(el){
+    var text=el.textContent.trim();
+    var target=parseInt(text.replace(/,/g,''));
+    if(isNaN(target)||target===0)return;
+    var duration=1000;
+    var startTime=null;
+    function easeOut(t){return 1-Math.pow(1-t,3)}
+    function step(ts){
+      if(!startTime)startTime=ts;
+      var p=Math.min((ts-startTime)/duration,1);
+      var val=Math.round(easeOut(p)*target);
+      el.textContent=val.toLocaleString();
+      if(p<1)requestAnimationFrame(step);
+    }
+    el.textContent='0';
+    requestAnimationFrame(step);
+  });
+}
+
+/* Animate bars/charts with IntersectionObserver — smooth spring easing */
+function animateCharts(){
+  var smoothEase='cubic-bezier(.16,1,.3,1)';
+  var allBars=document.querySelectorAll('.bar, .region-bar-fill');
+  allBars.forEach(function(bar){
+    var tw=bar.style.width;
+    if(!tw||tw==='0%'||tw==='0px')return;
+    bar.dataset.tw=tw;
+    bar.style.width='0%';
+  });
+  /* Stacked gender bars */
+  document.querySelectorAll('#genderChart div[style*="width:"]').forEach(function(seg){
+    var m=seg.style.width;
+    if(m&&m!=='0%'){seg.dataset.tw=m;seg.style.width='0%'}
+  });
+  /* Group bars by their parent card/section for per-section stagger */
+  function findSection(el){var p=el;while(p&&!p.classList.contains('card')&&!p.classList.contains('content-section')){p=p.parentElement}return p}
+  var sectionMap=new Map();
+  allBars.forEach(function(bar){
+    if(!bar.dataset.tw)return;
+    var sec=findSection(bar)||document.body;
+    if(!sectionMap.has(sec))sectionMap.set(sec,[]);
+    sectionMap.get(sec).push(bar);
+  });
+  /* Observe each section, stagger its bars */
+  sectionMap.forEach(function(bars,sec){
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          bars.forEach(function(bar,i){
+            setTimeout(function(){bar.style.width=bar.dataset.tw},i*90+50);
+          });
+          obs.unobserve(sec);
+        }
+      });
+    },{threshold:0.05});
+    obs.observe(sec);
+  });
+  /* Gender stacked bars */
+  var genderBars=[];
+  document.querySelectorAll('#genderChart div[style]').forEach(function(seg){
+    if(seg.dataset.tw){seg.style.transition='width 1.2s '+smoothEase;genderBars.push(seg)}
+  });
+  if(genderBars.length){
+    var gSec=document.getElementById('genderChart');
+    var obs4=new IntersectionObserver(function(e4){e4.forEach(function(en){
+      if(en.isIntersecting){genderBars.forEach(function(seg,i){setTimeout(function(){seg.style.width=seg.dataset.tw},i*100+100)});obs4.unobserve(gSec)}
+    })},{threshold:0.1});
+    obs4.observe(gSec);
+  }
+  /* Donut SVG smooth scale-in */
+  document.querySelectorAll('.donut-svg').forEach(function(svg){
+    svg.style.opacity='0';svg.style.transform='scale(.88)';svg.style.transition='opacity .8s '+smoothEase+', transform .8s '+smoothEase;
+    var obs2=new IntersectionObserver(function(e2){e2.forEach(function(en){if(en.isIntersecting){svg.style.opacity='1';svg.style.transform='scale(1)';obs2.unobserve(svg)}})},{threshold:0.15});
+    obs2.observe(svg);
+  });
+  /* Funnel steps smooth stagger */
+  document.querySelectorAll('.funnel-step').forEach(function(step,i){
+    step.style.opacity='0';step.style.transform='translateY(16px)';
+    step.style.transition='opacity .6s '+smoothEase+' '+(i*150+80)+'ms, transform .6s '+smoothEase+' '+(i*150+80)+'ms';
+    var obs3=new IntersectionObserver(function(e3){e3.forEach(function(en){if(en.isIntersecting){step.style.opacity='1';step.style.transform='translateY(0)';obs3.unobserve(step)}})},{threshold:0.15});
+    obs3.observe(step);
+  });
+}
+
+/* Run count-up + chart animations after render */
+var _origRender=render;
+render=function(){
+  _origRender.apply(this,arguments);
+  animateCountUp();
+  requestAnimationFrame(function(){animateCharts()});
+};
+</script>
+</body>
+</html>
