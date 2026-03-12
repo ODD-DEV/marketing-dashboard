@@ -1,6 +1,5 @@
 erp_config.json
 seen_orders.json
-address_cache.json
 data.json
 __pycache__/
 *.pyc
