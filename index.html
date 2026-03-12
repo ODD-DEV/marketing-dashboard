@@ -54,7 +54,7 @@ body{font-family:var(--sans);background:#000;color:var(--t2);line-height:1.55;fo
 .logo-img{height:18px;width:auto;object-fit:contain;display:block}
 .nav-title{font-size:12px;color:var(--t4);font-weight:400;padding-left:14px;border-left:1px solid rgba(255,255,255,.12);letter-spacing:.5px}
 .live-badge{font-size:7px;font-weight:600;color:var(--red);background:var(--red-dim);border:1px solid var(--red-border);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
-.nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4)}
+.nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4);white-space:nowrap;overflow:hidden;flex-shrink:1;min-width:0}
 .refresh-btn{padding:5px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--t3);cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;font-family:var(--sans)}
 .refresh-btn:hover{border-color:rgba(255,255,255,.3);color:var(--t1);background:rgba(255,255,255,.05)}
 .refresh-btn.loading{opacity:.3;pointer-events:none}
@@ -301,8 +301,16 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .hero-kpi-value{font-size:48px !important}
   .hero-kpi{padding:20px 12px 16px}
   main,.nav-inner{padding-left:12px;padding-right:12px}
+  .nav-inner{height:44px}
   .section-heading{font-size:20px}
   .nav-title{display:none}
+  .live-badge{display:none}
+  .nav-right #dataStatus{display:none}
+  .nav-right{gap:8px}
+  .refresh-btn{padding:4px 10px;font-size:10px;white-space:nowrap}
+  .tabs-area{padding-top:16px}
+  .month-tabs{gap:2px}
+  .month-tab{padding:6px 10px;font-size:11px}
   .buyer-filters{flex-direction:column}
   .buyer-search{min-width:auto}
   table{font-size:11px}
