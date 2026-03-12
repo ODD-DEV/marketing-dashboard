@@ -296,6 +296,10 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .summary-sticky.compact .m-tile-value{font-size:16px !important}
   .summary-sticky.compact .metric-tiles{grid-template-columns:repeat(3,1fr)}
 }
+.monthly-sticky-tbl{border-collapse:separate;border-spacing:0}
+.monthly-sticky-tbl thead th{position:sticky;top:0;z-index:2;background:#1d1d1f}
+.monthly-sticky-tbl thead th:first-child{position:sticky;left:0;z-index:3;background:#1d1d1f}
+.monthly-sticky-tbl tbody td:first-child{position:sticky;left:0;z-index:1;background:#1d1d1f;white-space:nowrap}
 @media(max-width:600px){
   .metric-tiles{grid-template-columns:repeat(2,1fr)}
   .hero-kpi-value{font-size:48px !important}
@@ -535,7 +539,7 @@ function renderWeekly(f){
 
 function renderMonthly(){
   var a=DATA.orders.filter(isValid),m={};ALL_MONTHS.forEach(v=>{m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,review:0,cnt:0}});a.forEach(o=>{var v=getMonth(o.d);if(!m[v])return;m[v][o.ch]=(m[v][o.ch]||0)+o.t;m[v].total+=o.t;m[v].cnt++;if(isReview(o.c,o.ch))m[v].review+=o.t});
-  var h='<table style="min-width:580px;width:100%"><thead><tr><th>월</th><th class="text-right">Shopify</th><th class="text-right">Amazon</th><th class="text-right">TikTok</th><th class="text-right">합계</th><th class="text-right">리뷰</th><th class="text-right">실매출</th><th class="text-center">건수</th></tr></thead><tbody>';
+  var h='<table class="monthly-sticky-tbl" style="min-width:580px;width:100%"><thead><tr><th>월</th><th class="text-right">Shopify</th><th class="text-right">Amazon</th><th class="text-right">TikTok</th><th class="text-right">합계</th><th class="text-right">리뷰</th><th class="text-right">실매출</th><th class="text-center">건수</th></tr></thead><tbody>';
   ALL_MONTHS.forEach(v=>{var d=m[v],ac=isAllMode||selectedMonths.has(v);h+='<tr style="'+(ac?'background:rgba(255,255,255,.03)':'opacity:.35')+'"><td style="font-weight:'+(ac?600:400)+';color:'+(ac?'var(--t1)':'var(--t4)')+'">'+fmtMon(v)+'</td><td class="text-right green">'+(d.shopify?$(d.shopify):'-')+'</td><td class="text-right orange">'+(d.amazon?$(d.amazon):'-')+'</td><td class="text-right pink">'+(d.tiktok_shop?$(d.tiktok_shop):'-')+'</td><td class="text-right" style="font-weight:600;color:var(--t1)">'+$(d.total)+'</td><td class="text-right" style="color:var(--orange)">'+(d.review?'-'+$(d.review):'-')+'</td><td class="text-right green">'+$(d.total-d.review)+'</td><td class="text-center" style="color:var(--t3)">'+d.cnt+'</td></tr>'});
   h+='</tbody></table>';document.getElementById('monthlyTable').innerHTML=h;
 }
