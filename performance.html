@@ -174,7 +174,9 @@
     white-space: nowrap;
   }
   @media (max-width: 768px) {
-    .dp-weeks { display: none; }
+    .date-picker-bar { flex-wrap: wrap; }
+    .dp-weeks { display: flex; flex-wrap: wrap; gap: 3px; margin-left: 0; width: 100%; margin-top: 8px; }
+    .dp-week { padding: 4px 10px; font-size: 10px; }
     .dp-range-label { display: none; }
   }
 
