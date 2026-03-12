@@ -194,6 +194,7 @@
   }
   .kpi-card:hover { background: #2c2c2e; }
   .kpi-label { font-size: 11px; color: var(--t4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+  .kpi-label.kpi-accent { opacity: .65; }
   .kpi-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; color: var(--t1); letter-spacing: -.5px; }
   .kpi-sub { font-size: 12px; color: var(--t3); }
 
@@ -421,6 +422,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="data.js"></script>
 </head>
 <body>
 
@@ -1180,6 +1182,36 @@ const WEEK_RANGES = [
   { label: 'W5', start: '3/8', end: '3/14' }
 ];
 
+// Week date ranges for matching sales data (2026 year)
+const WEEK_DATE_RANGES = [
+  { start: new Date(2026,1,8), end: new Date(2026,1,14,23,59,59) },
+  { start: new Date(2026,1,15), end: new Date(2026,1,21,23,59,59) },
+  { start: new Date(2026,1,22), end: new Date(2026,1,28,23,59,59) },
+  { start: new Date(2026,2,1), end: new Date(2026,2,7,23,59,59) },
+  { start: new Date(2026,2,8), end: new Date(2026,2,14,23,59,59) }
+];
+
+function getSalesWeeklyRevenue() {
+  var rev = [0,0,0,0,0];
+  if (typeof EMBEDDED_DATA === 'undefined' || !EMBEDDED_DATA.orders) return rev;
+  EMBEDDED_DATA.orders.forEach(function(o) {
+    if (o.s === 'cancel' || !o.d || !o.t) return;
+    var d = new Date(o.d + 'T00:00:00');
+    for (var i = 0; i < WEEK_DATE_RANGES.length; i++) {
+      if (d >= WEEK_DATE_RANGES[i].start && d <= WEEK_DATE_RANGES[i].end) {
+        rev[i] += o.t;
+        break;
+      }
+    }
+  });
+  return rev;
+}
+
+function getSelectedSalesRevenue() {
+  var rev = getSalesWeeklyRevenue();
+  return selectedWeeks.reduce(function(s, wi) { return s + rev[wi]; }, 0);
+}
+
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.view-toggle').forEach(v => v.classList.remove('active'));
@@ -1596,27 +1628,27 @@ function updateOverviewForPeriod() {
   const cpc = metaClicks > 0 ? (metaSpend / metaClicks) : 0;
 
   const kpis = document.querySelectorAll('#tab-overview .kpi-card');
-  if (kpis[0]) { kpis[0].querySelector('.kpi-label').textContent = 'Spend'; kpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(totalSpend)); kpis[0].querySelector('.kpi-sub').textContent = 'Meta $' + fn(Math.round(metaSpend)) + ' · TikTok $' + fn(Math.round(tkSpend)); }
-  if (kpis[1]) { kpis[1].querySelector('.kpi-label').textContent = 'Views'; const totalViews = metaViews + tkViews; kpis[1].querySelector('.kpi-value').textContent = totalViews >= 1000 ? fn(Math.round(totalViews/1000)) + 'K' : fn(Math.round(totalViews)); kpis[1].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaViews/1000)) + 'K · TikTok ' + fn(Math.round(tkViews/1000)) + 'K'; }
-  if (kpis[2]) { kpis[2].querySelector('.kpi-label').textContent = 'Clicks'; kpis[2].querySelector('.kpi-value').textContent = fn(Math.round(metaClicks)); kpis[2].querySelector('.kpi-sub').textContent = 'Avg CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—') + ' (Meta)'; }
-  if (kpis[3]) { kpis[3].querySelector('.kpi-label').textContent = 'Profile Visits'; kpis[3].querySelector('.kpi-value').textContent = fn(Math.round(metaPV + tkPV)); kpis[3].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaPV)) + ' · TikTok ' + fn(Math.round(tkPV)); }
-  if (kpis[4]) { kpis[4].querySelector('.kpi-label').textContent = 'Follows'; kpis[4].querySelector('.kpi-value').textContent = fn(Math.round(metaFollows + tkFollows)); kpis[4].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaFollows)) + ' · TikTok ' + fn(Math.round(tkFollows)); }
-  if (kpis[5]) { kpis[5].querySelector('.kpi-label').textContent = 'Avg CTR'; kpis[5].querySelector('.kpi-value').textContent = ctr.toFixed(1) + '%'; kpis[5].querySelector('.kpi-sub').textContent = 'Meta 기준'; }
+  if (kpis[0]) { kpis[0].querySelector('.kpi-label').textContent = 'Spend'; kpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(totalSpend)); kpis[0].querySelector('.kpi-sub').textContent = 'Meta $' + fn(Math.round(metaSpend)) + ' · TikTok $' + fn(Math.round(tkSpend)); kpis[0].querySelector('.kpi-value').style.color = ''; kpis[0].querySelector('.kpi-label').style.color = ''; kpis[0].querySelector('.kpi-label').classList.remove('kpi-accent'); }
+  if (kpis[1]) { kpis[1].querySelector('.kpi-label').textContent = 'Views'; const totalViews = metaViews + tkViews; kpis[1].querySelector('.kpi-value').textContent = totalViews >= 1000 ? fn(Math.round(totalViews/1000)) + 'K' : fn(Math.round(totalViews)); kpis[1].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaViews/1000)) + 'K · TikTok ' + fn(Math.round(tkViews/1000)) + 'K'; kpis[1].querySelector('.kpi-value').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[2]) { kpis[2].querySelector('.kpi-label').textContent = 'Clicks'; kpis[2].querySelector('.kpi-value').textContent = fn(Math.round(metaClicks)); kpis[2].querySelector('.kpi-sub').textContent = 'Avg CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—') + ' (Meta)'; kpis[2].querySelector('.kpi-value').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[3]) { kpis[3].querySelector('.kpi-label').textContent = 'Profile Visits'; kpis[3].querySelector('.kpi-value').textContent = fn(Math.round(metaPV + tkPV)); kpis[3].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaPV)) + ' · TikTok ' + fn(Math.round(tkPV)); kpis[3].querySelector('.kpi-value').style.color = ''; kpis[3].querySelector('.kpi-label').style.color = ''; kpis[3].querySelector('.kpi-label').classList.remove('kpi-accent'); }
+  if (kpis[4]) { kpis[4].querySelector('.kpi-label').textContent = 'Follows'; kpis[4].querySelector('.kpi-value').textContent = fn(Math.round(metaFollows + tkFollows)); kpis[4].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaFollows)) + ' · TikTok ' + fn(Math.round(tkFollows)); kpis[4].querySelector('.kpi-value').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[5]) { kpis[5].querySelector('.kpi-label').textContent = 'Avg CTR'; kpis[5].querySelector('.kpi-value').textContent = ctr.toFixed(1) + '%'; kpis[5].querySelector('.kpi-sub').textContent = 'Meta 기준'; kpis[5].querySelector('.kpi-value').style.color = 'var(--orange)'; kpis[5].querySelector('.kpi-label').style.color = 'var(--orange)'; kpis[5].querySelector('.kpi-label').classList.add('kpi-accent'); }
 
-  // ROAS — Revenue / Ad Spend (revenue data from Purchase row if available)
-  var totalRevenue = getSelectedSum(ms['Purchase value'] || ms['Revenue'] || ms['Purchase']) + getSelectedSum(ts['Purchase value'] || ts['Revenue'] || ts['Purchase']);
+  // ROAS — Sales Dashboard Revenue / Ad Spend
+  var totalRevenue = getSelectedSalesRevenue();
   var roas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(2) : '—';
-  if (kpis[6]) { kpis[6].querySelector('.kpi-label').textContent = 'ROAS'; kpis[6].querySelector('.kpi-value').textContent = totalRevenue > 0 ? roas + 'x' : '—'; kpis[6].querySelector('.kpi-sub').textContent = totalRevenue > 0 ? 'Revenue $' + fn(Math.round(totalRevenue)) : 'Revenue data pending'; }
+  if (kpis[6]) { kpis[6].querySelector('.kpi-label').textContent = 'ROAS'; kpis[6].querySelector('.kpi-value').textContent = totalRevenue > 0 ? roas + 'x' : '—'; kpis[6].querySelector('.kpi-sub').textContent = totalRevenue > 0 ? 'Revenue $' + fn(Math.round(totalRevenue)) + ' (Sales)' : 'Revenue data pending'; kpis[6].querySelector('.kpi-value').style.color = 'var(--red)'; kpis[6].querySelector('.kpi-label').style.color = 'var(--red)'; kpis[6].querySelector('.kpi-label').classList.add('kpi-accent'); }
 
   // CPM — Cost per 1K views
   var totalViews2 = metaViews + tkViews;
   var cpm = totalViews2 > 0 ? (totalSpend / totalViews2 * 1000) : 0;
-  if (kpis[7]) { kpis[7].querySelector('.kpi-label').textContent = 'CPM'; kpis[7].querySelector('.kpi-value').textContent = cpm > 0 ? '$' + cpm.toFixed(2) : '—'; kpis[7].querySelector('.kpi-sub').textContent = 'Cost per 1K views'; }
+  if (kpis[7]) { kpis[7].querySelector('.kpi-label').textContent = 'CPM'; kpis[7].querySelector('.kpi-value').textContent = cpm > 0 ? '$' + cpm.toFixed(2) : '—'; kpis[7].querySelector('.kpi-sub').textContent = 'Cost per 1K views'; kpis[7].querySelector('.kpi-value').style.color = ''; kpis[7].querySelector('.kpi-label').style.color = ''; kpis[7].querySelector('.kpi-label').classList.remove('kpi-accent'); }
 
   // Follow CPA — Spend / Follows
   var totalFollows = metaFollows + tkFollows;
   var followCPA = totalFollows > 0 ? (totalSpend / totalFollows) : 0;
-  if (kpis[8]) { kpis[8].querySelector('.kpi-label').textContent = 'Follow CPA'; kpis[8].querySelector('.kpi-value').textContent = followCPA > 0 ? '$' + followCPA.toFixed(2) : '—'; kpis[8].querySelector('.kpi-sub').textContent = 'Spend / Follows'; }
+  if (kpis[8]) { kpis[8].querySelector('.kpi-label').textContent = 'Follow CPA'; kpis[8].querySelector('.kpi-value').textContent = followCPA > 0 ? '$' + followCPA.toFixed(2) : '—'; kpis[8].querySelector('.kpi-sub').textContent = 'Spend / Follows'; kpis[8].querySelector('.kpi-value').style.color = 'var(--purple)'; kpis[8].querySelector('.kpi-label').style.color = 'var(--purple)'; kpis[8].querySelector('.kpi-label').classList.add('kpi-accent'); }
 
   // Re-render SVG charts with live data
   if (S.metaSum && S.metaSum['Expense']) {

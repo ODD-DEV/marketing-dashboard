@@ -99,7 +99,7 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 .hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400}
 
 /* ═══ Metric Tiles — Apple feature grid ═══ */
-.metric-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
+.metric-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
 .m-tile{background:var(--bg-raised);padding:32px 24px;transition:all .35s var(--ease);position:relative;cursor:default}
 .m-tile::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(191,32,38,.08) 0%,transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
 .m-tile:hover{background:#2c2c2e}
@@ -384,7 +384,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
     </div>
   </section>
 
-  <section class="content-section">
+  <section class="content-section" id="subSection">
     <div class="section-tag">Subscriptions</div>
     <h2 class="section-heading">구독 트래킹</h2>
     <div class="two-col" style="margin-bottom:24px">
@@ -432,7 +432,9 @@ const CH_LABELS={shopify:"Shopify (D2C)",tiktok_shop:"TikTok",amazon:"Amazon"};
 const CH_COLORS={shopify:"#30d158",tiktok_shop:"#ff375f",amazon:"#ff9f0a"};
 var activeSubs=[],cancelledSubs=[],subNameList=[],subCcMap={};
 
-function loadSubscriptionData(){if(!DATA)return;var rawActive=(DATA.recharge_active||[]).map(s=>({n:s.n,amt:s.amt,next:s.next,email:s.email||'',next_raw:s.next_raw||'',created:s.created||'',cc:s.cc||1}));cancelledSubs=(DATA.recharge_cancelled||[]).map(s=>({n:s.n,email:s.email||'',reason:s.reason||'',created:s.created||'',cancelled:s.cancelled||'',days:s.days||0,cc:s.cc||1}));activeSubs=[];rawActive.forEach(s=>{if(!s.next||s.next==='-'||s.next===''){cancelledSubs.push({n:s.n,email:s.email,reason:'다음 결제일 없음',created:s.created,cancelled:'',days:0,cc:s.cc})}else{activeSubs.push(s)}});subNameList=[];subCcMap={};[...activeSubs,...cancelledSubs].forEach(s=>{var k=s.n.toLowerCase().trim();subNameList.push(k);subCcMap[k]=s.cc})}
+function loadSubscriptionData(){if(!DATA)return;var rawActive=(DATA.recharge_active||[]).map(s=>({n:s.n,amt:s.amt,next:s.next,email:s.email||'',next_raw:s.next_raw||'',created:s.created||'',cc:s.cc||1}));cancelledSubs=(DATA.recharge_cancelled||[]).map(s=>({n:s.n,email:s.email||'',reason:s.reason||'',created:s.created||'',cancelled:s.cancelled||'',days:s.days||0,cc:s.cc||1}));activeSubs=[];rawActive.forEach(s=>{if(!s.next||s.next==='-'||s.next===''){cancelledSubs.push({n:s.n,email:s.email,reason:'다음 결제일 없음',created:s.created,cancelled:'',days:0,cc:s.cc})}else{activeSubs.push(s)}});subNameList=[];subCcMap={};[...activeSubs,...cancelledSubs].forEach(s=>{var k=s.n.toLowerCase().trim();subNameList.push(k);subCcMap[k]=s.cc});
+// Infer cc from ERP order history
+if(DATA.orders){var orderCounts={};DATA.orders.forEach(function(o){if(o.s==='cancel'||o.t<80||o.ch!=='shopify')return;var name=o.c.toLowerCase().trim();for(var sn in subCcMap){if(name===sn||fuzzyNameMatch(name,[sn])){orderCounts[sn]=(orderCounts[sn]||0)+1;break}}});for(var sn in orderCounts){if(orderCounts[sn]>subCcMap[sn])subCcMap[sn]=orderCounts[sn]}activeSubs.forEach(function(s){var k=s.n.toLowerCase().trim();if(subCcMap[k])s.cc=subCcMap[k]});cancelledSubs.forEach(function(s){var k=s.n.toLowerCase().trim();if(subCcMap[k])s.cc=subCcMap[k]})}}
 function getKit(p){return p<80?'5day':'30day'}
 function levenshtein(a,b){var m=a.length,n=b.length;if(!m)return n;if(!n)return m;var p=[],c=[];for(var j=0;j<=n;j++)p[j]=j;for(var i=1;i<=m;i++){c[0]=i;for(var j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));var t=p;p=c;c=t}return p[n]}
 function fuzzyNameMatch(name,nameList){var lower=name.toLowerCase().trim().replace(/\s+/g,' ');var oP=lower.split(' ');return nameList.some(function(rn){var rP=rn.split(' ');if(lower===rn)return true;if(rP.length>=2&&lower.indexOf(rP[0])>=0&&lower.indexOf(rP[rP.length-1])>=0)return true;if(oP.length>=2&&rn.indexOf(oP[0])>=0&&rn.indexOf(oP[oP.length-1])>=0)return true;if(oP.length===1&&oP[0].length>=3&&rP[0]===oP[0])return true;if(oP.length>=2&&rP.length>=2){var oF=oP[0],rF=rP[0],oL=oP[oP.length-1],rL=rP[rP.length-1];if(oF===rF&&oL.length>=3&&rL.length>=3&&oL.substring(0,3)===rL.substring(0,3))return true;if(oF.length>=3&&rF.length>=3&&oF.substring(0,3)===rF.substring(0,3)&&oL===rL)return true;if(oL===rL&&oL.length>=5)return true;if(oF.length>=3&&rF.length>=3&&oL.length>=3&&rL.length>=3&&oL.substring(0,3)===rL.substring(0,3)&&levenshtein(oF,rF)<=2)return true;if(oF===rF&&oL.length>=4&&rL.length>=4&&levenshtein(oL,rL)<=2)return true}if(oP.length===1&&oP[0].length>=4&&rP[0].length>=4&&levenshtein(oP[0],rP[0])<=2)return true;return false})}
@@ -486,7 +488,8 @@ function renderSummary(st,gT,gC,tRR,tRC,rT,t5,t30,tSC){
     '<div class="m-tile" style="cursor:pointer" onclick="location.href=\'shopify.html\'"><div class="m-tile-label">Shopify</div><div class="m-tile-value" style="color:var(--green)">'+$(sh.rev)+'</div><div class="m-tile-sub">'+sh.cnt+'건 · 5d:'+sh.k5.cnt+' 30d:'+sh.k30.cnt+(shS?' · 구독:<b>'+shS+'</b>':'')+'</div></div>'+
     '<div class="m-tile" style="cursor:pointer" onclick="location.href=\'amazon.html\'"><div class="m-tile-label">Amazon</div><div class="m-tile-value" style="color:var(--orange)">'+$(am.rev)+'</div><div class="m-tile-sub">'+am.cnt+'건 · 5d:'+am.k5.cnt+' 30d:'+am.k30.cnt+(aR?' · 리뷰:<b>'+aR+'</b>':'')+'</div></div>'+
     '<div class="m-tile" style="cursor:pointer" onclick="location.href=\'tiktok.html\'"><div class="m-tile-label">TikTok</div><div class="m-tile-value" style="color:var(--pink)">'+$(tt.rev)+'</div><div class="m-tile-sub">'+tt.cnt+'건 · 5d:'+tt.k5.cnt+' 30d:'+tt.k30.cnt+(tR?' · 리뷰:<b>'+tR+'</b>':'')+'</div></div>'+
-    '<div class="m-tile"><div class="m-tile-label" style="color:var(--red)">활성 구독</div><div class="m-tile-value" style="color:var(--red)">'+activeSubs.length+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">명</span></div><div class="m-tile-sub">$'+activeSubs.reduce((s,a)=>s+a.amt,0)+'/월 · 취소 '+filteredCancel.length+'명</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">판매건수</div><div class="m-tile-value" style="color:var(--t1)">'+gC+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">5day '+t5.cnt+' · 30day '+t30.cnt+'</div></div>'+
+    '<div class="m-tile" style="cursor:pointer" onclick="document.getElementById(\'subSection\').scrollIntoView({behavior:\'smooth\',block:\'start\'})"><div class="m-tile-label" style="color:var(--red)">활성 구독</div><div class="m-tile-value" style="color:var(--red)">'+activeSubs.length+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">명</span></div><div class="m-tile-sub">$'+activeSubs.reduce((s,a)=>s+a.amt,0)+'/월 · 취소 '+filteredCancel.length+'명</div></div>'+
     '</div>';
 }
 
