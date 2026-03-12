@@ -274,10 +274,10 @@ tr:hover td{background:rgba(255,255,255,.03)}
 /* ═══ Footer ═══ */
 .footer-text{text-align:center;padding:48px 0 32px;color:var(--t5);font-size:12px;letter-spacing:.3px}
 
-.dash-switcher{display:flex;background:rgba(255,255,255,.06);border-radius:100px;padding:2px;margin-left:16px;border:1px solid rgba(255,255,255,.08)}
-.dash-switch{padding:5px 16px;border-radius:100px;font-size:12px;font-weight:600;color:var(--t4);text-decoration:none;transition:all .2s;letter-spacing:.3px}
+.dash-switcher{display:flex;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:100px;padding:2px;margin-left:16px;border:1px solid rgba(255,255,255,.1);position:relative;touch-action:pan-x}
+.dash-switch{padding:5px 16px;border-radius:100px;font-size:12px;font-weight:600;color:var(--t4);text-decoration:none;transition:all .2s;letter-spacing:.3px;-webkit-user-select:none;user-select:none}
 .dash-switch:hover{color:var(--t2)}
-.dash-switch.active{background:var(--red);color:#fff}
+.dash-switch.active{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(191,32,38,.3)}
 
 .chart-hover-dot:hover~.chart-dot-visible[data-idx]{opacity:.8}
 
@@ -533,7 +533,25 @@ function toggleMonthlyView(){var ch=document.getElementById('monthlyChart'),tb=d
 function toggleReview(){var e=document.getElementById('reviewWrap'),t=document.getElementById('reviewToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='▾ 접기'}else{e.style.display='none';t.innerHTML='▸ 펼치기'}}
 var isAllMode=true;
 function initMonths(){var m={};DATA.orders.forEach(o=>{if(o.d)m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().forEach(v=>ALL_MONTHS.push(v));isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
-function renderMonthTabs(){var c=document.getElementById('monthTabs'),h='<button class="month-tab all-tab '+(isAllMode?'active':'')+'" data-m="all">전체</button>';ALL_MONTHS.forEach(m=>{var a=!isAllMode&&selectedMonths.has(m);h+='<button class="month-tab '+(a?'active':'')+'" data-m="'+m+'">'+fmtMon(m)+'</button>'});c.innerHTML=h;c.querySelectorAll('.month-tab').forEach(b=>{b.addEventListener('click',()=>{var m=b.dataset.m;if(m==='all'){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}else{isAllMode=false;selectedMonths=new Set([m])}selectedWeek=null;renderMonthTabs();renderWeekTabs();render()})});var act=c.querySelector('.month-tab.active');if(act)act.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
+function renderMonthTabs(){var c=document.getElementById('monthTabs'),h='<button class="month-tab all-tab '+(isAllMode?'active':'')+'" data-m="all">전체</button>';ALL_MONTHS.forEach(m=>{var a=!isAllMode&&selectedMonths.has(m);h+='<button class="month-tab '+(a?'active':'')+'" data-m="'+m+'">'+fmtMon(m)+'</button>'});c.innerHTML=h;
+var _isDrag=false,_startX=0;
+c.addEventListener('pointerdown',function(e){_isDrag=false;_startX=e.clientX});
+c.addEventListener('pointermove',function(e){if(Math.abs(e.clientX-_startX)>10)_isDrag=true});
+c.querySelectorAll('.month-tab').forEach(b=>{
+b.addEventListener('pointerup',function(e){
+var m=b.dataset.m;
+if(_isDrag){
+  // Drag = single select
+  if(m==='all'){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}
+  else{isAllMode=false;selectedMonths=new Set([m])}
+}else{
+  // Click = toggle multi-select
+  if(m==='all'){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}
+  else{if(isAllMode){isAllMode=false;selectedMonths=new Set([m])}
+  else{if(selectedMonths.has(m)){selectedMonths.delete(m);if(!selectedMonths.size){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}}else selectedMonths.add(m)}}
+}
+selectedWeek=null;renderMonthTabs();renderWeekTabs();render()})});
+var act=c.querySelector('.month-tab.active');if(act)act.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
 function getWeeksInMonth(ym){var w={};DATA.orders.forEach(o=>{if(o.d&&isValid(o)&&getMonth(o.d)===ym){var s=getWeekSunday(o.d);w[s]=(w[s]||0)+1}});return Object.keys(w).sort()}
 function renderWeekTabs(){var c=document.getElementById('weekTabs');if(selectedMonths.size!==1){c.innerHTML='';selectedWeek=null;return}var mo=Array.from(selectedMonths)[0],wk=getWeeksInMonth(mo);if(!wk.length){c.innerHTML='';return}var h='<span style="font-size:11px;color:var(--t4);letter-spacing:.5px;font-weight:600;margin-right:4px">주간:</span><button class="week-tab '+(!selectedWeek?'active':'')+'" data-w="all">전체</button>';wk.forEach(w=>{h+='<button class="week-tab '+(selectedWeek===w?'active':'')+'" data-w="'+w+'">'+fmtWeek(w)+'</button>'});c.innerHTML=h;c.querySelectorAll('.week-tab').forEach(b=>{b.addEventListener('click',()=>{var w=b.dataset.w;selectedWeek=(w==='all'||selectedWeek===w)?null:w;renderWeekTabs();render()})})}
 function getFiltered(){return DATA.orders.filter(o=>isValid(o)&&selectedMonths.has(getMonth(o.d))&&(!selectedWeek||getWeekSunday(o.d)===selectedWeek))}
@@ -739,6 +757,22 @@ async function autoRefreshData(){try{var l=await loadData();if(l&&l.data.updated
 function startAutoRefresh(){if(autoRefreshTimer)clearInterval(autoRefreshTimer);autoRefreshTimer=setInterval(autoRefreshData,AUTO_REFRESH_MS)}
 
 (async function(){var l=await loadData(),o=document.getElementById('loadingOverlay');if(l){DATA=l.data;initMonths();render();updateStatus(l.source);o.classList.add('hidden');startAutoRefresh()}else{o.querySelector('span').textContent='데이터가 없습니다.';updateStatus(null)}})();
+
+/* Dash switcher drag */
+(function(){
+  var sw=document.querySelector('.dash-switcher');
+  if(!sw)return;
+  var links=sw.querySelectorAll('.dash-switch');
+  var startX=0,dragged=false;
+  sw.addEventListener('pointerdown',function(e){startX=e.clientX;dragged=false});
+  sw.addEventListener('pointermove',function(e){if(Math.abs(e.clientX-startX)>15)dragged=true});
+  sw.addEventListener('pointerup',function(e){
+    if(!dragged)return;
+    var dx=e.clientX-startX;
+    if(dx>15&&links[1])links[1].click();
+    else if(dx<-15&&links[0])links[0].click();
+  });
+})();
 
 /* Metric tile mouse-follow glow */
 document.addEventListener('mousemove',function(e){
