@@ -11,6 +11,7 @@ import json
 import os
 import re
 import ssl
+import time
 import urllib.request
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -19,6 +20,30 @@ from pathlib import Path
 
 DIR = Path(__file__).parent.parent  # repo root
 ADDR_CACHE_PATH = DIR / "address_cache.json"
+SSL_CTX = ssl.create_default_context()
+
+
+def http_request(url, data=None, headers=None, retries=3, timeout=60):
+    """HTTP request with retry logic for transient errors (502, 503, 504, timeouts)."""
+    headers = headers or {}
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, data=data, headers=headers)
+            return urllib.request.urlopen(req, context=SSL_CTX, timeout=timeout)
+        except urllib.error.HTTPError as e:
+            if e.code in (502, 503, 504) and attempt < retries - 1:
+                wait = (attempt + 1) * 10
+                print(f"[RETRY] HTTP {e.code} on {url}, retrying in {wait}s... ({attempt+1}/{retries})")
+                time.sleep(wait)
+                continue
+            raise
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt < retries - 1:
+                wait = (attempt + 1) * 10
+                print(f"[RETRY] {e} on {url}, retrying in {wait}s... ({attempt+1}/{retries})")
+                time.sleep(wait)
+                continue
+            raise
 
 
 def load_config():
@@ -42,9 +67,7 @@ def erp_authenticate(config):
         "jsonrpc": "2.0", "id": 1, "method": "call",
         "params": {"db": config["erp_db"], "login": config["erp_login"], "password": config["erp_password"]}
     }).encode()
-    req = urllib.request.Request(f"{config['erp_url']}/web/session/authenticate", data=data, headers={"Content-Type": "application/json"})
-    ctx = ssl.create_default_context()
-    resp = urllib.request.urlopen(req, context=ctx)
+    resp = http_request(f"{config['erp_url']}/web/session/authenticate", data=data, headers={"Content-Type": "application/json"})
     cookie_header = resp.headers.get_all("Set-Cookie") or []
     session_id = None
     for cookie in cookie_header:
@@ -63,9 +86,7 @@ def erp_authenticate(config):
 
 def erp_rpc(config, session_id, model, method, args, kwargs):
     data = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "call", "params": {"model": model, "method": method, "args": args, "kwargs": kwargs}}).encode()
-    req = urllib.request.Request(f"{config['erp_url']}/web/dataset/call_kw/{model}/{method}", data=data, headers={"Content-Type": "application/json", "Cookie": f"session_id={session_id}"})
-    ctx = ssl.create_default_context()
-    resp = urllib.request.urlopen(req, context=ctx)
+    resp = http_request(f"{config['erp_url']}/web/dataset/call_kw/{model}/{method}", data=data, headers={"Content-Type": "application/json", "Cookie": f"session_id={session_id}"})
     result = json.loads(resp.read())
     if "error" in result:
         raise Exception(result["error"].get("data", {}).get("message", "RPC Error"))
@@ -138,9 +159,7 @@ def normalize_state_name(raw_state):
 
 def _scrape_order_address(erp_url, session_id, order_id, order_name):
     try:
-        ctx = ssl.create_default_context()
-        req = urllib.request.Request(f"{erp_url}/my/orders/{order_id}", headers={"Cookie": f"session_id={session_id}"})
-        resp = urllib.request.urlopen(req, context=ctx, timeout=15)
+        resp = http_request(f"{erp_url}/my/orders/{order_id}", headers={"Cookie": f"session_id={session_id}"}, timeout=15)
         html = resp.read().decode("utf-8")
         addr_blocks = re.findall(r'<address[^>]*>(.*?)</address>', html, re.DOTALL)
         if len(addr_blocks) < 2:
@@ -262,14 +281,12 @@ def fetch_google_sheet_names(config):
     tiktok_entries = 0
     sheet_id = config.get("google_sheet_id", "")
     gids = config.get("google_sheet_gids", {})
-    ctx = ssl.create_default_context()
     skip_words = {"이름", "remove", "price", "odd", "상품명", "신청자수", "리뷰완료수", "추가", "starter-kit", "refill-pack", "product name", "need more", "new:", "will join", "-> already"}
     for tab, gid in gids.items():
         is_amazon = "amazon" in tab.lower()
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
         try:
-            req = urllib.request.Request(url)
-            resp = urllib.request.urlopen(req, context=ctx)
+            resp = http_request(url)
             csv_text = resp.read().decode("utf-8")
             rows = [parse_csv_row(line) for line in csv_text.split("\n")]
             name_groups = []
@@ -329,13 +346,11 @@ def fetch_recharge_subscriptions(config):
     if not token:
         print("[RECHARGE] No API token, skipping")
         return {"active": [], "cancelled": []}
-    ctx = ssl.create_default_context()
     base = "https://api.rechargeapps.com"
     headers = {"X-Recharge-Access-Token": token}
 
     def rc_get(endpoint):
-        req = urllib.request.Request(f"{base}{endpoint}", headers=headers)
-        resp = urllib.request.urlopen(req, context=ctx)
+        resp = http_request(f"{base}{endpoint}", headers=headers)
         return json.loads(resp.read())
 
     customers = {}
