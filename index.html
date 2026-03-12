@@ -321,10 +321,22 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .tabs-area{padding-top:16px}
   .month-tabs{gap:2px}
   .month-tab{padding:6px 10px;font-size:11px}
-  .buyer-filters{flex-direction:column}
-  .buyer-search{min-width:auto}
+  .buyer-filters{flex-direction:row;flex-wrap:nowrap;gap:6px}
+  .buyer-search{min-width:0;flex:1;padding:8px 12px;font-size:13px}
+  .buyer-filter-select{width:38px;min-width:38px;height:38px;padding:0;text-indent:-9999px;background-position:center;background-size:16px;border-radius:10px;flex-shrink:0;background-image:none;position:relative}
+  .buyer-filter-select.filter-ch{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Cpath d='M2 3h12v1.5H2zm2 4h8v1.5H4zm2 4h4v1.5H6z'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-gender{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Ccircle cx='6' cy='6' r='3.5' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3Cpath d='M6 9.5V14M4.5 12h3M12.5 1.5l-3 3M12.5 1.5h-2.5M12.5 1.5v2.5' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-kit{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Crect x='2' y='3' width='12' height='10' rx='2' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3Cpath d='M5.5 3V1.5h5V3' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-region{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Cpath d='M8 1C5.2 1 3 3.1 3 5.8 3 9.5 8 15 8 15s5-5.5 5-9.2C13 3.1 10.8 1 8 1zm0 6.5a1.7 1.7 0 110-3.4 1.7 1.7 0 010 3.4z'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-active{border-color:var(--red-border);background-color:var(--red-dim)}
   table{font-size:11px}
   .m-tile{padding:16px !important}
+  .bar-label{min-width:55px;font-size:11px}
+  .bar-container{gap:8px;margin:4px 0}
+  .region-bar-label{min-width:55px;font-size:11px}
+  .region-bar-row{gap:6px;margin:3px 0}
+  .region-bar-count{min-width:28px;font-size:11px}
+  .region-bar-pct{min-width:32px;font-size:11px}
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -425,10 +437,10 @@ tr:hover td{background:rgba(255,255,255,.03)}
       <div class="card-title">전체 구매자 상세 <span class="ct-sub" id="buyerBadge"></span></div>
       <div class="buyer-filters" id="buyerFilters">
         <input type="text" class="buyer-search" id="buyerSearch" placeholder="구매자명, 지역, 채널 등 검색..." oninput="filterBuyers()">
-        <select class="buyer-filter-select" id="buyerChFilter" onchange="filterBuyers()"><option value="">전체 채널</option><option value="shopify">Shopify</option><option value="tiktok_shop">TikTok</option><option value="amazon">Amazon</option></select>
-        <select class="buyer-filter-select" id="buyerGenderFilter" onchange="filterBuyers()"><option value="">전체 성별</option><option value="F">여성</option><option value="M">남성</option><option value="U">미식별</option></select>
-        <select class="buyer-filter-select" id="buyerKitFilter" onchange="filterBuyers()"><option value="">전체 제품</option><option value="5day">5-day</option><option value="30day">30-day</option></select>
-        <select class="buyer-filter-select" id="buyerRegionFilter" onchange="filterBuyers()"><option value="">전체 지역</option></select>
+        <select class="buyer-filter-select filter-ch" id="buyerChFilter" onchange="filterBuyers()" title="채널"><option value="">전체 채널</option><option value="shopify">Shopify</option><option value="tiktok_shop">TikTok</option><option value="amazon">Amazon</option></select>
+        <select class="buyer-filter-select filter-gender" id="buyerGenderFilter" onchange="filterBuyers()" title="성별"><option value="">전체 성별</option><option value="F">여성</option><option value="M">남성</option><option value="U">미식별</option></select>
+        <select class="buyer-filter-select filter-kit" id="buyerKitFilter" onchange="filterBuyers()" title="제품"><option value="">전체 제품</option><option value="5day">5-day</option><option value="30day">30-day</option></select>
+        <select class="buyer-filter-select filter-region" id="buyerRegionFilter" onchange="filterBuyers()" title="지역"><option value="">전체 지역</option></select>
       </div>
       <div class="buyer-result-count" id="buyerResultCount"></div>
       <div class="table-wrap" id="buyerTable" style="max-height:500px"></div>
@@ -908,6 +920,8 @@ function filterBuyers(){
   var gF=document.getElementById('buyerGenderFilter').value;
   var kF=document.getElementById('buyerKitFilter').value;
   var rF=document.getElementById('buyerRegionFilter').value;
+  // Toggle active class on filter icons for mobile
+  ['buyerChFilter','buyerGenderFilter','buyerKitFilter','buyerRegionFilter'].forEach(function(id){var s=document.getElementById(id);if(s)s.classList.toggle('filter-active',!!s.value)});
   var filtered=_buyerData.filter(function(b){
     if(chF&&b.ch!==chF)return false;
     if(gF&&b.gender!==gF)return false;
