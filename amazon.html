@@ -185,7 +185,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .nav-title{display:none}
   .live-badge{display:none}
   .nav-right{gap:6px;flex-shrink:1;min-width:0}
-  .nav-right #dataStatus{display:none}
+  .nav-right #dataStatus{font-size:10px}
   .back-link{padding:4px 10px;font-size:11px;white-space:nowrap}
   #user-bar{gap:4px !important;margin-left:4px !important}
   #user-bar span{display:none}
@@ -252,6 +252,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
       <span class="live-badge">LIVE</span>
     </div>
     <div class="nav-right">
+      <span id="dataStatus" style="font-size:11px"></span>
       <a href="index.html" class="back-link">&larr; Dashboard</a>
       <div id="user-bar" style="display:none;align-items:center;gap:4px;margin-left:4px">
         <img id="user-photo" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
@@ -261,9 +262,6 @@ tr:hover td{background:rgba(255,255,255,.03)}
     </div>
   </div>
 </nav>
-<div class="data-status-bar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;color:var(--t4)">
-  <span id="dataStatus"></span>
-</div>
 
 <main>
   <div class="tabs-area">
@@ -351,7 +349,7 @@ function isReview(n,c){if(!n||!DATA)return false;if(c==='amazon'){var l=(DATA.am
 /* ═══ Data Loading ═══ */
 async function loadData(){try{var r=await fetch('/api/data');if(r.ok){var d=await r.json();if(d.orders)return{data:d,source:'server'}}}catch(e){}try{var r=await fetch('data.json');if(r.ok){var d=await r.json();if(d.orders)return{data:d,source:'file'}}}catch(e){}if(window.EMBEDDED_DATA&&window.EMBEDDED_DATA.orders)return{data:window.EMBEDDED_DATA,source:'embedded'};return null}
 
-function updateStatus(s){var e=document.getElementById('dataStatus');if(!DATA){e.innerHTML='<span style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--red);box-shadow:0 0 5px rgba(191,32,38,.5)"></span> 데이터 없음';return}var t=DATA.updated_at,a=t?timeAgo(new Date(t)):'?',d=s==='server'?'background:var(--green);box-shadow:0 0 6px rgba(48,209,88,.5)':'background:var(--orange);box-shadow:0 0 5px rgba(255,159,10,.4)';var amz=DATA.orders.filter(function(o){return o.ch==='amazon'&&isValid(o)}).length;e.innerHTML='<span style="width:6px;height:6px;border-radius:50%;display:inline-block;'+d+'"></span> '+a+' 갱신 · Amazon '+amz+'건'}
+function updateStatus(s){var e=document.getElementById('dataStatus');if(!DATA){e.innerHTML='<span style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--red);box-shadow:0 0 5px rgba(191,32,38,.5)"></span> 데이터 없음';return}var t=DATA.updated_at,a=t?timeAgo(new Date(t)):'?',d=s==='server'?'background:var(--green);box-shadow:0 0 6px rgba(48,209,88,.5)':'background:var(--orange);box-shadow:0 0 5px rgba(255,159,10,.4)';e.innerHTML='<span style="width:6px;height:6px;border-radius:50%;display:inline-block;'+d+'"></span> '+a+' 갱신'}
 
 /* ═══ Month/Week Tabs ═══ */
 function initMonths(){var m={};DATA.orders.forEach(function(o){if(o.d&&o.ch==='amazon'&&isValid(o))m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().forEach(function(v){ALL_MONTHS.push(v)});isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
