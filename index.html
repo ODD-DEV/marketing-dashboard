@@ -360,6 +360,8 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .donut-svg{width:120px !important;height:120px !important}
   .donut-legend{gap:8px}
   .donut-legend-item{font-size:13px}
+  .inv-sku-col{display:none}
+  .inv-tbl th,.inv-tbl td{padding:8px 6px;font-size:11px}
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -636,14 +638,17 @@ function renderInventory(){
   // 주요 제품만 필터 (on_hand > 0 또는 이름에 ODD 포함)
   var items=inv.filter(function(p){return p.on_hand>0||p.name.indexOf('ODD')>=0});
   if(!items.length)items=inv;
-  items.sort(function(a,b){return b.on_hand-a.on_hand});
+  function invShortName(n){if(n.indexOf('Starter')>=0)return '5day';if(n.indexOf('30day')>=0||n.indexOf('Refill')>=0)return '30day';return n.replace('ODD M-01 ','')}
+  function invOrder(p){return p.name.indexOf('Starter')>=0?0:1}
+  items.sort(function(a,b){return invOrder(a)-invOrder(b)});
+  inv=inv.slice().sort(function(a,b){return invOrder(a)-invOrder(b)});
   var totalOnHand=0;items.forEach(function(p){totalOnHand+=p.on_hand});
   var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px">';
   items.forEach(function(p){
     var pct=totalOnHand?Math.round(p.on_hand/totalOnHand*100):0;
     var barColor=p.on_hand<100?'#ef4444':p.on_hand<300?'#f59e0b':'var(--red)';
     var statusLabel=p.on_hand<100?'<span style="color:#ef4444;font-weight:600">LOW</span>':p.on_hand<300?'<span style="color:#f59e0b;font-weight:600">MID</span>':'<span style="color:#22c55e;font-weight:600">OK</span>';
-    var shortName=p.name.replace('ODD M-01 ','');
+    var shortName=invShortName(p.name);
     h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px">';
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:15px;font-weight:600;color:var(--t1)">'+shortName+'</span>'+statusLabel+'</div>';
     h+='<div style="font-size:36px;font-weight:700;color:var(--t1);margin-bottom:4px"><span class="inv-count" data-target="'+Math.round(p.on_hand)+'">0</span><span style="font-size:14px;color:var(--t4);font-weight:400"> units</span></div>';
@@ -656,10 +661,10 @@ function renderInventory(){
   });
   h+='</div>';
   // 전체 테이블
-  h+='<table class="tbl"><thead><tr><th>제품명</th><th>SKU</th><th style="text-align:right">보유</th><th style="text-align:right">예상</th><th style="text-align:right">출고예정</th><th style="text-align:right">입고예정</th></tr></thead><tbody>';
+  h+='<table class="tbl inv-tbl"><thead><tr><th>제품명</th><th class="inv-sku-col">SKU</th><th style="text-align:right">보유</th><th style="text-align:right">예상</th><th style="text-align:right">출고예정</th><th style="text-align:right">입고예정</th></tr></thead><tbody>';
   inv.forEach(function(p){
     var cls=p.on_hand<100?' style="color:#ef4444"':'';
-    h+='<tr><td>'+p.name+'</td><td style="color:var(--t4)">'+p.sku+'</td><td style="text-align:right;font-weight:600"'+cls+'>'+Math.round(p.on_hand).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.forecasted).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.outgoing).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.incoming).toLocaleString()+'</td></tr>';
+    h+='<tr><td>'+invShortName(p.name)+'</td><td class="inv-sku-col" style="color:var(--t4)">'+p.sku+'</td><td style="text-align:right;font-weight:600"'+cls+'>'+Math.round(p.on_hand).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.forecasted).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.outgoing).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.incoming).toLocaleString()+'</td></tr>';
   });
   h+='</tbody></table>';
   el.innerHTML=h;
