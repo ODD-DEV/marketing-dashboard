@@ -460,12 +460,12 @@ function render(){
 /* ═══ Summary / KPI ═══ */
 function renderSummary(totalRev,cnt,k5,k30,reviewCnt,reviewRev,netRev,sheetReviewCount){
   document.getElementById('summaryCards').innerHTML=
-    '<div class="hero-kpi"><div class="hero-kpi-tag">Amazon Channel</div><div class="hero-kpi-value">'+$(netRev)+'</div><div class="hero-kpi-sub">Net Revenue · '+cnt+'건 · 5day '+k5.cnt+' / 30day '+k30.cnt+'</div></div>'+
+    '<div class="hero-kpi"><div class="hero-kpi-tag">Amazon Channel</div><div class="hero-kpi-value">'+$(totalRev)+'</div><div class="hero-kpi-sub">Total Revenue · '+cnt+'건 · 5day '+k5.cnt+' / 30day '+k30.cnt+'</div></div>'+
     '<div class="metric-tiles">'+
     '<div class="m-tile"><div class="m-tile-label">5-Day Kit</div><div class="m-tile-value" style="color:var(--t1)">'+k5.cnt+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">'+$(k5.rev)+'</div></div>'+
     '<div class="m-tile"><div class="m-tile-label">30-Day Kit</div><div class="m-tile-value" style="color:var(--t1)">'+k30.cnt+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">'+$(k30.rev)+'</div></div>'+
     '<div class="m-tile"><div class="m-tile-label">Reviews</div><div class="m-tile-value" style="color:var(--yellow)">'+sheetReviewCount+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">매칭 <b>'+reviewCnt+'</b>건 · '+$(reviewRev)+'</div></div>'+
-    '<div class="m-tile"><div class="m-tile-label">Total Revenue</div><div class="m-tile-value" style="color:var(--orange)">'+$(totalRev)+'</div><div class="m-tile-sub">리뷰 -'+$(reviewRev)+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">Net Revenue</div><div class="m-tile-value" style="color:var(--green)">'+$(netRev)+'</div><div class="m-tile-sub">리뷰 제외 · -'+$(reviewRev)+'</div></div>'+
     '</div>';
 }
 
