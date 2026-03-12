@@ -213,8 +213,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
 /* ═══ Loading — Apple-style ═══ */
 .loading-overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:24px;transition:opacity .5s ease}
 .loading-overlay.fade-out{opacity:0;pointer-events:none}
-.loading-overlay .loader-logo{position:relative;font-size:48px;font-weight:800;letter-spacing:-2px;color:rgba(255,255,255,.12);-webkit-user-select:none;user-select:none}
-.loading-overlay .loader-logo::after{content:'ODD.';position:absolute;left:0;top:0;color:var(--red);clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards}
+.loading-overlay .loader-logo{position:relative;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none}
 @keyframes logoFill{0%{clip-path:inset(100% 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
 .loading-overlay .loader-bar{width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
 .loading-overlay .loader-bar::after{content:'';display:block;height:100%;width:40%;background:var(--red);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite}
@@ -380,7 +379,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
 
 <div id="auth-gate" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:#000">
   <div style="text-align:center">
-    <div style="font-size:28px;font-weight:800;letter-spacing:-1px;color:#f5f5f7;margin-bottom:32px">ODD.</div>
+    <img src="odd_logo_white.png" alt="ODD." style="height:28px;margin-bottom:32px">
     <h2 style="font-family:Pretendard,-apple-system,sans-serif;color:#f5f5f7;font-size:22px;font-weight:600;margin-bottom:8px">Global Dashboard</h2>
     <p style="color:#86868b;font-size:14px;margin-bottom:32px">@hanah1.com 계정으로 로그인하세요</p>
     <button onclick="signInWithGoogle()" style="padding:12px 32px;border-radius:100px;border:none;background:#d63634;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:Pretendard,sans-serif;transition:opacity .2s">Google 로그인</button>
@@ -390,12 +389,12 @@ tr:hover td{background:rgba(255,255,255,.03)}
 
 <div id="dashboard-content" style="display:none">
 
-<div class="loading-overlay" id="loadingOverlay"><div class="loader-logo">ODD.</div><div class="loader-bar"></div></div>
+<div class="loading-overlay" id="loadingOverlay"><div class="loader-logo"><img src="odd_logo_white.png" alt="ODD." style="height:48px;opacity:.12"><img src="odd_logo_white.png" alt="ODD." style="height:48px;position:absolute;left:0;top:0;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards"></div><div class="loader-bar"></div></div>
 
 <nav class="nav">
   <div class="nav-inner">
     <div class="nav-left">
-      <span style="font-size:20px;font-weight:800;letter-spacing:-1px;color:#f5f5f7">ODD.</span>
+      <img src="odd_logo_white.png" class="logo-img" alt="ODD.">
       <div class="dash-switcher">
         <a href="index.html" class="dash-switch active">Sales</a>
         <a href="performance.html" class="dash-switch">Performance</a>
@@ -762,7 +761,7 @@ var AUTO_REFRESH_MS=300000,autoRefreshTimer=null;
 async function autoRefreshData(){try{var l=await loadData();if(l&&l.data.updated_at!==(DATA&&DATA.updated_at)){DATA=l.data;initMonths();render();updateStatus(l.source)}}catch(e){}}
 function startAutoRefresh(){if(autoRefreshTimer)clearInterval(autoRefreshTimer);autoRefreshTimer=setInterval(autoRefreshData,AUTO_REFRESH_MS)}
 
-(async function(){var l=await loadData(),o=document.getElementById('loadingOverlay');if(l){DATA=l.data;initMonths();render();updateStatus(l.source);o.classList.add('fade-out');setTimeout(function(){o.style.display='none'},500);startAutoRefresh()}else{o.innerHTML='<div class="loader-logo">ODD.</div><div style="color:var(--t4);font-size:13px;margin-top:8px">데이터를 불러올 수 없습니다.</div>';updateStatus(null)}})();
+(async function(){var l=await loadData(),o=document.getElementById('loadingOverlay');if(l){DATA=l.data;initMonths();render();updateStatus(l.source);o.classList.add('fade-out');setTimeout(function(){o.style.display='none'},500);startAutoRefresh()}else{o.innerHTML='<div class="loader-logo"><img src="odd_logo_white.png" alt="ODD." style="height:48px"></div><div style="color:var(--t4);font-size:13px;margin-top:8px">데이터를 불러올 수 없습니다.</div>';updateStatus(null)}})();
 
 /* Dash switcher drag */
 (function(){
