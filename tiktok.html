@@ -76,7 +76,7 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 .hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400}
 
 /* Metric Tiles */
-.metric-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
+.metric-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
 .m-tile{background:var(--bg-raised);padding:32px 24px;transition:all .35s var(--ease);position:relative;cursor:default}
 .m-tile::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,55,95,.08) 0%,transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
 .m-tile:hover{background:#2c2c2e}
@@ -460,13 +460,12 @@ function render(){
 /* ═══ Summary / KPI ═══ */
 function renderSummary(totalRev,cnt,k5,k30,reviewCnt,reviewRev,netRev,sheetReviewCount){
   document.getElementById('summaryCards').innerHTML=
-    '<div class="hero-kpi"><div class="hero-kpi-tag">TikTok Shop Channel</div><div class="hero-kpi-value">'+$(totalRev)+'</div><div class="hero-kpi-sub">Total Revenue · '+cnt+'건 · 5day '+k5.cnt+' / 30day '+k30.cnt+'</div></div>'+
+    '<div class="hero-kpi"><div class="hero-kpi-tag">TikTok Shop Channel</div><div class="hero-kpi-value">'+$(netRev)+'</div><div class="hero-kpi-sub">Net Revenue · '+cnt+'건 · 5day '+k5.cnt+' / 30day '+k30.cnt+'</div></div>'+
     '<div class="metric-tiles">'+
-    '<div class="m-tile"><div class="m-tile-label">Total Revenue</div><div class="m-tile-value" style="color:var(--pink)">'+$(totalRev)+'</div><div class="m-tile-sub">'+cnt+'건</div></div>'+
     '<div class="m-tile"><div class="m-tile-label">5-Day Kit</div><div class="m-tile-value" style="color:var(--t1)">'+k5.cnt+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">'+$(k5.rev)+'</div></div>'+
     '<div class="m-tile"><div class="m-tile-label">30-Day Kit</div><div class="m-tile-value" style="color:var(--t1)">'+k30.cnt+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">'+$(k30.rev)+'</div></div>'+
     '<div class="m-tile"><div class="m-tile-label">Reviews</div><div class="m-tile-value" style="color:var(--yellow)">'+sheetReviewCount+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">매칭 <b>'+reviewCnt+'</b>건 · '+$(reviewRev)+'</div></div>'+
-    '<div class="m-tile"><div class="m-tile-label">Net Revenue</div><div class="m-tile-value" style="color:var(--green)">'+$(netRev)+'</div><div class="m-tile-sub">리뷰 제외 · -'+$(reviewRev)+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">Total Revenue</div><div class="m-tile-value" style="color:var(--pink)">'+$(totalRev)+'</div><div class="m-tile-sub">리뷰 -'+$(reviewRev)+'</div></div>'+
     '</div>';
 }
 
