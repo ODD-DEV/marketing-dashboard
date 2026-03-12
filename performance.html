@@ -379,12 +379,13 @@
 
   @media (max-width: 1200px) {
     .chart-grid { grid-template-columns: 1fr; }
-    .funnel-grid { grid-template-columns: 1fr; gap: 12px; }
-    .funnel-card { border-radius: var(--r); display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 0 20px; }
+    .funnel-grid { grid-template-columns: 1fr; gap: 16px; }
+    .funnel-card { border-radius: var(--r); padding: 28px 32px; display: flex; flex-wrap: wrap; gap: 0; }
     .funnel-card::before { border-radius: var(--r) var(--r) 0 0; }
-    .funnel-label { grid-column: 1 / -1; }
-    .funnel-stat { grid-column: 1; }
-    .funnel-stat + .funnel-stat-row { grid-column: 1 / -1; }
+    .funnel-label { width: 100%; margin-bottom: 16px; font-size: 14px; }
+    .funnel-stat { width: 100%; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .funnel-stat .funnel-stat-value { font-size: 28px; }
+    .funnel-stat-row { width: 50%; box-sizing: border-box; padding: 8px 12px 8px 0; }
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     .container { padding: 20px; }
     .nav-inner { padding: 0 20px; }
@@ -1395,28 +1396,48 @@ function buildDoughnutChart(segments, opts) {
 /* Mousemove handler for SVG chart hover interaction */
 document.addEventListener('mousemove', function(e) {
   var container = e.target.closest('.line-chart-container');
-  if (!container) return;
-  var dot = e.target.closest('.chart-hover-dot');
+  if (!container) {
+    document.querySelectorAll('.line-chart-container').forEach(function(c) {
+      var tt = c.querySelector('.chart-tooltip'); if (tt) tt.style.display = 'none';
+      var ln = c.querySelector('.chart-hover-line'); if (ln) ln.style.display = 'none';
+      c.querySelectorAll('.chart-dot-visible').forEach(function(d) { d.setAttribute('opacity', '0'); });
+    });
+    return;
+  }
+  var svgEl = container.querySelector('svg');
+  if (!svgEl) return;
+  var rect = svgEl.getBoundingClientRect();
+  var vb = svgEl.getAttribute('viewBox').split(' ');
+  var vbW = parseFloat(vb[2]), vbH = parseFloat(vb[3]);
+  var mouseX = (e.clientX - rect.left) / rect.width * vbW;
+  var dots = container.querySelectorAll('.chart-hover-dot');
+  var nearest = null, minDist = Infinity;
+  dots.forEach(function(d) {
+    var cx = parseFloat(d.getAttribute('cx'));
+    var dist = Math.abs(cx - mouseX);
+    if (dist < minDist) { minDist = dist; nearest = d; }
+  });
   var tooltip = container.querySelector('.chart-tooltip');
   var line = container.querySelector('.chart-hover-line');
-  var dots = container.querySelectorAll('.chart-dot-visible');
-  if (dot) {
-    var vals = decodeURIComponent(dot.dataset.vals).replace(/\\n/g, '<br>');
-    tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:4px;color:var(--t3)">' + dot.dataset.labels + '</div>' + vals;
+  var visDots = container.querySelectorAll('.chart-dot-visible');
+  if (nearest && minDist < vbW / (dots.length || 1)) {
+    var vals = decodeURIComponent(nearest.dataset.vals).replace(/\\n/g, '<br>');
+    tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:4px;color:var(--t3)">' + nearest.dataset.labels + '</div>' + vals;
     tooltip.style.display = 'block';
-    var cx = parseFloat(dot.getAttribute('cx')), cy = parseFloat(dot.getAttribute('cy'));
-    var svgEl = container.querySelector('svg'), rect = svgEl.getBoundingClientRect();
-    var vb = svgEl.getAttribute('viewBox').split(' ');
-    var xRatio = cx / parseFloat(vb[2]), yRatio = cy / parseFloat(vb[3]);
-    tooltip.style.left = (xRatio * rect.width - tooltip.offsetWidth / 2) + 'px';
+    var cx = parseFloat(nearest.getAttribute('cx')), cy = parseFloat(nearest.getAttribute('cy'));
+    var xRatio = cx / vbW, yRatio = cy / vbH;
+    var ttLeft = xRatio * rect.width - tooltip.offsetWidth / 2;
+    if (ttLeft < 0) ttLeft = 0;
+    if (ttLeft + tooltip.offsetWidth > rect.width) ttLeft = rect.width - tooltip.offsetWidth;
+    tooltip.style.left = ttLeft + 'px';
     tooltip.style.top = (yRatio * rect.height - tooltip.offsetHeight - 12) + 'px';
     if (line) { line.style.display = ''; line.setAttribute('x1', cx); line.setAttribute('x2', cx); }
-    var idx = dot.dataset.idx;
-    dots.forEach(function(d) { d.setAttribute('opacity', d.dataset.idx === idx ? '.9' : '0'); });
+    var idx = nearest.dataset.idx;
+    visDots.forEach(function(d) { d.setAttribute('opacity', d.dataset.idx === idx ? '.9' : '0'); });
   } else {
     tooltip.style.display = 'none';
     if (line) line.style.display = 'none';
-    dots.forEach(function(d) { d.setAttribute('opacity', '0'); });
+    visDots.forEach(function(d) { d.setAttribute('opacity', '0'); });
   }
 });
 
@@ -1617,6 +1638,38 @@ function getSelectedCTR(secObj) {
   return views > 0 ? (clicks / views * 100) : 0;
 }
 
+/* Count-up animation for performance KPI values */
+function animateValue(el, prefix, target, suffix, duration) {
+  if (!el || isNaN(target) || target === 0) { el && (el.textContent = prefix + '0' + suffix); return; }
+  duration = duration || 800;
+  var startTime = null;
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var p = Math.min((ts - startTime) / duration, 1);
+    var val = Math.round(easeOut(p) * target);
+    el.textContent = prefix + val.toLocaleString() + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function animateDecimal(el, prefix, target, decimals, suffix, duration) {
+  if (!el || isNaN(target)) { if (el) el.textContent = prefix + '—' + suffix; return; }
+  if (target === 0) { el.textContent = prefix + (0).toFixed(decimals) + suffix; return; }
+  duration = duration || 800;
+  var startTime = null;
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var p = Math.min((ts - startTime) / duration, 1);
+    var val = easeOut(p) * target;
+    el.textContent = prefix + val.toFixed(decimals) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function updateOverviewForPeriod() {
   const S = cachedSections;
   if (!S) return;
@@ -1637,27 +1690,27 @@ function updateOverviewForPeriod() {
   const cpc = metaClicks > 0 ? (metaSpend / metaClicks) : 0;
 
   const kpis = document.querySelectorAll('#tab-overview .kpi-card');
-  if (kpis[0]) { kpis[0].querySelector('.kpi-label').textContent = 'Spend'; kpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(totalSpend)); kpis[0].querySelector('.kpi-sub').textContent = 'Meta $' + fn(Math.round(metaSpend)) + ' · TikTok $' + fn(Math.round(tkSpend)); kpis[0].querySelector('.kpi-value').style.color = ''; kpis[0].querySelector('.kpi-label').style.color = ''; kpis[0].querySelector('.kpi-label').classList.remove('kpi-accent'); }
-  if (kpis[1]) { kpis[1].querySelector('.kpi-label').textContent = 'Views'; const totalViews = metaViews + tkViews; kpis[1].querySelector('.kpi-value').textContent = fn(Math.round(totalViews)); kpis[1].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaViews)) + ' · TikTok ' + fn(Math.round(tkViews)); kpis[1].querySelector('.kpi-value').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').classList.add('kpi-accent'); }
-  if (kpis[2]) { kpis[2].querySelector('.kpi-label').textContent = 'Clicks'; kpis[2].querySelector('.kpi-value').textContent = fn(Math.round(metaClicks)); kpis[2].querySelector('.kpi-sub').textContent = 'Avg CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—') + ' (Meta)'; kpis[2].querySelector('.kpi-value').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').classList.add('kpi-accent'); }
-  if (kpis[3]) { kpis[3].querySelector('.kpi-label').textContent = 'Profile Visits'; kpis[3].querySelector('.kpi-value').textContent = fn(Math.round(metaPV + tkPV)); kpis[3].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaPV)) + ' · TikTok ' + fn(Math.round(tkPV)); kpis[3].querySelector('.kpi-value').style.color = ''; kpis[3].querySelector('.kpi-label').style.color = ''; kpis[3].querySelector('.kpi-label').classList.remove('kpi-accent'); }
-  if (kpis[4]) { kpis[4].querySelector('.kpi-label').textContent = 'Follows'; kpis[4].querySelector('.kpi-value').textContent = fn(Math.round(metaFollows + tkFollows)); kpis[4].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaFollows)) + ' · TikTok ' + fn(Math.round(tkFollows)); kpis[4].querySelector('.kpi-value').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').classList.add('kpi-accent'); }
-  if (kpis[5]) { kpis[5].querySelector('.kpi-label').textContent = 'Avg CTR'; kpis[5].querySelector('.kpi-value').textContent = ctr.toFixed(1) + '%'; kpis[5].querySelector('.kpi-sub').textContent = 'Meta 기준'; kpis[5].querySelector('.kpi-value').style.color = 'var(--orange)'; kpis[5].querySelector('.kpi-label').style.color = 'var(--orange)'; kpis[5].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[0]) { kpis[0].querySelector('.kpi-label').textContent = 'Spend'; animateValue(kpis[0].querySelector('.kpi-value'), '$', Math.round(totalSpend), '', 800); kpis[0].querySelector('.kpi-sub').textContent = 'Meta $' + fn(Math.round(metaSpend)) + ' · TikTok $' + fn(Math.round(tkSpend)); kpis[0].querySelector('.kpi-value').style.color = ''; kpis[0].querySelector('.kpi-label').style.color = ''; kpis[0].querySelector('.kpi-label').classList.remove('kpi-accent'); }
+  if (kpis[1]) { kpis[1].querySelector('.kpi-label').textContent = 'Views'; const totalViews = metaViews + tkViews; animateValue(kpis[1].querySelector('.kpi-value'), '', Math.round(totalViews), '', 800); kpis[1].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaViews)) + ' · TikTok ' + fn(Math.round(tkViews)); kpis[1].querySelector('.kpi-value').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[2]) { kpis[2].querySelector('.kpi-label').textContent = 'Clicks'; animateValue(kpis[2].querySelector('.kpi-value'), '', Math.round(metaClicks), '', 800); kpis[2].querySelector('.kpi-sub').textContent = 'Avg CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—') + ' (Meta)'; kpis[2].querySelector('.kpi-value').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[3]) { kpis[3].querySelector('.kpi-label').textContent = 'Profile Visits'; animateValue(kpis[3].querySelector('.kpi-value'), '', Math.round(metaPV + tkPV), '', 800); kpis[3].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaPV)) + ' · TikTok ' + fn(Math.round(tkPV)); kpis[3].querySelector('.kpi-value').style.color = ''; kpis[3].querySelector('.kpi-label').style.color = ''; kpis[3].querySelector('.kpi-label').classList.remove('kpi-accent'); }
+  if (kpis[4]) { kpis[4].querySelector('.kpi-label').textContent = 'Follows'; animateValue(kpis[4].querySelector('.kpi-value'), '', Math.round(metaFollows + tkFollows), '', 800); kpis[4].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaFollows)) + ' · TikTok ' + fn(Math.round(tkFollows)); kpis[4].querySelector('.kpi-value').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[5]) { kpis[5].querySelector('.kpi-label').textContent = 'Avg CTR'; animateDecimal(kpis[5].querySelector('.kpi-value'), '', ctr, 1, '%', 800); kpis[5].querySelector('.kpi-sub').textContent = 'Meta 기준'; kpis[5].querySelector('.kpi-value').style.color = 'var(--orange)'; kpis[5].querySelector('.kpi-label').style.color = 'var(--orange)'; kpis[5].querySelector('.kpi-label').classList.add('kpi-accent'); }
 
   // ROAS — Sales Dashboard Revenue / Ad Spend
   var totalRevenue = getSelectedSalesRevenue();
   var roas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(2) : '—';
-  if (kpis[6]) { kpis[6].querySelector('.kpi-label').textContent = 'ROAS'; kpis[6].querySelector('.kpi-value').textContent = totalRevenue > 0 ? roas + 'x' : '—'; kpis[6].querySelector('.kpi-sub').textContent = totalRevenue > 0 ? 'Revenue $' + fn(Math.round(totalRevenue)) + ' (Sales)' : 'Revenue data pending'; kpis[6].querySelector('.kpi-value').style.color = 'var(--red)'; kpis[6].querySelector('.kpi-label').style.color = 'var(--red)'; kpis[6].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[6]) { kpis[6].querySelector('.kpi-label').textContent = 'ROAS'; if (totalRevenue > 0) { animateDecimal(kpis[6].querySelector('.kpi-value'), '', parseFloat(roas), 2, 'x', 800); } else { kpis[6].querySelector('.kpi-value').textContent = '—'; } kpis[6].querySelector('.kpi-sub').textContent = totalRevenue > 0 ? 'Revenue $' + fn(Math.round(totalRevenue)) + ' (Sales)' : 'Revenue data pending'; kpis[6].querySelector('.kpi-value').style.color = 'var(--red)'; kpis[6].querySelector('.kpi-label').style.color = 'var(--red)'; kpis[6].querySelector('.kpi-label').classList.add('kpi-accent'); }
 
   // CPM — Cost per 1K views
   var totalViews2 = metaViews + tkViews;
   var cpm = totalViews2 > 0 ? (totalSpend / totalViews2 * 1000) : 0;
-  if (kpis[7]) { kpis[7].querySelector('.kpi-label').textContent = 'CPM'; kpis[7].querySelector('.kpi-value').textContent = cpm > 0 ? '$' + cpm.toFixed(2) : '—'; kpis[7].querySelector('.kpi-sub').textContent = 'Cost per 1K views'; kpis[7].querySelector('.kpi-value').style.color = ''; kpis[7].querySelector('.kpi-label').style.color = ''; kpis[7].querySelector('.kpi-label').classList.remove('kpi-accent'); }
+  if (kpis[7]) { kpis[7].querySelector('.kpi-label').textContent = 'CPM'; if (cpm > 0) { animateDecimal(kpis[7].querySelector('.kpi-value'), '$', cpm, 2, '', 800); } else { kpis[7].querySelector('.kpi-value').textContent = '—'; } kpis[7].querySelector('.kpi-sub').textContent = 'Cost per 1K views'; kpis[7].querySelector('.kpi-value').style.color = ''; kpis[7].querySelector('.kpi-label').style.color = ''; kpis[7].querySelector('.kpi-label').classList.remove('kpi-accent'); }
 
   // Follow CPA — Spend / Follows
   var totalFollows = metaFollows + tkFollows;
   var followCPA = totalFollows > 0 ? (totalSpend / totalFollows) : 0;
-  if (kpis[8]) { kpis[8].querySelector('.kpi-label').textContent = 'Follow CPA'; kpis[8].querySelector('.kpi-value').textContent = followCPA > 0 ? '$' + followCPA.toFixed(2) : '—'; kpis[8].querySelector('.kpi-sub').textContent = 'Spend / Follows'; kpis[8].querySelector('.kpi-value').style.color = 'var(--purple)'; kpis[8].querySelector('.kpi-label').style.color = 'var(--purple)'; kpis[8].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[8]) { kpis[8].querySelector('.kpi-label').textContent = 'Follow CPA'; if (followCPA > 0) { animateDecimal(kpis[8].querySelector('.kpi-value'), '$', followCPA, 2, '', 800); } else { kpis[8].querySelector('.kpi-value').textContent = '—'; } kpis[8].querySelector('.kpi-sub').textContent = 'Spend / Follows'; kpis[8].querySelector('.kpi-value').style.color = 'var(--purple)'; kpis[8].querySelector('.kpi-label').style.color = 'var(--purple)'; kpis[8].querySelector('.kpi-label').classList.add('kpi-accent'); }
 
   // Re-render SVG charts with live data
   if (S.metaSum && S.metaSum['Expense']) {
@@ -1759,12 +1812,12 @@ function updateMetaForPeriod() {
   const viewRate = views > 0 ? (video3s / views * 100) : 0;
 
   const mkpis = document.querySelectorAll('#metaKpiGrid .kpi-card');
-  if (mkpis[0]) { mkpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(spend)); mkpis[0].querySelector('.kpi-sub').textContent = 'CPM $' + (cpm > 0 ? cpm.toFixed(2) : '—'); }
-  if (mkpis[1]) { mkpis[1].querySelector('.kpi-value').textContent = fn(Math.round(views)); mkpis[1].querySelector('.kpi-sub').textContent = 'CTR ' + ctr.toFixed(1) + '%'; }
-  if (mkpis[2]) { mkpis[2].querySelector('.kpi-value').textContent = fn(Math.round(clicks)); mkpis[2].querySelector('.kpi-sub').textContent = 'CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—'); }
-  if (mkpis[3]) { mkpis[3].querySelector('.kpi-value').textContent = fn(Math.round(pv)); }
-  if (mkpis[4]) { mkpis[4].querySelector('.kpi-value').textContent = fn(Math.round(follows)); mkpis[4].querySelector('.kpi-sub').textContent = 'CPA $' + (followCPA > 0 ? followCPA.toFixed(2) : '—'); }
-  if (mkpis[5]) { mkpis[5].querySelector('.kpi-value').textContent = fn(Math.round(video3s)); mkpis[5].querySelector('.kpi-sub').textContent = 'View Rate ' + viewRate.toFixed(0) + '%'; }
+  if (mkpis[0]) { animateValue(mkpis[0].querySelector('.kpi-value'), '$', Math.round(spend), '', 800); mkpis[0].querySelector('.kpi-sub').textContent = 'CPM $' + (cpm > 0 ? cpm.toFixed(2) : '—'); }
+  if (mkpis[1]) { animateValue(mkpis[1].querySelector('.kpi-value'), '', Math.round(views), '', 800); mkpis[1].querySelector('.kpi-sub').textContent = 'CTR ' + ctr.toFixed(1) + '%'; }
+  if (mkpis[2]) { animateValue(mkpis[2].querySelector('.kpi-value'), '', Math.round(clicks), '', 800); mkpis[2].querySelector('.kpi-sub').textContent = 'CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—'); }
+  if (mkpis[3]) { animateValue(mkpis[3].querySelector('.kpi-value'), '', Math.round(pv), '', 800); }
+  if (mkpis[4]) { animateValue(mkpis[4].querySelector('.kpi-value'), '', Math.round(follows), '', 800); mkpis[4].querySelector('.kpi-sub').textContent = 'CPA $' + (followCPA > 0 ? followCPA.toFixed(2) : '—'); }
+  if (mkpis[5]) { animateValue(mkpis[5].querySelector('.kpi-value'), '', Math.round(video3s), '', 800); mkpis[5].querySelector('.kpi-sub').textContent = 'View Rate ' + viewRate.toFixed(0) + '%'; }
 
   const cards = document.querySelectorAll('#metaFunnelGrid .funnel-card');
   const sections = [mt, mm, mb];
@@ -1880,12 +1933,12 @@ function updateTiktokForPeriod() {
   const viewRate = views > 0 ? (video2s / views * 100) : 0;
 
   const tkpis = document.querySelectorAll('#tiktokKpiGrid .kpi-card');
-  if (tkpis[0]) { tkpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(spend)); tkpis[0].querySelector('.kpi-sub').textContent = 'CPM $' + (cpm > 0 ? cpm.toFixed(2) : '—'); }
-  if (tkpis[1]) { tkpis[1].querySelector('.kpi-value').textContent = fn(Math.round(views)); }
-  if (tkpis[2]) { tkpis[2].querySelector('.kpi-value').textContent = fn(Math.round(pv)); tkpis[2].querySelector('.kpi-sub').textContent = 'CPA $' + (pvCPA > 0 ? pvCPA.toFixed(2) : '—'); }
-  if (tkpis[3]) { tkpis[3].querySelector('.kpi-value').textContent = fn(Math.round(follows)); tkpis[3].querySelector('.kpi-sub').textContent = 'CPA $' + (followCPA > 0 ? followCPA.toFixed(2) : '—'); }
-  if (tkpis[4]) { tkpis[4].querySelector('.kpi-value').textContent = fn(Math.round(video2s)); tkpis[4].querySelector('.kpi-sub').textContent = 'View Rate ' + viewRate.toFixed(0) + '%'; }
-  if (tkpis[5]) { tkpis[5].querySelector('.kpi-value').textContent = fn(Math.round(likes)); tkpis[5].querySelector('.kpi-sub').textContent = 'Comments ' + fn(Math.round(comments)); }
+  if (tkpis[0]) { animateValue(tkpis[0].querySelector('.kpi-value'), '$', Math.round(spend), '', 800); tkpis[0].querySelector('.kpi-sub').textContent = 'CPM $' + (cpm > 0 ? cpm.toFixed(2) : '—'); }
+  if (tkpis[1]) { animateValue(tkpis[1].querySelector('.kpi-value'), '', Math.round(views), '', 800); }
+  if (tkpis[2]) { animateValue(tkpis[2].querySelector('.kpi-value'), '', Math.round(pv), '', 800); tkpis[2].querySelector('.kpi-sub').textContent = 'CPA $' + (pvCPA > 0 ? pvCPA.toFixed(2) : '—'); }
+  if (tkpis[3]) { animateValue(tkpis[3].querySelector('.kpi-value'), '', Math.round(follows), '', 800); tkpis[3].querySelector('.kpi-sub').textContent = 'CPA $' + (followCPA > 0 ? followCPA.toFixed(2) : '—'); }
+  if (tkpis[4]) { animateValue(tkpis[4].querySelector('.kpi-value'), '', Math.round(video2s), '', 800); tkpis[4].querySelector('.kpi-sub').textContent = 'View Rate ' + viewRate.toFixed(0) + '%'; }
+  if (tkpis[5]) { animateValue(tkpis[5].querySelector('.kpi-value'), '', Math.round(likes), '', 800); tkpis[5].querySelector('.kpi-sub').textContent = 'Comments ' + fn(Math.round(comments)); }
 
   const tkSections = [S.tiktokTOF || {}, S.tiktokMOF || {}, S.tiktokBOF || {}];
   const tkCards = document.querySelectorAll('#tiktokFunnelGrid .funnel-card');

@@ -85,15 +85,15 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 .summary-sticky{position:sticky;top:48px;z-index:90;background:#000;padding-bottom:8px;transition:all .3s ease}
 .summary-sticky::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:24px;background:linear-gradient(to bottom,#000,transparent);pointer-events:none;z-index:89}
 /* Compact mode when scrolled */
-.summary-sticky.compact .hero-kpi{padding:12px 16px 8px}
+.summary-sticky.compact .hero-kpi{padding:16px 24px 12px}
 .summary-sticky.compact .hero-kpi-tag{display:none}
 .summary-sticky.compact .hero-kpi::after{display:none}
-.summary-sticky.compact .hero-kpi-value{font-size:28px !important;letter-spacing:-1px}
-.summary-sticky.compact .hero-kpi-sub{font-size:12px;margin-top:4px}
-.summary-sticky.compact .metric-tiles{gap:1px}
-.summary-sticky.compact .m-tile{padding:10px 14px}
+.summary-sticky.compact .hero-kpi-value{font-size:36px !important;letter-spacing:-1px}
+.summary-sticky.compact .hero-kpi-sub{font-size:13px;margin-top:6px}
+.summary-sticky.compact .metric-tiles{gap:2px}
+.summary-sticky.compact .m-tile{padding:14px 18px}
 .summary-sticky.compact .m-tile-value{font-size:18px !important}
-.summary-sticky.compact .m-tile-label{font-size:9px !important;margin-bottom:4px}
+.summary-sticky.compact .m-tile-label{font-size:10px !important;margin-bottom:6px}
 .summary-sticky.compact .m-tile-sub{display:none}
 
 .hero-kpi{
@@ -107,7 +107,7 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 .hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
 .hero-kpi-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t3);letter-spacing:.5px;margin-bottom:20px}
 .hero-kpi-tag::before{content:'';width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block}
-.hero-kpi-value{font-family:var(--sans);font-size:clamp(64px,10vw,108px);color:var(--t1);line-height:1;letter-spacing:-2px;font-weight:700;transform:scaleX(.97);transform-origin:center;transition:font-size .3s ease}
+.hero-kpi-value{font-family:var(--sans);font-size:clamp(96px,14vw,160px);color:var(--t1);line-height:1;letter-spacing:-2px;font-weight:700;transform:scaleX(.97);transform-origin:center;transition:font-size .3s ease}
 .hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400;transition:all .3s ease}
 
 /* ═══ Metric Tiles — Apple feature grid ═══ */
@@ -275,13 +275,13 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .chart-hover-dot:hover~.chart-dot-visible[data-idx]{opacity:.8}
 
 @media(max-width:1200px){
-  .hero-kpi-value{font-size:56px !important}
+  .hero-kpi-value{font-size:80px !important}
   .hero-kpi{padding:32px 16px 24px}
 }
 @media(max-width:900px){
   .two-col{grid-template-columns:1fr}
   .metric-tiles{grid-template-columns:repeat(3,1fr)}
-  .hero-kpi-value{font-size:48px !important}
+  .hero-kpi-value{font-size:64px !important}
   .hero-kpi{padding:24px 16px 20px}
   .hero-kpi-sub{font-size:13px !important}
   main,.nav-inner{padding-left:16px;padding-right:16px}
@@ -292,13 +292,13 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .dash-switcher{margin-left:10px}
   .dash-switch{padding:4px 12px;font-size:11px}
   /* Compact sticky on tablet */
-  .summary-sticky.compact .hero-kpi-value{font-size:24px !important}
+  .summary-sticky.compact .hero-kpi-value{font-size:32px !important}
   .summary-sticky.compact .m-tile-value{font-size:16px !important}
   .summary-sticky.compact .metric-tiles{grid-template-columns:repeat(3,1fr)}
 }
 @media(max-width:600px){
   .metric-tiles{grid-template-columns:repeat(2,1fr)}
-  .hero-kpi-value{font-size:32px !important}
+  .hero-kpi-value{font-size:48px !important}
   .hero-kpi{padding:20px 12px 16px}
   main,.nav-inner{padding-left:12px;padding-right:12px}
   .section-heading{font-size:20px}
@@ -763,33 +763,55 @@ function buildLineChart(labels,datasets,opts){
 
 document.addEventListener('mousemove',function(e){
   var container=e.target.closest('.line-chart-container');
-  if(!container)return;
-  var dot=e.target.closest('.chart-hover-dot');
+  if(!container){
+    /* Hide all tooltips when leaving charts */
+    document.querySelectorAll('.line-chart-container').forEach(function(c){
+      var tt=c.querySelector('.chart-tooltip');if(tt)tt.style.display='none';
+      var ln=c.querySelector('.chart-hover-line');if(ln)ln.style.display='none';
+      c.querySelectorAll('.chart-dot-visible').forEach(function(d){d.setAttribute('opacity','0')});
+    });
+    return;
+  }
+  var svgEl=container.querySelector('svg');
+  if(!svgEl)return;
+  var rect=svgEl.getBoundingClientRect();
+  var vb=svgEl.getAttribute('viewBox').split(' ');
+  var vbW=parseFloat(vb[2]),vbH=parseFloat(vb[3]);
+  var mouseX=(e.clientX-rect.left)/rect.width*vbW;
+  /* Find nearest dot by x distance */
+  var dots=container.querySelectorAll('.chart-hover-dot');
+  var nearest=null,minDist=Infinity;
+  dots.forEach(function(d){
+    var cx=parseFloat(d.getAttribute('cx'));
+    var dist=Math.abs(cx-mouseX);
+    if(dist<minDist){minDist=dist;nearest=d}
+  });
   var tooltip=container.querySelector('.chart-tooltip');
   var line=container.querySelector('.chart-hover-line');
-  var dots=container.querySelectorAll('.chart-dot-visible');
-  if(dot){
-    var vals=decodeURIComponent(dot.dataset.vals).replace(/\\n/g,'<br>');
-    tooltip.innerHTML='<div style="font-weight:600;margin-bottom:4px;color:var(--t3)">'+dot.dataset.labels+'</div>'+vals;
+  var visDots=container.querySelectorAll('.chart-dot-visible');
+  if(nearest&&minDist<vbW/(dots.length||1)){
+    var vals=decodeURIComponent(nearest.dataset.vals).replace(/\\n/g,'<br>');
+    tooltip.innerHTML='<div style="font-weight:600;margin-bottom:4px;color:var(--t3)">'+nearest.dataset.labels+'</div>'+vals;
     tooltip.style.display='block';
-    var cx=parseFloat(dot.getAttribute('cx')),cy=parseFloat(dot.getAttribute('cy'));
-    var svg=container.querySelector('svg'),rect=svg.getBoundingClientRect();
-    var xRatio=cx/parseFloat(svg.getAttribute('viewBox').split(' ')[2]);
-    var yRatio=cy/parseFloat(svg.getAttribute('viewBox').split(' ')[3]);
-    tooltip.style.left=(xRatio*rect.width-tooltip.offsetWidth/2)+'px';
+    var cx=parseFloat(nearest.getAttribute('cx')),cy=parseFloat(nearest.getAttribute('cy'));
+    var xRatio=cx/vbW,yRatio=cy/vbH;
+    var ttLeft=xRatio*rect.width-tooltip.offsetWidth/2;
+    if(ttLeft<0)ttLeft=0;
+    if(ttLeft+tooltip.offsetWidth>rect.width)ttLeft=rect.width-tooltip.offsetWidth;
+    tooltip.style.left=ttLeft+'px';
     tooltip.style.top=(yRatio*rect.height-tooltip.offsetHeight-12)+'px';
     if(line){line.style.display='';line.setAttribute('x1',cx);line.setAttribute('x2',cx)}
-    var idx=dot.dataset.idx;
-    dots.forEach(function(d){d.setAttribute('opacity',d.dataset.idx===idx?'.9':'0')});
+    var idx=nearest.dataset.idx;
+    visDots.forEach(function(d){d.setAttribute('opacity',d.dataset.idx===idx?'.9':'0')});
   } else {
     tooltip.style.display='none';
     if(line)line.style.display='none';
-    dots.forEach(function(d){d.setAttribute('opacity','0')});
+    visDots.forEach(function(d){d.setAttribute('opacity','0')});
   }
 });
 document.addEventListener('mouseleave',function(e){
-  if(e.target.classList&&e.target.classList.contains('chart-hover-dot')){
-    var c=e.target.closest('.line-chart-container');
+  if(e.target.classList&&e.target.classList.contains('line-chart-container')){
+    var c=e.target;
     if(c){c.querySelector('.chart-tooltip').style.display='none';var l=c.querySelector('.chart-hover-line');if(l)l.style.display='none';c.querySelectorAll('.chart-dot-visible').forEach(function(d){d.setAttribute('opacity','0')})}
   }
 },true);
@@ -1006,12 +1028,19 @@ render=function(){
 
 /* ═══ 판매건수 카드 클릭 → 월별 매출 비교 스크롤 + table 전환 ═══ */
 function scrollToMonthlyTable(){
-  /* Switch to table view */
   if(monthlyViewMode==='chart'){toggleMonthlyView()}
-  /* Smooth scroll to monthly section */
   var sec=document.getElementById('monthlyTable');
   if(sec){
-    sec.closest('.content-section').scrollIntoView({behavior:'smooth',block:'start'});
+    var section=sec.closest('.content-section');
+    var stickyEl=document.getElementById('summaryCards');
+    var navH=48;
+    /* Temporarily add compact to measure height, then calculate */
+    stickyEl.classList.add('compact');
+    var stickyH=stickyEl.offsetHeight;
+    if(window.scrollY<100)stickyEl.classList.remove('compact');
+    var offset=navH+stickyH+24;
+    var y=section.getBoundingClientRect().top+window.pageYOffset-offset;
+    window.scrollTo({top:y,behavior:'smooth'});
   }
 }
 </script>
