@@ -532,7 +532,7 @@ var monthlyViewMode='chart';
 function toggleMonthlyView(){var ch=document.getElementById('monthlyChart'),tb=document.getElementById('monthlyTableWrap'),btn=document.getElementById('monthlyViewBtn');if(monthlyViewMode==='chart'){monthlyViewMode='table';ch.style.display='none';tb.style.display='';btn.textContent='Chart';btn.classList.add('active')}else{monthlyViewMode='chart';ch.style.display='';tb.style.display='none';btn.textContent='Table';btn.classList.remove('active')}}
 function toggleReview(){var e=document.getElementById('reviewWrap'),t=document.getElementById('reviewToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='▾ 접기'}else{e.style.display='none';t.innerHTML='▸ 펼치기'}}
 var isAllMode=true;
-function initMonths(){var m={};DATA.orders.forEach(o=>{if(o.d)m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().forEach(v=>ALL_MONTHS.push(v));isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
+function initMonths(){var m={};DATA.orders.forEach(o=>{if(o.d)m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().reverse().forEach(v=>ALL_MONTHS.push(v));isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
 function renderMonthTabs(){var c=document.getElementById('monthTabs'),h='<button class="month-tab all-tab '+(isAllMode?'active':'')+'" data-m="all">전체</button>';ALL_MONTHS.forEach(m=>{var a=!isAllMode&&selectedMonths.has(m);h+='<button class="month-tab '+(a?'active':'')+'" data-m="'+m+'">'+fmtMon(m)+'</button>'});c.innerHTML=h;
 var _isDrag=false,_startX=0;
 c.addEventListener('pointerdown',function(e){_isDrag=false;_startX=e.clientX});
