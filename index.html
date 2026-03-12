@@ -391,7 +391,8 @@ tr:hover td{background:rgba(255,255,255,.03)}
 
 <div id="dashboard-content" style="display:none">
 
-<div class="loading-overlay" id="loadingOverlay"><div style="position:relative;font-size:48px;font-weight:800;letter-spacing:-2px;color:rgba(255,255,255,.12);user-select:none">ODD.<span style="position:absolute;left:0;top:0;color:#bf2026;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards">ODD.</span></div><div class="loader-bar"></div></div>
+<svg style="position:absolute;width:0;height:0"><defs><filter id="redTint"><feColorMatrix type="matrix" values="0 0 0 0 0.749 0 0 0 0 0.125 0 0 0 0 0.149 0 0 0 1 0"/></filter></defs></svg>
+<div class="loading-overlay" id="loadingOverlay"><div style="position:relative;user-select:none"><img src="odd_logo_white.png" alt="ODD." style="height:48px;opacity:.12"><img src="odd_logo_white.png" alt="ODD." style="height:48px;position:absolute;left:0;top:0;filter:url(#redTint);clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards"></div><div class="loader-bar"></div></div>
 
 <nav class="nav">
   <div class="nav-inner">

@@ -579,8 +579,9 @@
   </div>
 </nav>
 
+<svg style="position:absolute;width:0;height:0"><defs><filter id="redTint"><feColorMatrix type="matrix" values="0 0 0 0 0.749 0 0 0 0 0.125 0 0 0 0 0.149 0 0 0 1 0"/></filter></defs></svg>
 <div id="loadingOverlay" style="position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:24px;transition:opacity .5s ease">
-  <div style="position:relative;font-size:48px;font-weight:800;letter-spacing:-2px;color:rgba(255,255,255,.12);user-select:none">ODD.<span style="position:absolute;left:0;top:0;color:#bf2026;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards">ODD.</span></div>
+  <div style="position:relative;user-select:none"><img src="odd_logo_white.png" alt="ODD." style="height:48px;opacity:.12"><img src="odd_logo_white.png" alt="ODD." style="height:48px;position:absolute;left:0;top:0;filter:url(#redTint);clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards"></div>
   <div style="width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:40%;background:#bf2026;border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite"></div></div>
 </div>
 
