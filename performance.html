@@ -58,7 +58,7 @@
   .live-badge{font-size:7px;font-weight:600;color:var(--red);background:rgba(191,32,38,.1);border:1px solid rgba(191,32,38,.25);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
   .dash-switcher{display:flex;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:100px;padding:2px;margin-left:16px;border:1px solid rgba(255,255,255,.1);position:relative;touch-action:pan-x}
-  .dash-switch{padding:5px 16px;border-radius:100px;font-size:12px;font-weight:600;color:var(--t4);text-decoration:none;transition:all .2s;letter-spacing:.3px}
+  .dash-switch{padding:5px 16px;border-radius:100px;font-size:12px;font-weight:600;color:var(--t4);text-decoration:none;transition:all .2s;letter-spacing:.3px;-webkit-user-select:none;user-select:none}
   .dash-switch:hover{color:var(--t2)}
   .dash-switch.active{background:rgba(191,32,38,.15);color:var(--red)}
 
@@ -486,7 +486,7 @@
       <div id="user-bar" style="display:none;align-items:center;gap:8px">
         <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
         <span id="user-email" style="display:none"></span>
-        <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:var(--sans)">로그아웃</button>
+        <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:Pretendard,sans-serif">로그아웃</button>
       </div>
     </div>
   </div>
