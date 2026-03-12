@@ -410,6 +410,14 @@ tr:hover td{background:rgba(255,255,255,.03)}
     </div>
   </section>
 
+  <section class="content-section" id="inventorySection">
+    <div class="section-tag">Inventory</div>
+    <h2 class="section-heading">실시간 재고 현황</h2>
+    <div class="card" id="inventoryCard">
+      <div id="inventoryContent"></div>
+    </div>
+  </section>
+
   <section class="content-section">
     <div class="section-tag">Reviews</div>
     <div class="section-head-row" style="cursor:pointer" onclick="toggleReview()">
@@ -471,7 +479,7 @@ function render(){
   var gT=0,gC=0,tRR=0,tRC=0,tSC=0,t5={cnt:0,rev:0},t30={cnt:0,rev:0};
   chs.forEach(c=>{var v=st[c];gT+=v.rev;gC+=v.cnt;t5.cnt+=v.k5.cnt;t5.rev+=v.k5.rev;t30.cnt+=v.k30.cnt;t30.rev+=v.k30.rev;tRR+=v.k5.revRev+v.k30.revRev;tRC+=v.k5.revCnt+v.k30.revCnt;tSC+=v.k5.subCnt+v.k30.subCnt});
   var rT=gT-tRR;
-  renderSummary(st,gT,gC,tRR,tRC,rT,t5,t30,tSC);renderDemographics(f);renderWeekly(f);renderWeeklyChart(f);renderMonthly();renderMonthlyChart();renderChannel(st,gT,rT);renderReview(f);renderSubscriptions();renderBuyerDetail(f);renderCancelled();
+  renderSummary(st,gT,gC,tRR,tRC,rT,t5,t30,tSC);renderDemographics(f);renderWeekly(f);renderWeeklyChart(f);renderMonthly();renderMonthlyChart();renderChannel(st,gT,rT);renderInventory();renderReview(f);renderSubscriptions();renderBuyerDetail(f);renderCancelled();
   document.getElementById('footer').textContent='ERP '+(DATA.total_erp_orders||'?')+'건 · 판매 '+DATA.orders.length+'건 · 유효 '+gC+'건 · '+(DATA.updated_at||'?').substring(0,16);
 }
 
@@ -555,6 +563,42 @@ function renderChannel(st,gT,rT){
   var chGrad30={shopify:'linear-gradient(135deg,#28a745,#4ade80)',tiktok_shop:'linear-gradient(135deg,#e84060,#ff6b80)',amazon:'linear-gradient(135deg,#e08c00,#ffb340)'};
   chs.forEach(c=>{var s=st[c],m=Math.max(s.k5.rev,s.k30.rev)||1;b+='<div style="font-size:11px;color:'+CH_COLORS[c]+';margin:8px 0 3px;font-weight:600;letter-spacing:.3px">'+CH_LABELS[c]+'</div><div class="bar-container"><div class="bar-label">5-day</div><div class="bar" style="background:'+chGrad5[c]+';width:'+(s.k5.rev/m*80).toFixed(0)+'%">'+$(s.k5.rev)+' ('+s.k5.cnt+'건)</div></div><div class="bar-container"><div class="bar-label">30-day</div><div class="bar" style="background:'+chGrad30[c]+';width:'+(s.k30.rev/m*80).toFixed(0)+'%">'+$(s.k30.rev)+' ('+s.k30.cnt+'건)</div></div>'});
   document.getElementById('channelBars').innerHTML=b;
+}
+
+function renderInventory(){
+  var el=document.getElementById('inventoryContent');
+  var inv=DATA.inventory||[];
+  if(!inv.length){el.innerHTML='<div style="color:var(--t4);padding:16px">재고 데이터 없음</div>';return}
+  // 주요 제품만 필터 (on_hand > 0 또는 이름에 ODD 포함)
+  var items=inv.filter(function(p){return p.on_hand>0||p.name.indexOf('ODD')>=0});
+  if(!items.length)items=inv;
+  items.sort(function(a,b){return b.on_hand-a.on_hand});
+  var totalOnHand=0;items.forEach(function(p){totalOnHand+=p.on_hand});
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px">';
+  items.forEach(function(p){
+    var pct=totalOnHand?Math.round(p.on_hand/totalOnHand*100):0;
+    var barColor=p.on_hand<100?'#ef4444':p.on_hand<300?'#f59e0b':'var(--red)';
+    var statusLabel=p.on_hand<100?'<span style="color:#ef4444;font-weight:600">LOW</span>':p.on_hand<300?'<span style="color:#f59e0b;font-weight:600">MID</span>':'<span style="color:#22c55e;font-weight:600">OK</span>';
+    var shortName=p.name.replace('ODD M-01 ','');
+    h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:15px;font-weight:600;color:var(--t1)">'+shortName+'</span>'+statusLabel+'</div>';
+    h+='<div style="font-size:36px;font-weight:700;color:var(--t1);margin-bottom:4px">'+Math.round(p.on_hand).toLocaleString()+'<span style="font-size:14px;color:var(--t4);font-weight:400"> units</span></div>';
+    h+='<div style="background:var(--bg);border-radius:6px;height:8px;margin:12px 0 8px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:6px;transition:width .3s"></div></div>';
+    h+='<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t4)">';
+    h+='<span>예상: '+Math.round(p.forecasted).toLocaleString()+'</span>';
+    h+='<span>출고예정: '+Math.round(p.outgoing).toLocaleString()+'</span>';
+    h+='<span>입고예정: '+Math.round(p.incoming).toLocaleString()+'</span>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  // 전체 테이블
+  h+='<table class="tbl"><thead><tr><th>제품명</th><th>SKU</th><th style="text-align:right">보유</th><th style="text-align:right">예상</th><th style="text-align:right">출고예정</th><th style="text-align:right">입고예정</th></tr></thead><tbody>';
+  inv.forEach(function(p){
+    var cls=p.on_hand<100?' style="color:#ef4444"':'';
+    h+='<tr><td>'+p.name+'</td><td style="color:var(--t4)">'+p.sku+'</td><td style="text-align:right;font-weight:600"'+cls+'>'+Math.round(p.on_hand).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.forecasted).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.outgoing).toLocaleString()+'</td><td style="text-align:right">'+Math.round(p.incoming).toLocaleString()+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  el.innerHTML=h;
 }
 
 function renderReview(f){

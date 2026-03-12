@@ -433,6 +433,46 @@ def infer_gender(name):
 
 # ═══ Main ═══
 
+def fetch_inventory(config, session_id):
+    """ERP 포털 페이지에서 재고 데이터 스크래핑"""
+    try:
+        resp = http_request(f"{config['erp_url']}/portal/product", headers={"Cookie": f"session_id={session_id}"}, timeout=30)
+        html = resp.read().decode("utf-8")
+        tbody = re.search(r'<tbody>(.*?)</tbody>', html, re.DOTALL)
+        if not tbody:
+            print("[INVENTORY] No tbody found")
+            return []
+        rows = re.findall(r'<tr[^>]*>(.*?)</tr>', tbody.group(1), re.DOTALL)
+        inventory = []
+        def _clean(s):
+            return re.sub(r'<[^>]+>', '', s).strip()
+        def _num(s):
+            s = _clean(s).replace(',', '').replace('$', '').strip()
+            try: return float(s)
+            except: return 0.0
+        for row in rows:
+            cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.DOTALL)
+            if len(cells) < 12:
+                continue
+            name = _clean(cells[3])
+            if not name:
+                continue
+            inventory.append({
+                "name": name,
+                "sku": _clean(cells[1]),
+                "on_hand": _num(cells[8]),
+                "forecasted": _num(cells[11]),
+                "reserved": _num(cells[10]),
+                "incoming": 0,
+                "outgoing": _num(cells[10]),
+            })
+        print(f"[INVENTORY] {len(inventory)} products loaded")
+        return inventory
+    except Exception as e:
+        print(f"[INVENTORY] Error: {e}")
+        return []
+
+
 def refresh_data():
     config = load_config()
     print("[REFRESH] Starting data refresh...")
@@ -464,6 +504,7 @@ def refresh_data():
         state = normalize_state_name(state)
         sales_orders.append({"d": (o.get("date_order") or "")[:10], "t": o.get("amount_total", 0), "s": o.get("state", ""), "c": cname, "ch": ch, "src": o.get("origin") or "", "st": state, "ct": city, "g": g})
 
+    inventory = fetch_inventory(config, session_id)
     review_data = fetch_google_sheet_names(config)
     recharge = fetch_recharge_subscriptions(config)
 
@@ -477,6 +518,7 @@ def refresh_data():
         "tiktok_review_names": review_data["tiktok"],
         "amazon_review_entries": review_data["amazon_entries"],
         "tiktok_review_entries": review_data["tiktok_entries"],
+        "inventory": inventory,
         "recharge_active": recharge["active"],
         "recharge_cancelled": recharge["cancelled"]
     }
