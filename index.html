@@ -611,8 +611,8 @@ function renderInventory(){
     var shortName=p.name.replace('ODD M-01 ','');
     h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px">';
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:15px;font-weight:600;color:var(--t1)">'+shortName+'</span>'+statusLabel+'</div>';
-    h+='<div style="font-size:36px;font-weight:700;color:var(--t1);margin-bottom:4px">'+Math.round(p.on_hand).toLocaleString()+'<span style="font-size:14px;color:var(--t4);font-weight:400"> units</span></div>';
-    h+='<div style="background:var(--bg);border-radius:6px;height:8px;margin:12px 0 8px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:6px;transition:width .3s"></div></div>';
+    h+='<div style="font-size:36px;font-weight:700;color:var(--t1);margin-bottom:4px"><span class="inv-count" data-target="'+Math.round(p.on_hand)+'">0</span><span style="font-size:14px;color:var(--t4);font-weight:400"> units</span></div>';
+    h+='<div style="background:var(--bg);border-radius:6px;height:8px;margin:12px 0 8px;overflow:hidden"><div class="inv-bar" style="height:100%;width:0%;background:'+barColor+';border-radius:6px;transition:width 1s cubic-bezier(.25,.46,.45,.94)" data-pct="'+pct+'"></div></div>';
     h+='<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t4)">';
     h+='<span>예상: '+Math.round(p.forecasted).toLocaleString()+'</span>';
     h+='<span>출고예정: '+Math.round(p.outgoing).toLocaleString()+'</span>';
@@ -628,6 +628,24 @@ function renderInventory(){
   });
   h+='</tbody></table>';
   el.innerHTML=h;
+  // Count-up animation for inventory numbers
+  setTimeout(function(){
+    document.querySelectorAll('.inv-count').forEach(function(el){
+      var target=parseInt(el.dataset.target)||0;
+      var duration=1000,start=performance.now();
+      function tick(now){
+        var t=Math.min((now-start)/duration,1);
+        var ease=1-Math.pow(1-t,3);
+        el.textContent=Math.round(ease*target).toLocaleString();
+        if(t<1)requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+    // Bar fill animation
+    document.querySelectorAll('.inv-bar').forEach(function(bar){
+      requestAnimationFrame(function(){bar.style.width=bar.dataset.pct+'%'});
+    });
+  },100);
 }
 
 function renderReview(f){
