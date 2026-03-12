@@ -212,7 +212,12 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .funnel-step .step-label{font-size:13px}
   .buyer-filters{flex-direction:row;flex-wrap:nowrap;gap:6px}
   .buyer-search{min-width:0;flex:1;padding:8px 10px;font-size:12px}
-  .buyer-filter-select{padding:7px 6px;font-size:11px;min-width:0;flex-shrink:0;border-radius:8px}
+  .buyer-filter-select{width:38px;min-width:38px;height:38px;padding:0;text-indent:-9999px;background-position:center;background-size:16px;border-radius:10px;flex-shrink:0;background-image:none;position:relative}
+  .buyer-filter-select.filter-kit{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Crect x='2' y='3' width='12' height='10' rx='2' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3Cpath d='M5.5 3V1.5h5V3' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-gender{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Ccircle cx='6' cy='6' r='3.5' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3Cpath d='M6 9.5V14M4.5 12h3M12.5 1.5l-3 3M12.5 1.5h-2.5M12.5 1.5v2.5' stroke='%23a1a1a6' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-region{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Cpath d='M8 1C5.2 1 3 3.1 3 5.8 3 9.5 8 15 8 15s5-5.5 5-9.2C13 3.1 10.8 1 8 1zm0 6.5a1.7 1.7 0 110-3.4 1.7 1.7 0 010 3.4z'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-type{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Cpath d='M2 3h12v1.5H2zm2 4h8v1.5H4zm2 4h4v1.5H6z'/%3E%3C/svg%3E")}
+  .buyer-filter-select.filter-active{border-color:rgba(48,209,88,.5);background-color:rgba(48,209,88,.08)}
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -309,10 +314,10 @@ tr:hover td{background:rgba(255,255,255,.03)}
       <div class="card-title">Shopify 구매자 상세 <span class="ct-sub" id="buyerBadge"></span></div>
       <div class="buyer-filters" id="buyerFilters">
         <input type="text" class="buyer-search" id="buyerSearch" placeholder="고객명, 지역 등 검색..." oninput="filterBuyers()">
-        <select class="buyer-filter-select" id="buyerGenderFilter" onchange="filterBuyers()"><option value="">전체 성별</option><option value="F">여성</option><option value="M">남성</option><option value="U">미식별</option></select>
-        <select class="buyer-filter-select" id="buyerKitFilter" onchange="filterBuyers()"><option value="">전체 제품</option><option value="5day">5-day</option><option value="30day">30-day</option></select>
-        <select class="buyer-filter-select" id="buyerSubFilter" onchange="filterBuyers()"><option value="">전체 유형</option><option value="sub">구독</option><option value="normal">일반</option></select>
-        <select class="buyer-filter-select" id="buyerRegionFilter" onchange="filterBuyers()"><option value="">전체 지역</option></select>
+        <select class="buyer-filter-select filter-gender" id="buyerGenderFilter" onchange="filterBuyers()"><option value="">전체 성별</option><option value="F">여성</option><option value="M">남성</option><option value="U">미식별</option></select>
+        <select class="buyer-filter-select filter-kit" id="buyerKitFilter" onchange="filterBuyers()"><option value="">전체 제품</option><option value="5day">5-day</option><option value="30day">30-day</option></select>
+        <select class="buyer-filter-select filter-type" id="buyerSubFilter" onchange="filterBuyers()"><option value="">전체 유형</option><option value="sub">구독</option><option value="normal">일반</option></select>
+        <select class="buyer-filter-select filter-region" id="buyerRegionFilter" onchange="filterBuyers()"><option value="">전체 지역</option></select>
       </div>
       <div class="buyer-result-count" id="buyerResultCount"></div>
       <div class="table-wrap" id="buyerTable" style="max-height:500px"></div>
