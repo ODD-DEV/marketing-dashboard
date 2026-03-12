@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ODD. Performance Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #000;
+    --bg-raised: #1c1c1e;
+    --border: rgba(255,255,255,.06);
+    --t1: #f5f5f7;
+    --t2: #d1d1d6;
+    --t3: #a1a1a6;
+    --t4: #6e6e73;
+    --t5: #48484a;
+    --sans: 'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --r: 16px;
+    --r-s: 12px;
+    --red: #d63634;
+    --green: #30d158;
+    --orange: #ff9f0a;
+    --pink: #ff375f;
+    --blue: #0a84ff;
+    --purple: #bf5af2;
+    --yellow: #ffd60a;
+    --meta-color: #4f8df9;
+    --tiktok-color: #ff3b5c;
+    --tof-color: #38bdf8;
+    --mof-color: #a78bfa;
+    --bof-color: #f97316;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--t1);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--red); color: #fff; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+
+  .container { max-width: 1440px; margin: 0 auto; padding: 24px 32px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+    width: fit-content;
+    background: rgba(255,255,255,.04);
+  }
+  .tab {
+    padding: 6px 18px;
+    border-radius: 100px;
+    border: none;
+    background: transparent;
+    color: var(--t4);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all .15s;
+    font-family: var(--sans);
+  }
+  .tab:hover { color: var(--t2); background: rgba(255,255,255,.05); }
+  .tab.active { background: rgba(214,54,52,.15); color: #d63634; font-weight: 600; }
+  .tab.active[data-tab="tiktok"] { background: rgba(255,59,92,.15); color: var(--tiktok-color); }
+
+  /* Date Picker Bar */
+  .date-picker-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+  .date-picker-bar .dp-label {
+    font-size: 13px;
+    color: var(--t3);
+    font-weight: 500;
+    margin-right: 2px;
+  }
+  .dp-group {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,.04);
+    border-radius: 100px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .dp-month {
+    padding: 6px 18px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--t4);
+    border: none;
+    background: none;
+    transition: all .15s;
+    white-space: nowrap;
+    font-family: var(--sans);
+  }
+  .dp-month:hover { color: var(--t2); background: rgba(255,255,255,.05); }
+  .dp-month.active { background: rgba(214,54,52,.15); color: #d63634; font-weight: 600; }
+  .dp-sep {
+    width: 1px;
+    height: 22px;
+    background: rgba(255,255,255,.08);
+    margin: 0 2px;
+  }
+  .dp-total {
+    padding: 6px 18px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--t4);
+    border: 1px solid rgba(255,255,255,.08);
+    background: none;
+    transition: all .15s;
+    white-space: nowrap;
+    font-family: var(--sans);
+  }
+  .dp-total:hover { border-color: rgba(255,255,255,.15); color: var(--t2); }
+  .dp-total.active { border-color: rgba(214,54,52,.3); color: #d63634; background: rgba(214,54,52,.08); }
+  .dp-weeks {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 4px;
+  }
+  .dp-week {
+    padding: 6px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--t4);
+    border: 1px solid transparent;
+    background: rgba(255,255,255,.03);
+    transition: all .15s;
+    text-align: center;
+    line-height: 1.3;
+    white-space: nowrap;
+    font-family: var(--sans);
+  }
+  .dp-week:hover { background: rgba(255,255,255,.07); color: var(--t2); }
+  .dp-week.active { background: rgba(214,54,52,.12); color: #d63634; border-color: rgba(214,54,52,.25); }
+  .dp-range-label {
+    font-size: 11px;
+    color: rgba(214,54,52,.7);
+    font-weight: 500;
+    margin-left: 6px;
+    white-space: nowrap;
+  }
+  @media (max-width: 768px) {
+    .dp-weeks { display: none; }
+  }
+
+  /* KPI Cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2px;
+    margin-bottom: 24px;
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .kpi-card {
+    background: var(--bg-raised);
+    border: none;
+    padding: 24px;
+    transition: all 0.2s;
+  }
+  .kpi-card:hover { background: #2c2c2e; }
+  .kpi-label { font-size: 11px; color: var(--t4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+  .kpi-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; color: var(--t1); letter-spacing: -.5px; }
+  .kpi-sub { font-size: 12px; color: var(--t3); }
+
+  /* Charts */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--bg-raised);
+    border: none;
+    border-radius: var(--r);
+    padding: 24px;
+  }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--t2);
+  }
+  .chart-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .chart-wrap { height: 320px; width: 100%; }
+  .chart-wrap-sm { height: 260px; width: 100%; }
+
+  /* Funnel Section */
+  .funnel-section { margin-bottom: 24px; }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--t1); }
+  .funnel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .funnel-card {
+    background: var(--bg-raised);
+    border: none;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: background .2s;
+  }
+  .funnel-card:hover { background: #2c2c2e; }
+  .funnel-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+  .funnel-card.tof::before { background: var(--tof-color); }
+  .funnel-card.mof::before { background: var(--mof-color); }
+  .funnel-card.bof::before { background: var(--bof-color); }
+  .funnel-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .funnel-card.tof .funnel-label { color: var(--tof-color); }
+  .funnel-card.mof .funnel-label { color: var(--mof-color); }
+  .funnel-card.bof .funnel-label { color: var(--bof-color); }
+  .funnel-stat { margin-bottom: 12px; }
+  .funnel-stat-label { font-size: 11px; color: var(--t4); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .5px; }
+  .funnel-stat-value { font-size: 20px; font-weight: 700; color: var(--t1); }
+  .funnel-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    font-size: 13px;
+    color: var(--t2);
+  }
+  .funnel-stat-row:last-child { border-bottom: none; }
+  .funnel-stat-row .label { color: var(--t3); }
+
+  /* Table */
+  .table-card {
+    background: var(--bg-raised);
+    border: none;
+    border-radius: var(--r);
+    padding: 24px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  #metaFunnelWeeklyTable, #tiktokFunnelWeeklyTable {
+    min-width: 1200px;
+  }
+  .scroll-hint {
+    overflow-x: auto !important;
+    position: relative;
+  }
+  .scroll-hint::-webkit-scrollbar { height: 6px; }
+  .scroll-hint::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+  .scroll-hint::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  .scroll-hint::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  .scroll-fade { position: relative; }
+  .scroll-fade::after {
+    content: '→ 스크롤';
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--t4);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .sticky-table th:nth-child(1), .sticky-table td:nth-child(1) {
+    position: sticky; left: 0; z-index: 2;
+    background: var(--bg-raised);
+    min-width: 80px; max-width: 80px;
+  }
+  .sticky-table th:nth-child(2), .sticky-table td:nth-child(2) {
+    position: sticky; left: 80px; z-index: 2;
+    background: var(--bg-raised);
+    min-width: 120px; max-width: 120px;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.4);
+  }
+  .sticky-table thead th:nth-child(1),
+  .sticky-table thead th:nth-child(2) { z-index: 3; background: var(--bg-raised); }
+  .sticky-table tr[style*="font-weight:700"] td:nth-child(1),
+  .sticky-table tr[style*="font-weight:700"] td:nth-child(2) { background: #242426; }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--t4);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    white-space: nowrap;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    white-space: nowrap;
+    color: var(--t2);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.03); }
+
+  .view-toggle { display: none; }
+  .view-toggle.active { display: block; }
+
+  .badge { background: rgba(255,255,255,.06); padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: none; }
+  .badge-meta { background: rgba(79,141,249,0.12); color: var(--meta-color); }
+  .badge-tiktok { background: rgba(255,59,92,0.12); color: var(--tiktok-color); }
+  .date-range { color: var(--t3); font-size: 13px; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 1024px) {
+    .chart-grid { grid-template-columns: 1fr; }
+    .funnel-grid { grid-template-columns: 1fr; }
+    .container { padding: 16px; }
+  }
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- Auth Gate -->
+<style>
+  #auth-gate{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;z-index:10000;flex-direction:column;}
+  .auth-card{background:var(--bg-raised);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);padding:48px 40px;text-align:center;max-width:400px;width:90%;}
+  .auth-card h2{font-size:20px;margin-bottom:8px;color:var(--t1);font-weight:700;}
+  .auth-card p{color:var(--t3);font-size:13px;margin-bottom:24px;}
+  .google-btn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#333;border:none;border-radius:100px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;transition:box-shadow 0.2s;font-family:var(--sans);}
+  .google-btn:hover{box-shadow:0 2px 12px rgba(214,54,52,0.3);}
+  .google-btn svg{width:20px;height:20px;}
+  .auth-error{color:var(--red);font-size:12px;margin-top:12px;display:none;}
+  #admin-panel{position:fixed;top:0;right:-420px;width:420px;height:100%;background:var(--bg-raised);border-left:1px solid rgba(255,255,255,.06);z-index:9998;transition:right 0.3s;overflow-y:auto;padding:24px;}
+  #admin-panel.open{right:0;}
+  #admin-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9997;}
+  #admin-overlay.open{display:block;}
+  .log-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px;}
+  .log-table th,.log-table td{padding:8px 6px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06);}
+  .log-table th{color:var(--t4);font-weight:600;position:sticky;top:0;background:var(--bg-raised);}
+  .log-table td{color:var(--t2);}
+  #log-btn{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:9996;box-shadow:0 2px 12px rgba(214,54,52,0.4);display:none;}
+  #log-btn:hover{transform:scale(1.05);}
+</style>
+
+<div id="auth-gate">
+  <div class="auth-card">
+    <h2>Performance Dashboard</h2>
+    <p>@hanah1.com Google 계정으로 로그인해주세요</p>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Google 로그인
+    </button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- Admin Log Panel -->
+<div id="admin-overlay" onclick="toggleAdminPanel()"></div>
+<div id="admin-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h3 style="font-size:16px;color:var(--t1);">접속 로그</h3>
+    <button onclick="toggleAdminPanel()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;">&times;</button>
+  </div>
+  <div id="log-filter" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <select id="logDays" onchange="loadAccessLogs()" style="background:var(--bg);color:var(--t2);border:1px solid rgba(255,255,255,.06);border-radius:100px;padding:6px 10px;font-size:12px;font-family:var(--sans);">
+      <option value="7">최근 7일</option>
+      <option value="30" selected>최근 30일</option>
+      <option value="90">최근 90일</option>
+    </select>
+  </div>
+  <div id="log-content"><p style="color:var(--t3);font-size:13px;">로딩 중...</p></div>
+</div>
+<button id="log-btn" onclick="toggleAdminPanel()" title="접속 로그">&#128274;</button>
+
+<div id="dashboard-content" style="display:none;">
+
+<!-- Nav -->
+<nav style="position:sticky;top:0;z-index:100;padding:16px 32px;display:flex;align-items:center;gap:16px;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06)">
+  <span style="font-size:20px;font-weight:800;letter-spacing:-1px;color:#f5f5f7">ODD.</span>
+  <span style="font-size:14px;color:#a1a1a6;font-weight:500;border-left:1px solid rgba(255,255,255,.1);padding-left:16px">Performance Dashboard</span>
+  <span style="background:#d63634;color:#fff;font-size:9px;padding:2px 8px;border-radius:100px;font-weight:700;letter-spacing:.5px;text-transform:uppercase">LIVE</span>
+  <div style="flex:1"></div>
+  <span class="badge badge-meta" style="font-size:11px;">Meta</span>
+  <span class="badge badge-tiktok" style="font-size:11px;">TikTok</span>
+  <span class="date-range" id="dateRange" style="font-size:11px;">2026.02.08 - 2026.04.11 (USD 기준)</span>
+  <span id="lastUpdated" style="font-size:11px;color:var(--green);margin-left:4px;"></span>
+  <a href="index.html" style="padding:6px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.15);color:#a1a1a6;font-size:12px;font-weight:500;text-decoration:none;transition:all .2s;margin-right:4px" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='#f5f5f7'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='#a1a1a6'">Sales</a>
+  <div id="user-bar" style="display:none;align-items:center;gap:8px">
+    <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
+    <span id="user-email" style="font-size:11px;color:#86868b"></span>
+    <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:var(--sans)">로그아웃</button>
+  </div>
+</nav>
+
+<div id="loadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px;">
+  <div style="width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--t3);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+  <div style="color:var(--t3);font-size:13px;font-weight:500;">Google Sheets 데이터 로딩 중...</div>
+</div>
+
+<div class="container">
+  <!-- Tab Navigation -->
+  <div class="tabs">
+    <button class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+    <button class="tab" data-tab="meta" onclick="switchTab('meta')">Meta</button>
+    <button class="tab" data-tab="tiktok" onclick="switchTab('tiktok')">TikTok</button>
+    <button class="tab" data-tab="funnel" onclick="switchTab('funnel')">Funnel 분석</button>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div id="tab-overview" class="view-toggle active">
+    <div class="date-picker-bar">
+      <span class="dp-label">기간</span>
+      <div class="dp-group">
+        <button class="dp-month active" data-period="feb" onclick="switchPeriod('feb')">2월</button>
+        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
+        <span class="dp-sep"></span>
+        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
+      </div>
+      <div class="dp-weeks">
+        <button class="dp-week active" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
+        <button class="dp-week active" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
+        <button class="dp-week active" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
+        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
+        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
+      </div>
+      <span class="dp-range-label" id="dpRangeLabel">2/8 – 2/28</span>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Spend</div>
+        <div class="kpi-value">$7,923</div>
+        <div class="kpi-sub">Meta $7,082 · TikTok $841</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Views</div>
+        <div class="kpi-value">893K</div>
+        <div class="kpi-sub">Meta 660K · TikTok 233K</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Clicks</div>
+        <div class="kpi-value">36,436</div>
+        <div class="kpi-sub">Avg CPC $0.19 (Meta)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Profile Visits</div>
+        <div class="kpi-value">38,303</div>
+        <div class="kpi-sub">Meta 36,557 · TikTok 1,746</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Follows</div>
+        <div class="kpi-value">488</div>
+        <div class="kpi-sub">Meta 470 · TikTok 18</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg CTR</div>
+        <div class="kpi-value">5.5%</div>
+        <div class="kpi-sub">Meta 기준</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card full">
+        <div class="chart-title"><span class="dot" style="background:var(--meta-color)"></span>Weekly Spend ($) — Meta vs TikTok</div>
+        <div class="chart-wrap"><canvas id="chartWeeklySpend"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Weekly CTR (%) — Meta vs TikTok</div>
+        <div class="chart-wrap-sm"><canvas id="chartWeeklyCTR"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title"><span class="dot" style="background:var(--green)"></span>Weekly Profile Visit → Follow CVR (%) — Meta vs TikTok</div>
+        <div class="chart-wrap-sm"><canvas id="chartWeeklyCVR"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Weekly 3s+ Video Views — Meta vs TikTok</div>
+        <div class="chart-wrap"><canvas id="chartWeekly3s"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--bof-color)"></span>Channel Spend 비율</div>
+        <div class="chart-wrap"><canvas id="chartSpendPie"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Engagement 비교</div>
+        <div class="chart-wrap" id="engagementBars" style="display:flex;flex-direction:column;justify-content:center;gap:14px;padding:16px 20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#4f8df9;"></span><span style="font-size:13px;color:var(--t3);">Meta</span>
+            <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#ff3b5c;margin-left:12px;"></span><span style="font-size:13px;color:var(--t3);">TikTok</span>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--t3);margin-bottom:4px;">Likes</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <div style="height:22px;border-radius:4px;background:#4f8df9;width:100%;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">2,214</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;margin-top:3px;">
+              <div style="height:22px;border-radius:4px;background:#ff3b5c;width:19.2%;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">426</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--t3);margin-bottom:4px;">Comments</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <div style="height:22px;border-radius:4px;background:#4f8df9;width:7.8%;min-width:6px;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">172</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;margin-top:3px;">
+              <div style="height:22px;border-radius:4px;background:#ff3b5c;width:2.3%;min-width:6px;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">51</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--t3);margin-bottom:4px;">Shares</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <div style="height:22px;border-radius:4px;background:#4f8df9;width:20.6%;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">456</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;margin-top:3px;">
+              <div style="height:22px;border-radius:4px;background:#ff3b5c;width:0.14%;min-width:6px;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">3</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--t3);margin-bottom:4px;">Saves</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <div style="height:22px;border-radius:4px;background:#4f8df9;width:29.4%;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">650</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;margin-top:3px;">
+              <div style="height:22px;border-radius:4px;background:#ff3b5c;width:1.6%;min-width:6px;"></div>
+              <span style="font-size:11px;color:var(--t2);white-space:nowrap;">35</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- META TAB -->
+  <div id="tab-meta" class="view-toggle">
+    <div class="date-picker-bar">
+      <span class="dp-label">기간</span>
+      <div class="dp-group">
+        <button class="dp-month active" data-period="feb" onclick="switchPeriod('feb')">2월</button>
+        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
+        <span class="dp-sep"></span>
+        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
+      </div>
+      <div class="dp-weeks">
+        <button class="dp-week active" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
+        <button class="dp-week active" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
+        <button class="dp-week active" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
+        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
+        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
+      </div>
+      <span class="dp-range-label">2/8 – 2/28</span>
+    </div>
+
+    <div class="kpi-grid" id="metaKpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-label">Meta Spend</div>
+        <div class="kpi-value">$7,082</div>
+        <div class="kpi-sub">CPM $10.73</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Views</div>
+        <div class="kpi-value">659,984</div>
+        <div class="kpi-sub">CTR 5.5%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Clicks</div>
+        <div class="kpi-value">36,436</div>
+        <div class="kpi-sub">CPC $0.19</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Profile Visits</div>
+        <div class="kpi-value">36,557</div>
+        <div class="kpi-sub">CPA $0.19</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Follows</div>
+        <div class="kpi-value">470</div>
+        <div class="kpi-sub">CPA $15.06</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">3s+ Video Views</div>
+        <div class="kpi-value">217,129</div>
+        <div class="kpi-sub">View Rate 33%</div>
+      </div>
+    </div>
+
+    <div class="section-title">Meta — Funnel 별 상세 (TOF / MOF / BOF)</div>
+    <div class="funnel-grid" id="metaFunnelGrid">
+      <div class="funnel-card tof">
+        <div class="funnel-label">TOF (Top of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Clicks</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CTR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CPC</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CPM</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ View Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card mof">
+        <div class="funnel-label">MOF (Middle of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Clicks</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CTR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CPC</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CPM</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ View Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card bof">
+        <div class="funnel-label">BOF (Bottom of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Clicks</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CTR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CPC</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">CPM</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ View Rate</span><span>—</span></div>
+      </div>
+    </div>
+
+    <div class="chart-card full scroll-fade" style="margin-top:24px;margin-bottom:24px;" id="metaFunnelWeeklyWrap">
+      <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Meta — Funnel 주간 상세</div>
+      <div class="scroll-hint">
+        <table id="metaFunnelWeeklyTable" class="sticky-table">
+          <thead>
+            <tr><th>Funnel</th><th>주간</th><th>Spend</th><th>Views</th><th>Clicks</th><th>CTR</th><th>CPC</th><th>Profile Visits</th><th>Follows</th><th>Follow CPA</th><th>3s+ Views Rate</th><th>View→PV CVR</th><th>3s+→PV CVR</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-card full" style="margin-bottom:24px;">
+      <div class="chart-title"><span class="dot" style="background:var(--meta-color)"></span>Meta — Weekly Performance Summary</div>
+      <div style="overflow-x:auto;">
+        <table id="metaWeeklySummaryTable">
+          <thead>
+            <tr><th>Week</th><th>Spend ($)</th><th>Views</th><th>Clicks</th><th>CTR</th><th>Profile Visits</th><th>Follows</th><th>Follow CVR</th><th>3s+ Views</th><th>3s+ Rate</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Meta CTR% Weekly Trend</div>
+        <div class="chart-wrap"><canvas id="chartMetaCTR"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Video Completion Funnel (TOF)</div>
+        <div class="chart-wrap"><canvas id="chartVideoFunnel"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title"><span class="dot" style="background:var(--green)"></span>Meta — Weekly Video View Rate (%) by Funnel</div>
+        <div class="chart-wrap"><canvas id="chartMetaVideoRate"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIKTOK TAB -->
+  <div id="tab-tiktok" class="view-toggle">
+    <div class="date-picker-bar">
+      <span class="dp-label">기간</span>
+      <div class="dp-group">
+        <button class="dp-month active" data-period="feb" onclick="switchPeriod('feb')">2월</button>
+        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
+        <span class="dp-sep"></span>
+        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
+      </div>
+      <div class="dp-weeks">
+        <button class="dp-week active" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
+        <button class="dp-week active" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
+        <button class="dp-week active" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
+        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
+        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
+      </div>
+      <span class="dp-range-label">2/8 – 2/28</span>
+    </div>
+
+    <div class="kpi-grid" id="tiktokKpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-label">TikTok Spend</div>
+        <div class="kpi-value">$841</div>
+        <div class="kpi-sub">CPM $3.60</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Views</div>
+        <div class="kpi-value">233,298</div>
+        <div class="kpi-sub">CTR 0.0%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Profile Visits</div>
+        <div class="kpi-value">1,746</div>
+        <div class="kpi-sub">CPA $0.48</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Follows</div>
+        <div class="kpi-value">18</div>
+        <div class="kpi-sub">CPA $46.72</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">2s+ Video Views</div>
+        <div class="kpi-value">126,670</div>
+        <div class="kpi-sub">View Rate 54%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Content Likes</div>
+        <div class="kpi-value">426</div>
+        <div class="kpi-sub">Comments 51</div>
+      </div>
+    </div>
+
+    <div class="section-title">TikTok — Funnel 상세 (TOF / MOF / BOF)</div>
+    <div class="funnel-grid" id="tiktokFunnelGrid">
+      <div class="funnel-card tof">
+        <div class="funnel-label">TOF (Top of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card mof">
+        <div class="funnel-label">MOF (Middle of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card bof">
+        <div class="funnel-label">BOF (Bottom of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+    </div>
+
+    <div class="chart-card full scroll-fade" style="margin-top:24px;margin-bottom:24px;" id="tiktokFunnelWeeklyWrap">
+      <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok — Funnel 주간 상세</div>
+      <div class="scroll-hint">
+        <table id="tiktokFunnelWeeklyTable" class="sticky-table">
+          <thead>
+            <tr><th>Funnel</th><th>주간</th><th>Spend</th><th>Views</th><th>Reach</th><th>PV</th><th>Follows</th><th>Follow CPA</th><th>2s+ Views</th><th>2s+ Rate</th><th>3s+→PV CVR</th><th>6s+ Rate</th><th>50% Rate</th><th>100% Rate</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-card full" style="margin-bottom:24px;">
+      <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok — Daily Performance Summary</div>
+      <div style="overflow-x:auto;">
+        <table id="tiktokDailySummaryTable">
+          <thead>
+            <tr><th>Date</th><th>Spend ($)</th><th>Views</th><th>Reach</th><th>Profile Visits</th><th>Follows</th><th>Follow CVR</th><th>2s+ Views</th><th>2s+ Rate</th><th>Likes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>2/23 (Mon)</td><td>$201.03</td><td>51,351</td><td>44,925</td><td>394</td><td>3</td><td>0.8%</td><td>28,164</td><td>55%</td><td>62</td></tr>
+            <tr><td>2/24 (Tue)</td><td>$160.25</td><td>45,265</td><td>40,876</td><td>348</td><td>3</td><td>0.9%</td><td>24,761</td><td>55%</td><td>68</td></tr>
+            <tr><td>2/25 (Wed)</td><td>$161.24</td><td>44,056</td><td>40,134</td><td>331</td><td>6</td><td>1.8%</td><td>23,355</td><td>53%</td><td>61</td></tr>
+            <tr><td>2/26 (Thu)</td><td>$159.44</td><td>45,832</td><td>41,510</td><td>339</td><td>4</td><td>1.2%</td><td>24,635</td><td>54%</td><td>128</td></tr>
+            <tr><td>2/27 (Fri)</td><td>$159.07</td><td>46,794</td><td>43,980</td><td>334</td><td>2</td><td>0.6%</td><td>25,755</td><td>55%</td><td>107</td></tr>
+            <tr style="font-weight:700;border-top:2px solid rgba(255,255,255,.06);"><td>Total</td><td>$841.03</td><td>233,298</td><td>211,425</td><td>1,746</td><td>18</td><td>1.0%</td><td>126,670</td><td>54%</td><td>426</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok Video Completion Rates</div>
+        <div class="chart-wrap"><canvas id="chartTiktokVideo"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--green)"></span>TikTok Engagement Breakdown</div>
+        <div class="chart-wrap"><canvas id="chartTiktokEngagement"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok — Daily Video View Rate (%)</div>
+        <div class="chart-wrap"><canvas id="chartTiktokVideoRate"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FUNNEL TAB -->
+  <div id="tab-funnel" class="view-toggle">
+    <div class="date-picker-bar" id="funnelPicker">
+      <span class="dp-label">기간</span>
+      <div class="dp-group">
+        <button class="dp-month active" data-period="feb" onclick="switchPeriod('feb')">2월</button>
+        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
+        <span class="dp-sep"></span>
+        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
+      </div>
+      <div class="dp-weeks">
+        <button class="dp-week active" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
+        <button class="dp-week active" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
+        <button class="dp-week active" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
+        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
+        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
+      </div>
+      <span class="dp-range-label">2/8 – 2/28</span>
+    </div>
+    <div class="section-title">Meta — Funnel Stage 비교 (TOF / MOF / BOF)</div>
+
+    <div class="funnel-grid">
+      <div class="funnel-card tof">
+        <div class="funnel-label">TOF (Top of Funnel)</div>
+        <div class="funnel-stat">
+          <div class="funnel-stat-label">Total Spend</div>
+          <div class="funnel-stat-value">$5,758.53</div>
+        </div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>560,544</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>497,812</span></div>
+        <div class="funnel-stat-row"><span class="label">Clicks</span><span>33,978</span></div>
+        <div class="funnel-stat-row"><span class="label">CTR</span><span>6.1%</span></div>
+        <div class="funnel-stat-row"><span class="label">CPC</span><span>$0.17</span></div>
+        <div class="funnel-stat-row"><span class="label">CPM</span><span>$10.27</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>34,285</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>421</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>$13.68</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ Video Views</span><span>220,790</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ View Rate</span><span>39%</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>1,971</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Saves</span><span>447</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>439</span></div>
+      </div>
+
+      <div class="funnel-card mof">
+        <div class="funnel-label">MOF (Middle of Funnel)</div>
+        <div class="funnel-stat">
+          <div class="funnel-stat-label">Total Spend</div>
+          <div class="funnel-stat-value">$1,009.51</div>
+        </div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>83,928</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>61,849+</span></div>
+        <div class="funnel-stat-row"><span class="label">Clicks</span><span>2,306</span></div>
+        <div class="funnel-stat-row"><span class="label">CTR</span><span>2.7%</span></div>
+        <div class="funnel-stat-row"><span class="label">CPC</span><span>$0.44</span></div>
+        <div class="funnel-stat-row"><span class="label">CPM</span><span>$12.03</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>2,223</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>56</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>$18.03</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ Video Views</span><span>3,385</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ View Rate</span><span>4.0%</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>136+</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Saves</span><span>77</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>25</span></div>
+      </div>
+
+      <div class="funnel-card bof">
+        <div class="funnel-label">BOF (Bottom of Funnel)</div>
+        <div class="funnel-stat">
+          <div class="funnel-stat-label">Total Spend</div>
+          <div class="funnel-stat-value">$314.30</div>
+        </div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>15,512</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>27,691+</span></div>
+        <div class="funnel-stat-row"><span class="label">Clicks</span><span>152</span></div>
+        <div class="funnel-stat-row"><span class="label">CTR</span><span>1.0%</span></div>
+        <div class="funnel-stat-row"><span class="label">CPC</span><span>$2.07</span></div>
+        <div class="funnel-stat-row"><span class="label">CPM</span><span>$20.26</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>49</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>8</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>$39.29</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ Video Views</span><span>2,454</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+ View Rate</span><span>16%</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>73</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Saves</span><span>20</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>6</span></div>
+      </div>
+    </div>
+
+    <div class="chart-grid" style="margin-top: 24px;">
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Funnel — Spend 배분</div>
+        <div class="chart-wrap"><canvas id="chartFunnelSpend"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Funnel — CPC 비교</div>
+        <div class="chart-wrap"><canvas id="chartFunnelCPC"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--bof-color)"></span>Funnel — CTR 비교</div>
+        <div class="chart-wrap"><canvas id="chartFunnelCTR"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--green)"></span>Funnel — Follow CPA 비교</div>
+        <div class="chart-wrap"><canvas id="chartFunnelFollowCPA"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--meta-color)"></span>Funnel — Follow 수 비교</div>
+        <div class="chart-wrap"><canvas id="chartFunnelFollows"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>Funnel — 3s+ Video View Rate 비교</div>
+        <div class="chart-wrap"><canvas id="chartFunnelVideoRate"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:32px;">TikTok — Funnel Stage 비교 (TOF / MOF / BOF)</div>
+
+    <div class="funnel-grid" id="tkFunnelGrid">
+      <div class="funnel-card tof">
+        <div class="funnel-label">TOF (Top of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Total Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card mof">
+        <div class="funnel-label">MOF (Middle of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Total Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+      <div class="funnel-card bof">
+        <div class="funnel-label">BOF (Bottom of Funnel)</div>
+        <div class="funnel-stat"><div class="funnel-stat-label">Total Spend</div><div class="funnel-stat-value">—</div></div>
+        <div class="funnel-stat-row"><span class="label">Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Reach</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Profile Visits</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follows</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Follow CPA</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ Video Views</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">2s+ View Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Likes</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Comments</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">Content Shares</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">3s+→PV CVR</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">6s+ Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">50% Views Rate</span><span>—</span></div>
+        <div class="funnel-stat-row"><span class="label">100% Views Rate</span><span>—</span></div>
+      </div>
+    </div>
+
+    <div class="chart-grid" style="margin-top: 24px;">
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>TikTok Funnel — Spend 배분</div>
+        <div class="chart-wrap"><canvas id="chartTkFunnelSpend"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>TikTok Funnel — Follow CPA 비교</div>
+        <div class="chart-wrap"><canvas id="chartTkFunnelFollowCPA"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--bof-color)"></span>TikTok Funnel — Follow 수 비교</div>
+        <div class="chart-wrap"><canvas id="chartTkFunnelFollows"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--green)"></span>TikTok Funnel — 2s+ Video View Rate</div>
+        <div class="chart-wrap"><canvas id="chartTkFunnelVideoRate"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok Funnel — Profile Visit 비교</div>
+        <div class="chart-wrap"><canvas id="chartTkFunnelPV"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="background:var(--meta-color)"></span>TikTok Funnel — Reach 비교</div>
+        <div class="chart-wrap"><canvas id="chartTkFunnelReach"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Chart.js dark theme defaults (Sales Dashboard style)
+Chart.defaults.color = '#a1a1a6';
+Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
+Chart.defaults.font.family = "'Pretendard',-apple-system,sans-serif";
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
+Chart.defaults.elements.line.borderWidth = 1.5;
+Chart.defaults.elements.line.tension = 0.4;
+Chart.defaults.elements.point.radius = 0;
+Chart.defaults.elements.point.hoverRadius = 4;
+Chart.defaults.scale.grid = { color: 'rgba(255,255,255,.04)' };
+Chart.defaults.animation = false;
+
+const charts = {};
+let cachedSections = null;
+let currentPeriod = 'feb';
+let selectedWeeks = [0, 1, 2];
+
+const WEEK_RANGES = [
+  { label: 'W1', start: '2/8', end: '2/14' },
+  { label: 'W2', start: '2/15', end: '2/21' },
+  { label: 'W3', start: '2/22', end: '2/28' },
+  { label: 'W4', start: '3/1', end: '3/7' },
+  { label: 'W5', start: '3/8', end: '3/14' }
+];
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view-toggle').forEach(v => v.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+function switchPeriod(period) {
+  currentPeriod = period;
+  if (period === 'feb') selectedWeeks = [0, 1, 2];
+  else if (period === 'mar') selectedWeeks = [3, 4];
+  else selectedWeeks = [0, 1, 2, 3, 4];
+  syncPickerUI();
+  if (cachedSections) { updateOverviewForPeriod(); updateMetaForPeriod(); updateTiktokForPeriod(); updateFunnelForPeriod(); }
+}
+
+function toggleWeek(idx) {
+  const pos = selectedWeeks.indexOf(idx);
+  if (pos >= 0) {
+    if (selectedWeeks.length <= 1) return;
+    selectedWeeks.splice(pos, 1);
+  } else {
+    selectedWeeks.push(idx);
+  }
+  selectedWeeks.sort();
+  const s = selectedWeeks.join(',');
+  if (s === '0,1,2') currentPeriod = 'feb';
+  else if (s === '3,4') currentPeriod = 'mar';
+  else if (s === '0,1,2,3,4') currentPeriod = 'total';
+  else currentPeriod = 'custom';
+  syncPickerUI();
+  if (cachedSections) { updateOverviewForPeriod(); updateMetaForPeriod(); updateTiktokForPeriod(); updateFunnelForPeriod(); }
+}
+
+function syncPickerUI() {
+  document.querySelectorAll('.dp-month, .dp-total').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === currentPeriod);
+  });
+  document.querySelectorAll('.dp-week').forEach(b => {
+    b.classList.toggle('active', selectedWeeks.includes(parseInt(b.dataset.week)));
+  });
+  if (selectedWeeks.length > 0) {
+    const first = WEEK_RANGES[selectedWeeks[0]];
+    const last = WEEK_RANGES[selectedWeeks[selectedWeeks.length - 1]];
+    const rangeText = first.start + ' – ' + last.end;
+    document.querySelectorAll('.dp-range-label').forEach(el => el.textContent = rangeText);
+  }
+}
+
+const weekLabels = ['W1 (2/8-14)', 'W2 (2/15-21)', 'W3 (2/22-28)', 'W4 (3/1-7)', 'W5 (3/8-14)'];
+
+// Weekly Spend
+charts.weeklySpend = new Chart(document.getElementById('chartWeeklySpend'), {
+  type: 'line',
+  data: {
+    labels: weekLabels,
+    datasets: [
+      { label: 'Meta', data: [339.83, 3089.18, 3653.33, 1913.57, 104.08], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, borderWidth: 3 },
+      { label: 'TikTok', data: [0, 0, 841.03, 0, 0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, borderWidth: 3 }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString() } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } } } }
+});
+
+// Weekly CTR
+charts.weeklyCTR = new Chart(document.getElementById('chartWeeklyCTR'), {
+  type: 'line',
+  data: {
+    labels: weekLabels,
+    datasets: [
+      { label: 'Meta CTR', data: [5.9, 7.1, 4.4, 2.9, 0.3], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.1)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, pointHoverRadius: 8 },
+      { label: 'TikTok CTR', data: [null, null, 0.0, null, null], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.1)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, pointHoverRadius: 8, spanGaps: false }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y + '%' : 'N/A') } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => v + '%' }, title: { display: true, text: 'CTR (%)' } } } }
+});
+
+// Weekly CVR
+charts.weeklyCVR = new Chart(document.getElementById('chartWeeklyCVR'), {
+  type: 'line',
+  data: {
+    labels: weekLabels,
+    datasets: [
+      { label: 'Meta CVR', data: [0.0, 1.2, 1.5, 0.0, 0.0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.1)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, pointHoverRadius: 8 },
+      { label: 'TikTok CVR', data: [null, null, 1.0, null, null], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.1)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, pointHoverRadius: 8, spanGaps: false }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y + '%' : 'N/A') } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => v + '%' }, title: { display: true, text: 'Profile Visit → Follow CVR (%)' } } } }
+});
+
+// Weekly 3s+
+charts.weekly3s = new Chart(document.getElementById('chartWeekly3s'), {
+  type: 'line',
+  data: {
+    labels: weekLabels,
+    datasets: [
+      { label: 'Meta 3s+ Views', data: [56, 101648, 115425, 39890, 0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, borderWidth: 3 },
+      { label: 'TikTok 2s+ Views', data: [0, 0, 126670, 0, 0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, borderWidth: 3 }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0) + 'K' } } } }
+});
+
+// Spend Pie
+charts.spendPie = new Chart(document.getElementById('chartSpendPie'), {
+  type: 'doughnut',
+  data: { labels: ['Meta TOF', 'Meta MOF', 'Meta BOF', 'TikTok TOF'], datasets: [{ data: [5758.53, 1009.51, 314.30, 841.03], backgroundColor: ['#38bdf8', '#a78bfa', '#f97316', '#ff3b5c'], borderWidth: 0 }] },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { padding: 16 } } } }
+});
+
+// Meta CTR Weekly
+charts.metaCTR = new Chart(document.getElementById('chartMetaCTR'), {
+  type: 'line',
+  data: {
+    labels: ['W1', 'W2', 'W3', 'W4', 'W5'],
+    datasets: [
+      { label: 'Meta Sum CTR', data: [5.9, 7.1, 4.4, 2.9, 0.3], borderColor: '#4f8df9', fill: false },
+      { label: 'TOF CTR', data: [6.4, 7.1, 5.0, 4.3, 0], borderColor: '#38bdf8', borderDash: [5,5], fill: false },
+      { label: 'MOF CTR', data: [5.3, 5.4, 2.5, 2.3, 0], borderColor: '#a78bfa', borderDash: [5,5], fill: false },
+      { label: 'BOF CTR', data: [0.7, 0.7, 1.0, 1.1, 0.3], borderColor: '#f97316', borderDash: [5,5], fill: false }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+});
+
+// Meta Video Funnel
+charts.videoFunnel = new Chart(document.getElementById('chartVideoFunnel'), {
+  type: 'line',
+  data: { labels: ['3s+', '25%', '50%', '75%', '95%'], datasets: [{ label: 'Video Views', data: [220790, 199544, 133591, 88305, 66620], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, pointRadius: 5, pointBackgroundColor: '#4f8df9', borderWidth: 3 }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + ' views (' + Math.round(ctx.parsed.y/220790*100) + '%)' } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0) + 'K' } } } }
+});
+
+// Meta Video View Rate
+charts.metaVideoRate = new Chart(document.getElementById('chartMetaVideoRate'), {
+  type: 'line',
+  data: {
+    labels: weekLabels,
+    datasets: [
+      { label: '3s+ Rate', data: [0, 38, 31, 26, 0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.08)', fill: true, pointRadius: 5 },
+      { label: '25% Rate', data: [0, 36, 29, 23, 0], borderColor: '#38bdf8', borderDash: [4,4], fill: false, pointRadius: 4 },
+      { label: '50% Rate', data: [0, 25, 18, 12, 0], borderColor: '#a78bfa', borderDash: [4,4], fill: false, pointRadius: 4 },
+      { label: '75% Rate', data: [0, 17, 69, 7, 0], borderColor: '#f97316', borderDash: [4,4], fill: false, pointRadius: 4 },
+      { label: '95% Rate', data: [0, 13, 9, 5, 0], borderColor: '#f87171', borderDash: [4,4], fill: false, pointRadius: 4 }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 80, ticks: { callback: v => v + '%' }, title: { display: true, text: 'View Rate (%)' } } } }
+});
+
+// TikTok Video Completion
+charts.tiktokVideo = new Chart(document.getElementById('chartTiktokVideo'), {
+  type: 'line',
+  data: { labels: ['2s+ (54%)', '25% (39%)', '50% (27%)', '75% (13%)', '100% (6%)'], datasets: [{ label: 'Video Views', data: [126670, 90506, 62553, 29178, 12893], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#ff3b5c' }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+// TikTok Engagement
+charts.tiktokEngagement = new Chart(document.getElementById('chartTiktokEngagement'), {
+  type: 'doughnut',
+  data: { labels: ['Likes — 426 (82.7%)', 'Comments — 51 (9.9%)', 'Saves — 35 (6.8%)', 'Shares — 3 (0.6%)'], datasets: [{ data: [426, 51, 35, 3], backgroundColor: ['#ff3b5c', '#f97316', '#a78bfa', '#38bdf8'], borderWidth: 0 }] },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(ctx) { const total = ctx.dataset.data.reduce((a,b) => a+b, 0); const pct = (ctx.parsed / total * 100).toFixed(1); return ctx.label.split(' — ')[0] + ': ' + ctx.parsed.toLocaleString() + ' (' + pct + '%)'; } } } } }
+});
+
+// TikTok Video View Rate
+charts.tiktokVideoRate = new Chart(document.getElementById('chartTiktokVideoRate'), {
+  type: 'line',
+  data: {
+    labels: ['2/23', '2/24', '2/25', '2/26', '2/27'],
+    datasets: [
+      { label: '2s+ Rate', data: [55, 55, 53, 54, 55], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.08)', fill: true, pointRadius: 5 },
+      { label: '25% Rate', data: [40, 40, 37, 38, 40], borderColor: '#f97316', borderDash: [4,4], fill: false, pointRadius: 4 },
+      { label: '50% Rate', data: [28, 28, 25, 26, 27], borderColor: '#a78bfa', borderDash: [4,4], fill: false, pointRadius: 4 },
+      { label: '75% Rate', data: [13, 13, 12, 12, 13], borderColor: '#38bdf8', borderDash: [4,4], fill: false, pointRadius: 4 },
+      { label: '100% Rate', data: [6, 6, 5, 5, 6], borderColor: '#30d158', borderDash: [4,4], fill: false, pointRadius: 4 }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 70, ticks: { callback: v => v + '%' }, title: { display: true, text: 'View Rate (%)' } } } }
+});
+
+// Funnel Spend
+charts.funnelSpend = new Chart(document.getElementById('chartFunnelSpend'), {
+  type: 'doughnut',
+  data: { labels: ['TOF — $5,759 (81.3%)', 'MOF — $1,010 (14.3%)', 'BOF — $314 (4.4%)'], datasets: [{ data: [5758.53, 1009.51, 314.30], backgroundColor: ['#38bdf8', '#a78bfa', '#f97316'], borderWidth: 0 }] },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(ctx) { const total = ctx.dataset.data.reduce((a,b) => a+b, 0); const pct = (ctx.parsed / total * 100).toFixed(1); return ctx.label.split(' — ')[0] + ': $' + ctx.parsed.toLocaleString(undefined, {minimumFractionDigits:2}) + ' (' + pct + '%)'; } } } } }
+});
+
+// Funnel CPC
+charts.funnelCPC = new Chart(document.getElementById('chartFunnelCPC'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'CPC ($)', data: [0.17, 0.44, 2.07], borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } } }
+});
+
+// Funnel CTR
+charts.funnelCTR = new Chart(document.getElementById('chartFunnelCTR'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'CTR (%)', data: [6.1, 2.7, 1.0], borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+});
+
+// Funnel Follow CPA
+charts.funnelFollowCPA = new Chart(document.getElementById('chartFunnelFollowCPA'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follow CPA ($)', data: [13.68, 18.03, 39.29], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } } }
+});
+
+// Funnel Follows
+charts.funnelFollows = new Chart(document.getElementById('chartFunnelFollows'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follows', data: [421, 56, 8], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { const total = 485; const pct = (ctx.parsed.y / total * 100).toFixed(1); return 'Follows: ' + ctx.parsed.y + ' (' + pct + '%)'; } } } }, scales: { y: { beginAtZero: true } } }
+});
+
+// Funnel 3s+ Video View Rate
+charts.funnelVideoRate = new Chart(document.getElementById('chartFunnelVideoRate'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: '3s+ View Rate', data: [39, 4.0, 16], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '3s+ View Rate: ' + ctx.parsed.y + '%' } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+});
+
+// TikTok Funnel Charts
+charts.tkFunnelSpend = new Chart(document.getElementById('chartTkFunnelSpend'), {
+  type: 'doughnut',
+  data: { labels: ['TOF — $0', 'MOF — $0', 'BOF — $0'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#38bdf8', '#a78bfa', '#f97316'], borderWidth: 0 }] },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(ctx) { const total = ctx.dataset.data.reduce((a,b) => a+b, 0) || 1; return ctx.label.split(' — ')[0] + ': $' + ctx.parsed.toLocaleString(undefined, {minimumFractionDigits:2}) + ' (' + (ctx.parsed/total*100).toFixed(1) + '%)'; } } } } }
+});
+
+charts.tkFunnelFollowCPA = new Chart(document.getElementById('chartTkFunnelFollowCPA'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follow CPA ($)', data: [0,0,0], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } } }
+});
+
+charts.tkFunnelFollows = new Chart(document.getElementById('chartTkFunnelFollows'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follows', data: [0,0,0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+charts.tkFunnelVideoRate = new Chart(document.getElementById('chartTkFunnelVideoRate'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: '2s+ View Rate', data: [0,0,0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '2s+ View Rate: ' + ctx.parsed.y.toFixed(1) + '%' } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+});
+
+charts.tkFunnelPV = new Chart(document.getElementById('chartTkFunnelPV'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Profile Visits', data: [0,0,0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+charts.tkFunnelReach = new Chart(document.getElementById('chartTkFunnelReach'), {
+  type: 'line',
+  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Reach', data: [0,0,0], borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+// =============================================
+// GOOGLE SHEETS LIVE DATA FETCHER
+// =============================================
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJQpp9WdjTcj95v9r5BWdk_arYdrYZci_l2g9VouTFh_Avjj7VzfQ1LwRghkLRdI19_qq6AmFFmPsy/pub?output=csv';
+const REFRESH_INTERVAL = 5 * 60 * 1000;
+
+function parseCSV(text) {
+  const rows = [];
+  let inQuote = false, field = '', row = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuote) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuote = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') { inQuote = true; }
+      else if (c === ',') { row.push(field.trim()); field = ''; }
+      else if (c === '\n' || (c === '\r' && text[i+1] === '\n')) {
+        row.push(field.trim()); rows.push(row); row = []; field = '';
+        if (c === '\r') i++;
+      } else { field += c; }
+    }
+  }
+  if (field || row.length) { row.push(field.trim()); rows.push(row); }
+  return rows;
+}
+
+function pn(v) {
+  if (!v || v === '' || v === 'inf' || v === '#DIV/0!' || v === '—') return null;
+  return parseFloat(String(v).replace(/[$,%\s]/g, '').replace(/,/g, ''));
+}
+
+function fn(v, d=0) { return v == null ? '—' : v.toLocaleString(undefined, {minimumFractionDigits:d, maximumFractionDigits:d}); }
+
+function parseSections(rows) {
+  const sections = {};
+  let currentSection = null;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const c2 = (r[2]||'').toLowerCase().trim();
+    const c1 = (r[1]||'').toLowerCase().trim();
+    if (c2 === 'meta sum') currentSection = 'metaSum';
+    else if (c2 === 'meta tof') currentSection = 'metaTOF';
+    else if (c2 === 'meta mof') currentSection = 'metaMOF';
+    else if (c2 === 'meta bof') currentSection = 'metaBOF';
+    else if (c2.includes('tiktok sum') || c2.includes('tik tok sum') || c2 === 'tiktok sum') currentSection = 'tiktokSum';
+    else if (c2.includes('tiktok tof') || c2.includes('tik tok tof') || c2 === 'tiktok tof') currentSection = 'tiktokTOF';
+    else if (c1.includes('tiktok')) { if (!currentSection?.startsWith('tiktok')) currentSection = 'tiktokSum'; }
+    if (currentSection && r[3]) {
+      if (!sections[currentSection]) sections[currentSection] = {};
+      sections[currentSection][r[3].trim()] = r;
+    }
+  }
+  return sections;
+}
+
+const WCOLS = [14, 22, 30, 38, 46];
+const TKCOLS = [24, 25, 26, 27, 28];
+
+function getWeekly(row) { return WCOLS.map(c => pn(row?.[c]) || 0); }
+function getTkDaily(row) { return TKCOLS.map(c => pn(row?.[c]) || 0); }
+function getTotal(row) { if (!row) return null; return pn(row[5]) ?? pn(row[4]); }
+
+function getSelectedSum(row) {
+  if (!row) return 0;
+  return selectedWeeks.reduce((sum, wi) => sum + (pn(row[WCOLS[wi]]) || 0), 0);
+}
+
+function getSelectedAvg(row) {
+  if (!row) return '—';
+  let sum = 0, cnt = 0;
+  selectedWeeks.forEach(wi => {
+    const raw = row[WCOLS[wi]];
+    if (raw && raw !== '—' && raw !== '') {
+      const v = parseFloat(String(raw).replace('%',''));
+      if (!isNaN(v)) { sum += v; cnt++; }
+    }
+  });
+  return cnt > 0 ? (sum / cnt).toFixed(1) + '%' : '—';
+}
+
+function getSelectedCTR(secObj) {
+  const clicks = getSelectedSum(secObj['Click']);
+  const views = getSelectedSum(secObj['View']);
+  return views > 0 ? (clicks / views * 100) : 0;
+}
+
+function updateOverviewForPeriod() {
+  const S = cachedSections;
+  if (!S) return;
+  const ms = S.metaSum || {};
+  const ts = S.tiktokTOF || S.tiktokSum || {};
+
+  const metaSpend = getSelectedSum(ms['Expense']);
+  const tkSpend = getSelectedSum(ts['Expense']);
+  const totalSpend = metaSpend + tkSpend;
+  const metaViews = getSelectedSum(ms['View']);
+  const tkViews = getSelectedSum(ts['View']);
+  const metaClicks = getSelectedSum(ms['Click']);
+  const metaPV = getSelectedSum(ms['Profile visit']);
+  const tkPV = getSelectedSum(ts['Profile visit']);
+  const metaFollows = getSelectedSum(ms['Follow']);
+  const tkFollows = getSelectedSum(ts['Follow']);
+  const ctr = getSelectedCTR(ms);
+  const cpc = metaClicks > 0 ? (metaSpend / metaClicks) : 0;
+
+  const kpis = document.querySelectorAll('#tab-overview .kpi-card');
+  if (kpis[0]) { kpis[0].querySelector('.kpi-label').textContent = 'Spend'; kpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(totalSpend)); kpis[0].querySelector('.kpi-sub').textContent = 'Meta $' + fn(Math.round(metaSpend)) + ' · TikTok $' + fn(Math.round(tkSpend)); }
+  if (kpis[1]) { kpis[1].querySelector('.kpi-label').textContent = 'Views'; const totalViews = metaViews + tkViews; kpis[1].querySelector('.kpi-value').textContent = totalViews >= 1000 ? fn(Math.round(totalViews/1000)) + 'K' : fn(Math.round(totalViews)); kpis[1].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaViews/1000)) + 'K · TikTok ' + fn(Math.round(tkViews/1000)) + 'K'; }
+  if (kpis[2]) { kpis[2].querySelector('.kpi-label').textContent = 'Clicks'; kpis[2].querySelector('.kpi-value').textContent = fn(Math.round(metaClicks)); kpis[2].querySelector('.kpi-sub').textContent = 'Avg CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—') + ' (Meta)'; }
+  if (kpis[3]) { kpis[3].querySelector('.kpi-label').textContent = 'Profile Visits'; kpis[3].querySelector('.kpi-value').textContent = fn(Math.round(metaPV + tkPV)); kpis[3].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaPV)) + ' · TikTok ' + fn(Math.round(tkPV)); }
+  if (kpis[4]) { kpis[4].querySelector('.kpi-label').textContent = 'Follows'; kpis[4].querySelector('.kpi-value').textContent = fn(Math.round(metaFollows + tkFollows)); kpis[4].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaFollows)) + ' · TikTok ' + fn(Math.round(tkFollows)); }
+  if (kpis[5]) { kpis[5].querySelector('.kpi-label').textContent = 'Avg CTR'; kpis[5].querySelector('.kpi-value').textContent = ctr.toFixed(1) + '%'; kpis[5].querySelector('.kpi-sub').textContent = 'Meta 기준'; }
+
+  const isAll = selectedWeeks.length === 5;
+  [charts.weeklySpend, charts.weeklyCTR, charts.weeklyCVR, charts.weekly3s].forEach(chart => {
+    if (!chart) return;
+    chart.data.datasets.forEach(ds => {
+      if (!isAll && ds.data) {
+        ds.pointBackgroundColor = ds.data.map((_, i) => selectedWeeks.includes(i) ? ds.borderColor : 'rgba(128,128,128,0.3)');
+        ds.pointRadius = ds.data.map((_, i) => selectedWeeks.includes(i) ? 5 : 3);
+        ds.segment = { borderColor: ctx => { const idx = ctx.p0DataIndex; if (selectedWeeks.includes(idx) && selectedWeeks.includes(idx + 1)) return undefined; return 'rgba(128,128,128,0.25)'; }};
+      } else { ds.pointBackgroundColor = ds.borderColor; ds.pointRadius = 4; ds.segment = undefined; }
+    });
+    chart.update();
+  });
+
+  if (charts.spendPie) {
+    const mt = S.metaTOF || {}, mm = S.metaMOF || {}, mb = S.metaBOF || {};
+    const tt = S.tiktokTOF || {}, tm = S.tiktokMOF || {}, tb = S.tiktokBOF || {};
+    const segs = [
+      { label: 'Meta TOF', val: getSelectedSum(mt['Expense']), color: '#38bdf8' },
+      { label: 'Meta MOF', val: getSelectedSum(mm['Expense']), color: '#a78bfa' },
+      { label: 'Meta BOF', val: getSelectedSum(mb['Expense']), color: '#f97316' },
+      { label: 'TikTok TOF', val: getSelectedSum(tt['Expense']), color: '#ff3b5c' },
+      { label: 'TikTok MOF', val: getSelectedSum(tm['Expense']), color: '#fb923c' },
+      { label: 'TikTok BOF', val: getSelectedSum(tb['Expense']), color: '#fbbf24' },
+    ].filter(s => s.val > 0);
+    const total = segs.reduce((a, s) => a + s.val, 0) || 1;
+    charts.spendPie.data.labels = segs.map(s => `${s.label} — $${fn(Math.round(s.val))} (${(s.val/total*100).toFixed(1)}%)`);
+    charts.spendPie.data.datasets[0].data = segs.map(s => s.val);
+    charts.spendPie.data.datasets[0].backgroundColor = segs.map(s => s.color);
+    charts.spendPie.update();
+  }
+
+  const metaLikes = getSelectedSum(ms['Content like']);
+  const tkLikes = getSelectedSum(ts['Content like']);
+  const metaComments = getSelectedSum(ms['Content comment']);
+  const tkComments = getSelectedSum(ts['Content comment']);
+  const metaShares = getSelectedSum(ms['Content share']);
+  const tkShares = getSelectedSum(ts['Content share']);
+  const metaSaves = getSelectedSum(ms['Content save']);
+  const tkSaves = getSelectedSum(ts['Content save']);
+  updateEngagementBars(metaLikes, tkLikes, metaComments, tkComments, metaShares, tkShares, metaSaves, tkSaves);
+}
+
+function updateEngagementBars(mL, tL, mC, tC, mSh, tSh, mSv, tSv) {
+  const container = document.getElementById('engagementBars');
+  if (!container) return;
+  const maxVal = Math.max(mL, tL, mC, tC, mSh, tSh, mSv, tSv, 1);
+  const items = [ { label: 'Likes', m: mL, t: tL }, { label: 'Comments', m: mC, t: tC }, { label: 'Shares', m: mSh, t: tSh }, { label: 'Saves', m: mSv, t: tSv } ];
+  const legend = container.children[0];
+  container.innerHTML = '';
+  container.appendChild(legend);
+  items.forEach(({ label, m, t }) => {
+    const div = document.createElement('div');
+    const pctM = Math.max((m / maxVal) * 100, 0.3);
+    const pctT = Math.max((t / maxVal) * 100, 0.3);
+    div.innerHTML = `<div style="font-size:12px;color:var(--t3);margin-bottom:4px;">${label}</div>
+      <div style="display:flex;gap:4px;align-items:center;"><div style="height:22px;border-radius:4px;background:#4f8df9;width:${pctM}%;min-width:6px;"></div><span style="font-size:11px;color:var(--t2);white-space:nowrap;">${fn(Math.round(m))}</span></div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:3px;"><div style="height:22px;border-radius:4px;background:#ff3b5c;width:${pctT}%;min-width:6px;"></div><span style="font-size:11px;color:var(--t2);white-space:nowrap;">${fn(Math.round(t))}</span></div>`;
+    container.appendChild(div);
+  });
+}
+
+function updateMetaForPeriod() {
+  const S = cachedSections;
+  if (!S) return;
+  const ms = S.metaSum || {};
+  const mt = S.metaTOF || {};
+  const mm = S.metaMOF || {};
+  const mb = S.metaBOF || {};
+
+  const spend = getSelectedSum(ms['Expense']);
+  const views = getSelectedSum(ms['View']);
+  const clicks = getSelectedSum(ms['Click']);
+  const pv = getSelectedSum(ms['Profile visit']);
+  const follows = getSelectedSum(ms['Follow']);
+  const video3s = getSelectedSum(ms['3s+ video views']);
+  const ctr = views > 0 ? (clicks / views * 100) : 0;
+  const cpc = clicks > 0 ? spend / clicks : 0;
+  const cpm = views > 0 ? spend / views * 1000 : 0;
+  const followCPA = follows > 0 ? spend / follows : 0;
+  const viewRate = views > 0 ? (video3s / views * 100) : 0;
+
+  const mkpis = document.querySelectorAll('#metaKpiGrid .kpi-card');
+  if (mkpis[0]) { mkpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(spend)); mkpis[0].querySelector('.kpi-sub').textContent = 'CPM $' + (cpm > 0 ? cpm.toFixed(2) : '—'); }
+  if (mkpis[1]) { mkpis[1].querySelector('.kpi-value').textContent = fn(Math.round(views)); mkpis[1].querySelector('.kpi-sub').textContent = 'CTR ' + ctr.toFixed(1) + '%'; }
+  if (mkpis[2]) { mkpis[2].querySelector('.kpi-value').textContent = fn(Math.round(clicks)); mkpis[2].querySelector('.kpi-sub').textContent = 'CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—'); }
+  if (mkpis[3]) { mkpis[3].querySelector('.kpi-value').textContent = fn(Math.round(pv)); }
+  if (mkpis[4]) { mkpis[4].querySelector('.kpi-value').textContent = fn(Math.round(follows)); mkpis[4].querySelector('.kpi-sub').textContent = 'CPA $' + (followCPA > 0 ? followCPA.toFixed(2) : '—'); }
+  if (mkpis[5]) { mkpis[5].querySelector('.kpi-value').textContent = fn(Math.round(video3s)); mkpis[5].querySelector('.kpi-sub').textContent = 'View Rate ' + viewRate.toFixed(0) + '%'; }
+
+  const cards = document.querySelectorAll('#metaFunnelGrid .funnel-card');
+  const sections = [mt, mm, mb];
+  sections.forEach((sec, idx) => {
+    if (!cards[idx] || !sec['Expense']) return;
+    const card = cards[idx];
+    const s = getSelectedSum(sec['Expense']);
+    const v = getSelectedSum(sec['View']);
+    const c = getSelectedSum(sec['Click']);
+    const f = getSelectedSum(sec['Follow']);
+    const v3s = getSelectedSum(sec['3s+ video views']);
+    const reach = getSelectedSum(sec['Reach']);
+    const profV = getSelectedSum(sec['Profile visit']);
+    card.querySelector('.funnel-stat-value').textContent = '$' + fn(s, 2);
+    const rows = card.querySelectorAll('.funnel-stat-row span:last-child');
+    const vals = [ fn(Math.round(v)), fn(Math.round(reach)) || '—', fn(Math.round(c)), v > 0 ? (c / v * 100).toFixed(1) + '%' : '—', c > 0 ? '$' + (s / c).toFixed(2) : '—', v > 0 ? '$' + (s / v * 1000).toFixed(2) : '—', fn(Math.round(profV)), fn(Math.round(f)), f > 0 ? '$' + (s / f).toFixed(2) : '—', fn(Math.round(v3s)), v > 0 ? (v3s / v * 100).toFixed(0) + '%' : '—' ];
+    vals.forEach((val, i) => { if (rows[i]) rows[i].textContent = val || '—'; });
+  });
+
+  const fwTable = document.querySelector('#metaFunnelWeeklyTable tbody');
+  if (fwTable) {
+    const weekNames = ['W1 (2/8-14)','W2 (2/15-21)','W3 (2/22-28)','W4 (3/1-7)','W5 (3/8-14)'];
+    const funnelNames = ['TOF','MOF','BOF'];
+    const funnelColors = ['var(--tof-color)','var(--mof-color)','var(--bof-color)'];
+    let html = '';
+    sections.forEach((sec, fi) => {
+      if (!sec['Expense']) return;
+      const hasCVR = fi < 2;
+      for (let wi = 0; wi < 5; wi++) {
+        const isSelected = selectedWeeks.includes(wi);
+        const dimStyle = isSelected ? '' : ' style="opacity:0.35;"';
+        const wSpend = pn(sec['Expense'][WCOLS[wi]]) || 0;
+        const wViews = pn(sec['View']?.[WCOLS[wi]]) || 0;
+        const wClicks = pn(sec['Click']?.[WCOLS[wi]]) || 0;
+        const wCTR = wViews > 0 ? (wClicks / wViews * 100).toFixed(1) + '%' : '—';
+        const wCPC = wClicks > 0 ? '$' + (wSpend / wClicks).toFixed(2) : '—';
+        const wPV = pn(sec['Profile visit']?.[WCOLS[wi]]) || 0;
+        const wFollows = pn(sec['Follow']?.[WCOLS[wi]]) || 0;
+        const wFCPA = wFollows > 0 ? '$' + (wSpend / wFollows).toFixed(2) : '—';
+        const w3sRate = sec['3s+ video views rate'] ? (sec['3s+ video views rate'][WCOLS[wi]] || '—') : '—';
+        const wV2PV = sec['View to Profile visit CVR(%)'] ? (sec['View to Profile visit CVR(%)'][WCOLS[wi]] || '—') : '—';
+        const w3s2PV = sec['3s+ to Profile visit CVR(%)'] ? (sec['3s+ to Profile visit CVR(%)'][WCOLS[wi]] || '—') : '—';
+        const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : '';
+        const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid rgba(255,255,255,.06);' : '';
+        const bt = borderTop ? ` style="${borderTop}"` : '';
+        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>$${fn(wSpend,2)}</td><td${bt}>${fn(Math.round(wViews))}</td><td${bt}>${fn(Math.round(wClicks))}</td><td${bt}>${wCTR}</td><td${bt}>${wCPC}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wFollows))}</td><td${bt}>${wFCPA}</td>`;
+        if (hasCVR) html += `<td${bt}>${w3sRate}</td><td${bt}>${wV2PV}</td><td${bt}>${w3s2PV}</td>`;
+        else html += `<td${bt}>—</td><td${bt}>—</td><td${bt}>—</td>`;
+        html += '</tr>';
+      }
+      const tSpend = getSelectedSum(sec['Expense']);
+      const tViews = getSelectedSum(sec['View']);
+      const tClicks = getSelectedSum(sec['Click']);
+      const tPV = getSelectedSum(sec['Profile visit']);
+      const tFollows = getSelectedSum(sec['Follow']);
+      const t3sV = getSelectedSum(sec['3s+ video views']);
+      const t3sRate = tViews > 0 ? (t3sV / tViews * 100).toFixed(1) + '%' : '—';
+      const tV2PV = tViews > 0 ? (tPV / tViews * 100).toFixed(2) + '%' : '—';
+      const t3s2PV = t3sV > 0 ? (tPV / t3sV * 100).toFixed(2) + '%' : '—';
+      const cvrCells = hasCVR ? `<td>${t3sRate}</td><td>${tV2PV}</td><td>${t3s2PV}</td>` : '<td>—</td><td>—</td><td>—</td>';
+      html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td>$${fn(tSpend,2)}</td><td>${fn(Math.round(tViews))}</td><td>${fn(Math.round(tClicks))}</td><td>${tViews > 0 ? (tClicks/tViews*100).toFixed(1)+'%' : '—'}</td><td>${tClicks > 0 ? '$'+(tSpend/tClicks).toFixed(2) : '—'}</td><td>${fn(Math.round(tPV))}</td><td>${fn(Math.round(tFollows))}</td><td>${tFollows > 0 ? '$'+(tSpend/tFollows).toFixed(2) : '—'}</td>${cvrCells}</tr>`;
+    });
+    fwTable.innerHTML = html;
+  }
+}
+
+function updateTiktokForPeriod() {
+  const S = cachedSections;
+  if (!S) return;
+  const ts = S.tiktokTOF || S.tiktokSum || {};
+
+  const spend = getSelectedSum(ts['Expense']);
+  const views = getSelectedSum(ts['View']);
+  const pv = getSelectedSum(ts['Profile visit']);
+  const follows = getSelectedSum(ts['Follow']);
+  const video2s = getSelectedSum(ts['2s+ video views'] || ts['3s+ video views']);
+  const likes = getSelectedSum(ts['Content like']);
+  const comments = getSelectedSum(ts['Content comment']);
+  const reach = getSelectedSum(ts['Reach']);
+  const shares = getSelectedSum(ts['Content share']);
+  const cpm = views > 0 ? spend / views * 1000 : 0;
+  const pvCPA = pv > 0 ? spend / pv : 0;
+  const followCPA = follows > 0 ? spend / follows : 0;
+  const viewRate = views > 0 ? (video2s / views * 100) : 0;
+
+  const tkpis = document.querySelectorAll('#tiktokKpiGrid .kpi-card');
+  if (tkpis[0]) { tkpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(spend)); tkpis[0].querySelector('.kpi-sub').textContent = 'CPM $' + (cpm > 0 ? cpm.toFixed(2) : '—'); }
+  if (tkpis[1]) { tkpis[1].querySelector('.kpi-value').textContent = fn(Math.round(views)); }
+  if (tkpis[2]) { tkpis[2].querySelector('.kpi-value').textContent = fn(Math.round(pv)); tkpis[2].querySelector('.kpi-sub').textContent = 'CPA $' + (pvCPA > 0 ? pvCPA.toFixed(2) : '—'); }
+  if (tkpis[3]) { tkpis[3].querySelector('.kpi-value').textContent = fn(Math.round(follows)); tkpis[3].querySelector('.kpi-sub').textContent = 'CPA $' + (followCPA > 0 ? followCPA.toFixed(2) : '—'); }
+  if (tkpis[4]) { tkpis[4].querySelector('.kpi-value').textContent = fn(Math.round(video2s)); tkpis[4].querySelector('.kpi-sub').textContent = 'View Rate ' + viewRate.toFixed(0) + '%'; }
+  if (tkpis[5]) { tkpis[5].querySelector('.kpi-value').textContent = fn(Math.round(likes)); tkpis[5].querySelector('.kpi-sub').textContent = 'Comments ' + fn(Math.round(comments)); }
+
+  const tkSections = [S.tiktokTOF || {}, S.tiktokMOF || {}, S.tiktokBOF || {}];
+  const tkCards = document.querySelectorAll('#tiktokFunnelGrid .funnel-card');
+  tkSections.forEach((sec, idx) => {
+    if (!tkCards[idx]) return;
+    const card = tkCards[idx];
+    const s = getSelectedSum(sec['Expense']);
+    const v = getSelectedSum(sec['View']);
+    const r = getSelectedSum(sec['Reach']);
+    const p = getSelectedSum(sec['Profile visit']);
+    const f = getSelectedSum(sec['Follow']);
+    const v2s = getSelectedSum(sec['2s+ video views'] || sec['3s+ video views']);
+    const lk = getSelectedSum(sec['Content like']);
+    const cm = getSelectedSum(sec['Content comment']);
+    const sh = getSelectedSum(sec['Content share']);
+    const v3s = getSelectedSum(sec['3s+ video views'] || sec['2s+ video views']);
+    const v6s = getSelectedSum(sec['6s+ video views']);
+    const v50 = getSelectedSum(sec['50% video views']);
+    const v100 = getSelectedSum(sec['100% video views']);
+    card.querySelector('.funnel-stat-value').textContent = s > 0 ? '$' + fn(s, 2) : '—';
+    const rows = card.querySelectorAll('.funnel-stat-row span:last-child');
+    const vals = [ fn(Math.round(v)), fn(Math.round(r)), fn(Math.round(p)), fn(Math.round(f)), f > 0 ? '$' + (s / f).toFixed(2) : '—', fn(Math.round(v2s)), v > 0 ? (v2s / v * 100).toFixed(0) + '%' : '—', fn(Math.round(lk)), fn(Math.round(cm)), fn(Math.round(sh)), v3s > 0 ? (p / v3s * 100).toFixed(2) + '%' : '—', v > 0 ? (v6s / v * 100).toFixed(1) + '%' : '—', v > 0 ? (v50 / v * 100).toFixed(1) + '%' : '—', v > 0 ? (v100 / v * 100).toFixed(1) + '%' : '—' ];
+    vals.forEach((val, i) => { if (rows[i]) rows[i].textContent = val || '—'; });
+  });
+
+  if (charts.tiktokVideo) {
+    const tv2s = getSelectedSum(ts['2s+ video views'] || ts['3s+ video views']);
+    const tv25 = getSelectedSum(ts['25% video views']);
+    const tv50 = getSelectedSum(ts['50% video views']);
+    const tv75 = getSelectedSum(ts['75% video views']);
+    const tv100 = getSelectedSum(ts['100% video views']);
+    const tvViews = getSelectedSum(ts['View']) || 1;
+    charts.tiktokVideo.data.datasets[0].data = [tv2s, tv25, tv50, tv75, tv100];
+    charts.tiktokVideo.data.labels = [ `2s+ (${tvViews > 1 ? Math.round(tv2s/tvViews*100) : 0}%)`, `25% (${tvViews > 1 ? Math.round(tv25/tvViews*100) : 0}%)`, `50% (${tvViews > 1 ? Math.round(tv50/tvViews*100) : 0}%)`, `75% (${tvViews > 1 ? Math.round(tv75/tvViews*100) : 0}%)`, `100% (${tvViews > 1 ? Math.round(tv100/tvViews*100) : 0}%)` ];
+    charts.tiktokVideo.options.plugins.tooltip = { callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' views (' + (tvViews > 1 ? Math.round(ctx.parsed.y/tvViews*100) : 0) + '%)'; } } };
+    charts.tiktokVideo.update();
+  }
+
+  if (charts.tiktokEngagement) {
+    const eLikes = getSelectedSum(ts['Content like']);
+    const eComments = getSelectedSum(ts['Content comment']);
+    const eSaves = getSelectedSum(ts['Content save']);
+    const eShares = getSelectedSum(ts['Content share']);
+    const eTotal = eLikes + eComments + eSaves + eShares || 1;
+    charts.tiktokEngagement.data.labels = [ `Likes — ${fn(Math.round(eLikes))} (${(eLikes/eTotal*100).toFixed(1)}%)`, `Comments — ${fn(Math.round(eComments))} (${(eComments/eTotal*100).toFixed(1)}%)`, `Saves — ${fn(Math.round(eSaves))} (${(eSaves/eTotal*100).toFixed(1)}%)`, `Shares — ${fn(Math.round(eShares))} (${(eShares/eTotal*100).toFixed(1)}%)` ];
+    charts.tiktokEngagement.data.datasets[0].data = [eLikes, eComments, eSaves, eShares];
+    charts.tiktokEngagement.update();
+  }
+
+  const tkFwTable = document.querySelector('#tiktokFunnelWeeklyTable tbody');
+  if (tkFwTable) {
+    const weekNames = ['W1 (2/8-14)','W2 (2/15-21)','W3 (2/22-28)','W4 (3/1-7)','W5 (3/8-14)'];
+    const funnelNames = ['TOF','MOF','BOF'];
+    const funnelColors = ['var(--tof-color)','var(--mof-color)','var(--bof-color)'];
+    let html = '';
+    tkSections.forEach((sec, fi) => {
+      if (!sec['Expense']) {
+        for (let wi = 0; wi < 5; wi++) { const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : ''; const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid rgba(255,255,255,.06);' : ''; const bt = borderTop ? ` style="${borderTop}"` : ''; html += `<tr style="opacity:0.25;"><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td></tr>`; }
+        html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);opacity:0.25;"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td colspan="12">데이터 없음</td></tr>`;
+        return;
+      }
+      for (let wi = 0; wi < 5; wi++) {
+        const isSelected = selectedWeeks.includes(wi);
+        const dimStyle = isSelected ? '' : ' style="opacity:0.35;"';
+        const wS = pn(sec['Expense'][WCOLS[wi]]) || 0;
+        const wV = pn(sec['View']?.[WCOLS[wi]]) || 0;
+        const wR = pn(sec['Reach']?.[WCOLS[wi]]) || 0;
+        const wPV = pn(sec['Profile visit']?.[WCOLS[wi]]) || 0;
+        const wF = pn(sec['Follow']?.[WCOLS[wi]]) || 0;
+        const wFCPA = wF > 0 ? '$' + (wS / wF).toFixed(2) : '—';
+        const w2s = pn((sec['2s+ video views'] || sec['3s+ video views'])?.[WCOLS[wi]]) || 0;
+        const w2sRate = wV > 0 ? (w2s / wV * 100).toFixed(0) + '%' : '—';
+        const w3s2PV = sec['3s+ to Profile visit CVR'] ? (sec['3s+ to Profile visit CVR'][WCOLS[wi]] || '—') : '—';
+        const w6sRate = sec['6s+ video views rate'] ? (sec['6s+ video views rate'][WCOLS[wi]] || '—') : '—';
+        const w50Rate = sec['50% video views rate'] ? (sec['50% video views rate'][WCOLS[wi]] || '—') : '—';
+        const w100Rate = sec['100% video views rate'] ? (sec['100% video views rate'][WCOLS[wi]] || '—') : '—';
+        const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : '';
+        const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid rgba(255,255,255,.06);' : '';
+        const bt = borderTop ? ` style="${borderTop}"` : '';
+        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>$${fn(wS,2)}</td><td${bt}>${fn(Math.round(wV))}</td><td${bt}>${fn(Math.round(wR))}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wF))}</td><td${bt}>${wFCPA}</td><td${bt}>${fn(Math.round(w2s))}</td><td${bt}>${w2sRate}</td><td${bt}>${w3s2PV}</td><td${bt}>${w6sRate}</td><td${bt}>${w50Rate}</td><td${bt}>${w100Rate}</td></tr>`;
+      }
+      const tS = getSelectedSum(sec['Expense']); const tV = getSelectedSum(sec['View']); const tR = getSelectedSum(sec['Reach']); const tPV = getSelectedSum(sec['Profile visit']); const tF = getSelectedSum(sec['Follow']); const t2s = getSelectedSum(sec['2s+ video views'] || sec['3s+ video views']); const t2sRate = tV > 0 ? (t2s / tV * 100).toFixed(0) + '%' : '—'; const t3sV = getSelectedSum(sec['3s+ video views'] || sec['2s+ video views']); const t3s2PV = t3sV > 0 ? (tPV / t3sV * 100).toFixed(2) + '%' : '—'; const t6s = getSelectedSum(sec['6s+ video views']); const t6sRate = tV > 0 ? (t6s / tV * 100).toFixed(1) + '%' : '—'; const t50 = getSelectedSum(sec['50% video views']); const t50Rate = tV > 0 ? (t50 / tV * 100).toFixed(1) + '%' : '—'; const t100 = getSelectedSum(sec['100% video views']); const t100Rate = tV > 0 ? (t100 / tV * 100).toFixed(1) + '%' : '—';
+      html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td>$${fn(tS,2)}</td><td>${fn(Math.round(tV))}</td><td>${fn(Math.round(tR))}</td><td>${fn(Math.round(tPV))}</td><td>${fn(Math.round(tF))}</td><td>${tF > 0 ? '$'+(tS/tF).toFixed(2) : '—'}</td><td>${fn(Math.round(t2s))}</td><td>${t2sRate}</td><td>${t3s2PV}</td><td>${t6sRate}</td><td>${t50Rate}</td><td>${t100Rate}</td></tr>`;
+    });
+    tkFwTable.innerHTML = html;
+  }
+}
+
+function updateFunnelForPeriod() {
+  const S = cachedSections;
+  if (!S) return;
+  const mt = S.metaTOF || {};
+  const mm = S.metaMOF || {};
+  const mb = S.metaBOF || {};
+  const sections = [mt, mm, mb];
+
+  const funnelCards = document.querySelectorAll('#tab-funnel .funnel-card');
+  sections.forEach((sec, idx) => {
+    if (!funnelCards[idx] || !sec['Expense']) return;
+    const card = funnelCards[idx];
+    const spend = getSelectedSum(sec['Expense']);
+    const views = getSelectedSum(sec['View']);
+    const clicks = getSelectedSum(sec['Click']);
+    const follows = getSelectedSum(sec['Follow']);
+    const video3s = getSelectedSum(sec['3s+ video views']);
+    card.querySelector('.funnel-stat-value').textContent = '$' + fn(spend, 2);
+    const statRows = card.querySelectorAll('.funnel-stat-row span:last-child');
+    const fields = ['View','Reach','Click','CTR(%)','CPC','CPM','Profile visit','Follow','Follow CPA','3s+ video views','3s+ video views rate','Content like','Content save','Content share'];
+    fields.forEach((f, fi) => {
+      if (!statRows[fi] || !sec[f]) return;
+      let v;
+      if (f === 'CTR(%)') v = views > 0 ? (clicks / views * 100).toFixed(1) + '%' : '—';
+      else if (f === 'CPC') v = clicks > 0 ? '$' + (spend / clicks).toFixed(2) : '—';
+      else if (f === 'CPM') v = views > 0 ? '$' + (spend / views * 1000).toFixed(2) : '—';
+      else if (f === 'Follow CPA') v = follows > 0 ? '$' + (spend / follows).toFixed(2) : '—';
+      else if (f === '3s+ video views rate') v = views > 0 ? (video3s / views * 100).toFixed(0) + '%' : '—';
+      else v = fn(Math.round(getSelectedSum(sec[f])));
+      statRows[fi].textContent = v || '—';
+    });
+  });
+
+  const tofSpend = getSelectedSum(mt['Expense']); const mofSpend = getSelectedSum(mm['Expense']); const bofSpend = getSelectedSum(mb['Expense']);
+  if (charts.funnelSpend) { const total = tofSpend + mofSpend + bofSpend || 1; charts.funnelSpend.data.labels = [ `TOF — $${fn(Math.round(tofSpend))} (${(tofSpend/total*100).toFixed(1)}%)`, `MOF — $${fn(Math.round(mofSpend))} (${(mofSpend/total*100).toFixed(1)}%)`, `BOF — $${fn(Math.round(bofSpend))} (${(bofSpend/total*100).toFixed(1)}%)` ]; charts.funnelSpend.data.datasets[0].data = [tofSpend, mofSpend, bofSpend]; charts.funnelSpend.update(); }
+  const tofClicks = getSelectedSum(mt['Click']); const mofClicks = getSelectedSum(mm['Click']); const bofClicks = getSelectedSum(mb['Click']);
+  if (charts.funnelCPC) { charts.funnelCPC.data.datasets[0].data = [ tofClicks > 0 ? tofSpend/tofClicks : 0, mofClicks > 0 ? mofSpend/mofClicks : 0, bofClicks > 0 ? bofSpend/bofClicks : 0 ]; charts.funnelCPC.update(); }
+  const tofViews = getSelectedSum(mt['View']); const mofViews = getSelectedSum(mm['View']); const bofViews = getSelectedSum(mb['View']);
+  if (charts.funnelCTR) { charts.funnelCTR.data.datasets[0].data = [ tofViews > 0 ? tofClicks/tofViews*100 : 0, mofViews > 0 ? mofClicks/mofViews*100 : 0, bofViews > 0 ? bofClicks/bofViews*100 : 0 ]; charts.funnelCTR.update(); }
+  const tofFollow = getSelectedSum(mt['Follow']); const mofFollow = getSelectedSum(mm['Follow']); const bofFollow = getSelectedSum(mb['Follow']);
+  if (charts.funnelFollowCPA) { charts.funnelFollowCPA.data.datasets[0].data = [ tofFollow > 0 ? tofSpend/tofFollow : 0, mofFollow > 0 ? mofSpend/mofFollow : 0, bofFollow > 0 ? bofSpend/bofFollow : 0 ]; charts.funnelFollowCPA.update(); }
+  if (charts.funnelFollows) { charts.funnelFollows.data.datasets[0].data = [tofFollow, mofFollow, bofFollow]; charts.funnelFollows.update(); }
+  if (charts.funnelVideoRate) { const tof3s = getSelectedSum(mt['3s+ video views']); const mof3s = getSelectedSum(mm['3s+ video views']); const bof3s = getSelectedSum(mb['3s+ video views']); charts.funnelVideoRate.data.datasets[0].data = [ tofViews > 0 ? tof3s/tofViews*100 : 0, mofViews > 0 ? mof3s/mofViews*100 : 0, bofViews > 0 ? bof3s/bofViews*100 : 0 ]; charts.funnelVideoRate.update(); }
+  if (charts.videoFunnel && mt['3s+ video views']) { const vf3s = getSelectedSum(mt['3s+ video views']); const vf25 = getSelectedSum(mt['25% video views']); const vf50 = getSelectedSum(mt['50% video views']); const vf75 = getSelectedSum(mt['75% video views']); const vf95 = getSelectedSum(mt['95% video views']); const vfBase = vf3s || 1; charts.videoFunnel.data.datasets[0].data = [vf3s, vf25, vf50, vf75, vf95]; charts.videoFunnel.data.labels = [ `3s+ (100%)`, `25% (${Math.round(vf25/vfBase*100)}%)`, `50% (${Math.round(vf50/vfBase*100)}%)`, `75% (${Math.round(vf75/vfBase*100)}%)`, `95% (${Math.round(vf95/vfBase*100)}%)` ]; charts.videoFunnel.options.plugins.tooltip.callbacks.label = function(ctx) { return ctx.parsed.y.toLocaleString() + ' views (' + Math.round(ctx.parsed.y/vfBase*100) + '%)'; }; charts.videoFunnel.update(); }
+
+  const tt = S.tiktokTOF || {}; const tm = S.tiktokMOF || {}; const tb = S.tiktokBOF || {};
+  const tkSections = [tt, tm, tb];
+  const tkFunnelCards = document.querySelectorAll('#tkFunnelGrid .funnel-card');
+  tkSections.forEach((sec, idx) => {
+    if (!tkFunnelCards[idx]) return;
+    const card = tkFunnelCards[idx];
+    const hasData = sec['Expense'] && sec['Expense'].length > 0;
+    const spend = hasData ? getSelectedSum(sec['Expense']) : 0;
+    const views = hasData ? getSelectedSum(sec['View']) : 0;
+    const reach = hasData ? getSelectedSum(sec['Reach']) : 0;
+    const pv = hasData ? getSelectedSum(sec['Profile visit']) : 0;
+    const follows = hasData ? getSelectedSum(sec['Follow']) : 0;
+    const v2s = hasData ? getSelectedSum(sec['2s+ video views'] || sec['3s+ video views']) : 0;
+    const likes = hasData ? getSelectedSum(sec['Content like']) : 0;
+    const comments = hasData ? getSelectedSum(sec['Content comment']) : 0;
+    const shares = hasData ? getSelectedSum(sec['Content share']) : 0;
+    card.querySelector('.funnel-stat-value').textContent = hasData ? '$' + fn(spend, 2) : '—';
+    const statRows = card.querySelectorAll('.funnel-stat-row span:last-child');
+    const vals = [ hasData ? fn(Math.round(views)) : '—', hasData ? fn(Math.round(reach)) : '—', hasData ? fn(Math.round(pv)) : '—', hasData ? fn(Math.round(follows)) : '—', hasData && follows > 0 ? '$' + (spend / follows).toFixed(2) : '—', hasData ? fn(Math.round(v2s)) : '—', hasData && views > 0 ? (v2s / views * 100).toFixed(1) + '%' : '—', hasData ? fn(Math.round(likes)) : '—', hasData ? fn(Math.round(comments)) : '—', hasData ? fn(Math.round(shares)) : '—', hasData && sec['3s+ to Profile visit CVR'] ? getSelectedAvg(sec['3s+ to Profile visit CVR']) : '—', hasData && sec['6s+ video views rate'] ? getSelectedAvg(sec['6s+ video views rate']) : '—', hasData && sec['50% video views rate'] ? getSelectedAvg(sec['50% video views rate']) : '—', hasData && sec['100% video views rate'] ? getSelectedAvg(sec['100% video views rate']) : '—' ];
+    vals.forEach((v, vi) => { if (statRows[vi]) statRows[vi].textContent = v; });
+  });
+
+  const ttSpend = getSelectedSum(tt['Expense']); const tmSpend = getSelectedSum(tm['Expense']); const tbSpend = getSelectedSum(tb['Expense']);
+  if (charts.tkFunnelSpend) { const total = ttSpend + tmSpend + tbSpend || 1; charts.tkFunnelSpend.data.labels = [ `TOF — $${fn(Math.round(ttSpend))} (${(ttSpend/total*100).toFixed(1)}%)`, `MOF — $${fn(Math.round(tmSpend))} (${(tmSpend/total*100).toFixed(1)}%)`, `BOF — $${fn(Math.round(tbSpend))} (${(tbSpend/total*100).toFixed(1)}%)` ]; charts.tkFunnelSpend.data.datasets[0].data = [ttSpend, tmSpend, tbSpend]; charts.tkFunnelSpend.update(); }
+  const ttFollow = getSelectedSum(tt['Follow']); const tmFollow = getSelectedSum(tm['Follow']); const tbFollow = getSelectedSum(tb['Follow']);
+  if (charts.tkFunnelFollowCPA) { charts.tkFunnelFollowCPA.data.datasets[0].data = [ ttFollow > 0 ? ttSpend/ttFollow : 0, tmFollow > 0 ? tmSpend/tmFollow : 0, tbFollow > 0 ? tbSpend/tbFollow : 0 ]; charts.tkFunnelFollowCPA.update(); }
+  if (charts.tkFunnelFollows) { charts.tkFunnelFollows.data.datasets[0].data = [ttFollow, tmFollow, tbFollow]; charts.tkFunnelFollows.update(); }
+  const ttViews = getSelectedSum(tt['View']); const tmViews = getSelectedSum(tm['View']); const tbViews = getSelectedSum(tb['View']);
+  if (charts.tkFunnelVideoRate) { const tt2s = getSelectedSum(tt['2s+ video views'] || tt['3s+ video views']); const tm2s = getSelectedSum(tm['2s+ video views'] || tm['3s+ video views']); const tb2s = getSelectedSum(tb['2s+ video views'] || tb['3s+ video views']); charts.tkFunnelVideoRate.data.datasets[0].data = [ ttViews > 0 ? tt2s/ttViews*100 : 0, tmViews > 0 ? tm2s/tmViews*100 : 0, tbViews > 0 ? tb2s/tbViews*100 : 0 ]; charts.tkFunnelVideoRate.update(); }
+  if (charts.tkFunnelPV) { charts.tkFunnelPV.data.datasets[0].data = [ getSelectedSum(tt['Profile visit']), getSelectedSum(tm['Profile visit']), getSelectedSum(tb['Profile visit']) ]; charts.tkFunnelPV.update(); }
+  if (charts.tkFunnelReach) { charts.tkFunnelReach.data.datasets[0].data = [ getSelectedSum(tt['Reach']), getSelectedSum(tm['Reach']), getSelectedSum(tb['Reach']) ]; charts.tkFunnelReach.update(); }
+}
+
+function updateDashboard(rows) {
+  const S = parseSections(rows);
+  cachedSections = S;
+  const ms = S.metaSum || {};
+  const mt = S.metaTOF || {};
+  const mm = S.metaMOF || {};
+  const mb = S.metaBOF || {};
+  const ts = S.tiktokTOF || S.tiktokSum || {};
+
+  updateOverviewForPeriod();
+  updateMetaForPeriod();
+  const metaSpend = getSelectedSum(ms['Expense']);
+  const metaViews = getSelectedSum(ms['View']);
+  const metaClicks = getSelectedSum(ms['Click']);
+  const metaProfileVisits = getSelectedSum(ms['Profile visit']);
+  const metaFollows = getSelectedSum(ms['Follow']);
+  const meta3s = getSelectedSum(ms['3s+ video views']);
+
+  if (ms['Expense'] && charts.weeklySpend) { charts.weeklySpend.data.datasets[0].data = getWeekly(ms['Expense']); charts.weeklySpend.data.datasets[1].data = ts['Expense'] ? getWeekly(ts['Expense']) : [0,0,0,0,0]; charts.weeklySpend.update(); }
+  if (ms['CTR(%)'] && charts.weeklyCTR) { charts.weeklyCTR.data.datasets[0].data = getWeekly(ms['CTR(%)']).map(v => v || null); charts.weeklyCTR.update(); }
+  if (ms['3s+ video views'] && charts.weekly3s) { charts.weekly3s.data.datasets[0].data = getWeekly(ms['3s+ video views']); if (ts['2s+ video views'] || ts['3s+ video views']) charts.weekly3s.data.datasets[1].data = getWeekly(ts['2s+ video views'] || ts['3s+ video views']); charts.weekly3s.update(); }
+
+  const metaTable = document.querySelector('#metaWeeklySummaryTable tbody');
+  if (metaTable && ms['Expense']) {
+    const wSpend = getWeekly(ms['Expense']); const wViews = getWeekly(ms['View'] || []); const wClicks = getWeekly(ms['Click'] || []); const wCTR = ms['CTR(%)'] ? WCOLS.map(c => ms['CTR(%)'][c] || '—') : []; const wPV = getWeekly(ms['Profile visit'] || []); const wFollows = ms['Follow'] ? WCOLS.map(c => pn(ms['Follow'][c]) || 0) : []; const wFollowCVR = ms['Profile visit -> Follow CVR(%)'] ? WCOLS.map(c => ms['Profile visit -> Follow CVR(%)'][c] || '0.0%') : []; const w3s = getWeekly(ms['3s+ video views'] || []); const w3sRate = ms['3s+ video views rate'] ? WCOLS.map(c => ms['3s+ video views rate'][c] || '0%') : [];
+    const weekNames = ['W1 (2/8-14)','W2 (2/15-21)','W3 (2/22-28)','W4 (3/1-7)','W5 (3/8-14)'];
+    let html = '';
+    for (let i = 0; i < 5; i++) { html += `<tr><td>${weekNames[i]}</td><td>$${fn(wSpend[i],2)}</td><td>${fn(Math.round(wViews[i]))}</td><td>${fn(Math.round(wClicks[i]))}</td><td>${wCTR[i]}</td><td>${fn(Math.round(wPV[i]))}</td><td>${fn(Math.round(wFollows[i]))}</td><td>${wFollowCVR[i]}</td><td>${fn(Math.round(w3s[i]))}</td><td>${w3sRate[i]}</td></tr>`; }
+    const metaCTR = metaViews > 0 ? (metaClicks / metaViews * 100) : 0;
+    const metaFCVR = metaProfileVisits > 0 ? (metaFollows / metaProfileVisits * 100).toFixed(1) + '%' : '—';
+    const metaVR = metaViews > 0 ? (meta3s / metaViews * 100).toFixed(0) + '%' : '—';
+    html += `<tr style="font-weight:700;border-top:2px solid rgba(255,255,255,.06);"><td>Total</td><td>$${fn(metaSpend,2)}</td><td>${fn(Math.round(metaViews))}</td><td>${fn(Math.round(metaClicks))}</td><td>${metaCTR.toFixed(1)}%</td><td>${fn(Math.round(metaProfileVisits))}</td><td>${fn(Math.round(metaFollows))}</td><td>${metaFCVR}</td><td>${fn(Math.round(meta3s||0))}</td><td>${metaVR}</td></tr>`;
+    metaTable.innerHTML = html;
+  }
+
+  updateTiktokForPeriod();
+
+  const tkSpend = getSelectedSum(ts['Expense']); const tkViews = getSelectedSum(ts['View']); const tkProfileVisits = getSelectedSum(ts['Profile visit']); const tkFollows = getSelectedSum(ts['Follow']);
+  const tkTable = document.querySelector('#tiktokDailySummaryTable tbody');
+  if (tkTable && ts['Expense']) {
+    const dSpend = getTkDaily(ts['Expense']); const dViews = getTkDaily(ts['View'] || []); const dReach = getTkDaily(ts['Reach'] || []); const dPV = getTkDaily(ts['Profile visit'] || []); const dFollows = ts['Follow'] ? TKCOLS.map(c => pn(ts['Follow'][c]) || 0) : []; const d2s = getTkDaily(ts['2s+ video views'] || ts['3s+ video views'] || []); const d2sRate = (ts['2s+ video views rate'] || ts['3s+ video views rate']) ? TKCOLS.map(c => (ts['2s+ video views rate'] || ts['3s+ video views rate'])[c] || '—') : []; const dLikes = ts['Content like'] ? TKCOLS.map(c => pn(ts['Content like'][c]) || 0) : [];
+    const dayNames = ['2/23 (Mon)','2/24 (Tue)','2/25 (Wed)','2/26 (Thu)','2/27 (Fri)'];
+    let html = '';
+    for (let i = 0; i < 5; i++) { const fCVR = dPV[i] > 0 ? (dFollows[i]/dPV[i]*100).toFixed(1) + '%' : '—'; html += `<tr><td>${dayNames[i]}</td><td>$${fn(dSpend[i],2)}</td><td>${fn(Math.round(dViews[i]))}</td><td>${fn(Math.round(dReach[i]))}</td><td>${fn(Math.round(dPV[i]))}</td><td>${fn(Math.round(dFollows[i]))}</td><td>${fCVR}</td><td>${fn(Math.round(d2s[i]))}</td><td>${d2sRate[i]}</td><td>${fn(Math.round(dLikes[i]))}</td></tr>`; }
+    const tFCVR = tkProfileVisits > 0 ? ((tkFollows/tkProfileVisits)*100).toFixed(1) + '%' : '—';
+    html += `<tr style="font-weight:700;border-top:2px solid rgba(255,255,255,.06);"><td>Total</td><td>$${fn(tkSpend,2)}</td><td>${fn(Math.round(tkViews))}</td><td>${fn(Math.round(getSelectedSum(ts['Reach'])))}</td><td>${fn(Math.round(tkProfileVisits))}</td><td>${fn(Math.round(tkFollows))}</td><td>${tFCVR}</td><td>${fn(Math.round(getSelectedSum(ts['2s+ video views'] || ts['3s+ video views'])))}</td><td>${tkViews > 0 ? (getSelectedSum(ts['2s+ video views'] || ts['3s+ video views']) / tkViews * 100).toFixed(0) + '%' : '—'}</td><td>${fn(Math.round(getSelectedSum(ts['Content like'])))}</td></tr>`;
+    tkTable.innerHTML = html;
+  }
+
+  updateFunnelForPeriod();
+
+  document.getElementById('lastUpdated').textContent = '✓ Live · ' + new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+let liveConnected = false;
+
+async function fetchSheetData() {
+  const el = document.getElementById('lastUpdated');
+  try {
+    if (window.location.protocol === 'file:') {
+      console.warn('[Dashboard] file:// 프로토콜에서는 Google Sheets 연동 불가. http://localhost:8080/performance.html 로 접속하세요.');
+      if (el) el.innerHTML = '⚠ Offline — <span style="font-size:0.7em">localhost:8080 으로 접속 필요</span>';
+      const lo = document.getElementById('loadingOverlay');
+      if (lo) lo.style.display = 'none';
+      return;
+    }
+    const resp = await fetch(SHEET_CSV_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    if (rows.length < 10) throw new Error('CSV rows too few: ' + rows.length);
+    updateDashboard(rows);
+    liveConnected = true;
+    console.log('[Dashboard] ✓ Data refreshed from Google Sheets, rows:', rows.length);
+  } catch(e) {
+    console.error('[Dashboard] Fetch error:', e);
+    if (el) { if (!liveConnected) { el.textContent = '⚠ Offline mode'; } else { el.textContent = '⚠ 갱신 실패 · 재시도 중...'; } }
+    const lo = document.getElementById('loadingOverlay');
+    if (lo) lo.style.display = 'none';
+  }
+}
+</script>
+
+</div><!-- end dashboard-content -->
+
+<script>
+// ===== Firebase Auth & Access Log =====
+const firebaseConfig = {
+  apiKey: "AIzaSyC-q4mncVKMU_XSaAXJk0iBuMbkmxwvQ5s",
+  authDomain: "odd-performance-dashboard.firebaseapp.com",
+  projectId: "odd-performance-dashboard",
+  storageBucket: "odd-performance-dashboard.firebasestorage.app",
+  messagingSenderId: "845033758092",
+  appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let refreshTimer = null;
+
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ hd: 'hanah1.com' });
+  auth.signInWithPopup(provider).catch(err => {
+    console.error('Sign-in error:', err);
+    const el = document.getElementById('auth-error');
+    el.textContent = '로그인에 실패했습니다. 다시 시도해주세요.';
+    el.style.display = 'block';
+  });
+}
+
+function signOut() {
+  auth.signOut().then(() => { window.location.reload(); });
+}
+
+auth.onAuthStateChanged(user => {
+  const gate = document.getElementById('auth-gate');
+  const content = document.getElementById('dashboard-content');
+  const logBtn = document.getElementById('log-btn');
+  const userBar = document.getElementById('user-bar');
+  const errEl = document.getElementById('auth-error');
+
+  if (user) {
+    const email = user.email || '';
+    if (!email.endsWith('@hanah1.com')) {
+      errEl.textContent = '@hanah1.com 계정만 접속할 수 있습니다.';
+      errEl.style.display = 'block';
+      auth.signOut();
+      return;
+    }
+    gate.style.display = 'none';
+    content.style.display = 'block';
+    logBtn.style.display = 'block';
+    userBar.style.display = 'flex';
+    document.getElementById('user-email').textContent = email;
+    const photo = document.getElementById('user-photo');
+    if (user.photoURL) { photo.src = user.photoURL; }
+    else { photo.style.display = 'none'; }
+    logAccessEvent(user);
+    setTimeout(fetchSheetData, 500);
+    if (!refreshTimer) { refreshTimer = setInterval(fetchSheetData, REFRESH_INTERVAL); }
+  } else {
+    gate.style.display = 'flex';
+    content.style.display = 'none';
+    logBtn.style.display = 'none';
+    userBar.style.display = 'none';
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  }
+});
+
+async function logAccessEvent(user) {
+  try {
+    await db.collection('access_logs').add({
+      email: user.email,
+      displayName: user.displayName || '',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      userAgent: navigator.userAgent,
+      page: 'performance'
+    });
+  } catch(e) { console.warn('Access log failed:', e); }
+}
+
+function toggleAdminPanel() {
+  const panel = document.getElementById('admin-panel');
+  const overlay = document.getElementById('admin-overlay');
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) { panel.classList.remove('open'); overlay.classList.remove('open'); }
+  else { panel.classList.add('open'); overlay.classList.add('open'); loadAccessLogs(); }
+}
+
+async function loadAccessLogs() {
+  const content = document.getElementById('log-content');
+  const days = parseInt(document.getElementById('logDays').value);
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  try {
+    const snap = await db.collection('access_logs').where('timestamp', '>=', since).orderBy('timestamp', 'desc').limit(200).get();
+    if (snap.empty) { content.innerHTML = '<p style="color:var(--t3);font-size:13px;">접속 기록이 없습니다.</p>'; return; }
+    let html = '<table class="log-table"><thead><tr><th>시간</th><th>이메일</th><th>이름</th></tr></thead><tbody>';
+    snap.forEach(doc => { const d = doc.data(); const ts = d.timestamp ? d.timestamp.toDate() : null; const timeStr = ts ? ts.toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—'; html += `<tr><td>${timeStr}</td><td>${d.email || '—'}</td><td>${d.displayName || '—'}</td></tr>`; });
+    html += '</tbody></table>';
+    content.innerHTML = html;
+  } catch(e) { console.error('Load logs error:', e); content.innerHTML = '<p style="color:var(--red);font-size:13px;">로그 로드 실패: ' + e.message + '</p>'; }
+}
+</script>
+</body>
+</html>
