@@ -387,7 +387,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
       <button class="toggle-view-btn" id="monthlyViewBtn" onclick="toggleMonthlyView()">Table</button>
     </div>
     <div class="card" id="monthlyChart" style="margin-bottom:16px;padding:28px 28px 20px"></div>
-    <div id="monthlyTable" style="display:none"></div>
+    <div class="card" id="monthlyTableWrap" style="display:none;overflow-x:auto;-webkit-overflow-scrolling:touch"><div id="monthlyTable"></div></div>
   </section>
 
   <section class="content-section">
@@ -483,7 +483,7 @@ function isReview(n,c){if(!n||!DATA)return false;if(c==='amazon'){var l=(DATA.am
 function isValid(o){return o.t>=5&&o.s!=='cancel'}
 function toggleWeekly(){var e=document.getElementById('weeklyWrap'),t=document.getElementById('weeklyToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='▾ 접기'}else{e.style.display='none';t.innerHTML='▸ 펼치기'}}
 var monthlyViewMode='chart';
-function toggleMonthlyView(){var ch=document.getElementById('monthlyChart'),tb=document.getElementById('monthlyTable'),btn=document.getElementById('monthlyViewBtn');if(monthlyViewMode==='chart'){monthlyViewMode='table';ch.style.display='none';tb.style.display='';btn.textContent='Chart';btn.classList.add('active')}else{monthlyViewMode='chart';ch.style.display='';tb.style.display='none';btn.textContent='Table';btn.classList.remove('active')}}
+function toggleMonthlyView(){var ch=document.getElementById('monthlyChart'),tb=document.getElementById('monthlyTableWrap'),btn=document.getElementById('monthlyViewBtn');if(monthlyViewMode==='chart'){monthlyViewMode='table';ch.style.display='none';tb.style.display='';btn.textContent='Chart';btn.classList.add('active')}else{monthlyViewMode='chart';ch.style.display='';tb.style.display='none';btn.textContent='Table';btn.classList.remove('active')}}
 function toggleReview(){var e=document.getElementById('reviewWrap'),t=document.getElementById('reviewToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='▾ 접기'}else{e.style.display='none';t.innerHTML='▸ 펼치기'}}
 var isAllMode=true;
 function initMonths(){var m={};DATA.orders.forEach(o=>{if(o.d)m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().forEach(v=>ALL_MONTHS.push(v));isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
@@ -535,7 +535,7 @@ function renderWeekly(f){
 
 function renderMonthly(){
   var a=DATA.orders.filter(isValid),m={};ALL_MONTHS.forEach(v=>{m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,review:0,cnt:0}});a.forEach(o=>{var v=getMonth(o.d);if(!m[v])return;m[v][o.ch]=(m[v][o.ch]||0)+o.t;m[v].total+=o.t;m[v].cnt++;if(isReview(o.c,o.ch))m[v].review+=o.t});
-  var h='<table><thead><tr><th>월</th><th class="text-right">Shopify</th><th class="text-right">Amazon</th><th class="text-right">TikTok</th><th class="text-right">합계</th><th class="text-right">리뷰</th><th class="text-right">실매출</th><th class="text-center">건수</th></tr></thead><tbody>';
+  var h='<table style="min-width:580px;width:100%"><thead><tr><th>월</th><th class="text-right">Shopify</th><th class="text-right">Amazon</th><th class="text-right">TikTok</th><th class="text-right">합계</th><th class="text-right">리뷰</th><th class="text-right">실매출</th><th class="text-center">건수</th></tr></thead><tbody>';
   ALL_MONTHS.forEach(v=>{var d=m[v],ac=isAllMode||selectedMonths.has(v);h+='<tr style="'+(ac?'background:rgba(255,255,255,.03)':'opacity:.35')+'"><td style="font-weight:'+(ac?600:400)+';color:'+(ac?'var(--t1)':'var(--t4)')+'">'+fmtMon(v)+'</td><td class="text-right green">'+(d.shopify?$(d.shopify):'-')+'</td><td class="text-right orange">'+(d.amazon?$(d.amazon):'-')+'</td><td class="text-right pink">'+(d.tiktok_shop?$(d.tiktok_shop):'-')+'</td><td class="text-right" style="font-weight:600;color:var(--t1)">'+$(d.total)+'</td><td class="text-right" style="color:var(--orange)">'+(d.review?'-'+$(d.review):'-')+'</td><td class="text-right green">'+$(d.total-d.review)+'</td><td class="text-center" style="color:var(--t3)">'+d.cnt+'</td></tr>'});
   h+='</tbody></table>';document.getElementById('monthlyTable').innerHTML=h;
 }
@@ -1037,7 +1037,7 @@ render=function(){
 /* ═══ 판매건수 카드 클릭 → 월별 매출 비교 스크롤 + table 전환 ═══ */
 function scrollToMonthlyTable(){
   if(monthlyViewMode==='chart'){toggleMonthlyView()}
-  var sec=document.getElementById('monthlyTable');
+  var sec=document.getElementById('monthlyTableWrap');
   if(sec){
     var section=sec.closest('.content-section');
     var stickyEl=document.getElementById('summaryCards');
