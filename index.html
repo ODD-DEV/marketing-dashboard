@@ -331,12 +331,21 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .buyer-filter-select.filter-active{border-color:var(--red-border);background-color:var(--red-dim)}
   table{font-size:11px}
   .m-tile{padding:16px !important}
-  .bar-label{min-width:55px;font-size:11px}
-  .bar-container{gap:8px;margin:4px 0}
-  .region-bar-label{min-width:55px;font-size:11px}
+  .bar-label{min-width:auto;font-size:11px;text-align:left;width:60px;flex-shrink:0}
+  .bar-container{gap:6px;margin:4px 0}
+  .bar{height:30px;font-size:11px;padding-left:10px}
+  .region-bar-label{min-width:auto;font-size:11px;text-align:left;width:60px;flex-shrink:0}
   .region-bar-row{gap:6px;margin:3px 0}
-  .region-bar-count{min-width:28px;font-size:11px}
-  .region-bar-pct{min-width:32px;font-size:11px}
+  .region-bar-fill{height:24px;font-size:10px;padding-left:8px}
+  .region-bar-count{min-width:auto;font-size:10px}
+  .region-bar-pct{min-width:auto;font-size:10px}
+  .cg-row{gap:6px !important}
+  .cg-row .cg-label{min-width:50px !important;font-size:11px !important;text-align:left !important}
+  .cg-row .cg-bar{height:24px !important}
+  .donut-wrap{flex-direction:column;gap:16px;padding:8px 0}
+  .donut-svg{width:120px !important;height:120px !important}
+  .donut-legend{gap:8px}
+  .donut-legend-item{font-size:13px}
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -569,7 +578,7 @@ function renderDemographics(f){
   svg+='<text x="'+cx+'" y="'+cy+'" text-anchor="middle" dominant-baseline="central" fill="#f5f5f7" font-size="30" font-weight="700" font-family="Pretendard, Helvetica Neue, sans-serif" letter-spacing="-1">'+tot+'</text></svg>';
   var leg='<div class="donut-legend">';segs.forEach(s=>{var p=Math.round(s.c/tot*100);leg+='<div class="donut-legend-item"><span class="donut-legend-dot" style="background:'+s.co+'"></span><span>'+s.l+' <b style="color:var(--t1)">'+s.c+'</b>건 ('+p+'%) · '+$(s.r)+'</span></div>'});leg+='</div>';
   var cg='<div class="chart-sublabel">채널별 성별</div>';
-  ['shopify','tiktok_shop','amazon'].forEach(c=>{var d=gB[c],t=d.F+d.M+d.U;if(!t)return;var fP=Math.round(d.F/t*100),mP=Math.round(d.M/t*100),uP=100-fP-mP;cg+='<div style="display:flex;align-items:center;gap:10px;margin:7px 0"><span style="min-width:100px;font-size:13px;color:'+CH_COLORS[c]+';text-align:right;font-weight:600">'+CH_LABELS[c].split(' ')[0]+'</span><div style="flex:1;display:flex;height:30px;border-radius:8px;overflow:hidden">';if(d.F)cg+='<div style="width:'+fP+'%;background:#ff375f;display:flex;align-items:center;padding-left:7px;font-size:11px;color:#fff;font-weight:600">'+(fP>=20?fP+'%':'')+'</div>';if(d.M)cg+='<div style="width:'+mP+'%;background:#0a84ff;display:flex;align-items:center;padding-left:7px;font-size:11px;color:#fff;font-weight:600">'+(mP>=15?mP+'%':'')+'</div>';if(d.U)cg+='<div style="width:'+uP+'%;background:#3a3a3c"></div>';cg+='</div><span style="font-size:11px;color:var(--t3);min-width:26px;text-align:right;font-weight:600">'+t+'</span></div>'});
+  ['shopify','tiktok_shop','amazon'].forEach(c=>{var d=gB[c],t=d.F+d.M+d.U;if(!t)return;var fP=Math.round(d.F/t*100),mP=Math.round(d.M/t*100),uP=100-fP-mP;cg+='<div class="cg-row" style="display:flex;align-items:center;gap:10px;margin:7px 0"><span class="cg-label" style="min-width:70px;font-size:13px;color:'+CH_COLORS[c]+';text-align:left;font-weight:600">'+CH_LABELS[c].split(' ')[0]+'</span><div class="cg-bar" style="flex:1;display:flex;height:30px;border-radius:8px;overflow:hidden">';if(d.F)cg+='<div style="width:'+fP+'%;background:#ff375f;display:flex;align-items:center;padding-left:7px;font-size:11px;color:#fff;font-weight:600">'+(fP>=20?fP+'%':'')+'</div>';if(d.M)cg+='<div style="width:'+mP+'%;background:#0a84ff;display:flex;align-items:center;padding-left:7px;font-size:11px;color:#fff;font-weight:600">'+(mP>=15?mP+'%':'')+'</div>';if(d.U)cg+='<div style="width:'+uP+'%;background:#3a3a3c"></div>';cg+='</div><span style="font-size:11px;color:var(--t3);min-width:26px;text-align:right;font-weight:600">'+t+'</span></div>'});
   document.getElementById('genderChart').innerHTML='<div class="card-title">성별 분포</div><div class="donut-wrap">'+svg+leg+'</div>'+cg;
 
   var sC={},sR={},hR=0;f.forEach(o=>{var s=o.st||'';if(s){hR++;sC[s]=(sC[s]||0)+1;sR[s]=(sR[s]||0)+o.t}});
