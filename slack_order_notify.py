@@ -86,6 +86,63 @@ def fetch_recent_orders(session_id):
     return result["result"]
 
 
+def get_stock_info(session_id, order_id):
+    """주문 상품의 재고 수량을 간단히 반환"""
+    try:
+        # 1) order line에서 상품 ID 조회
+        data = json.dumps({
+            "jsonrpc": "2.0", "id": 1, "method": "call",
+            "params": {
+                "model": "sale.order.line", "method": "search_read",
+                "args": [[["order_id", "=", order_id]]],
+                "kwargs": {"fields": ["product_id"]}
+            }
+        }).encode()
+        req = urllib.request.Request(
+            f"{ERP_URL}/web/dataset/call_kw/sale.order.line/search_read",
+            data=data,
+            headers={"Content-Type": "application/json", "Cookie": f"session_id={session_id}"}
+        )
+        ctx = ssl.create_default_context()
+        lines = json.loads(urllib.request.urlopen(req, context=ctx).read())["result"]
+        product_ids = [l["product_id"][0] for l in lines if l.get("product_id")]
+        if not product_ids:
+            return ""
+
+        # 2) stock.quant에서 재고 조회
+        data = json.dumps({
+            "jsonrpc": "2.0", "id": 1, "method": "call",
+            "params": {
+                "model": "stock.quant", "method": "search_read",
+                "args": [[["product_id", "in", product_ids], ["location_id.usage", "=", "internal"]]],
+                "kwargs": {"fields": ["product_id", "quantity", "reserved_quantity"]}
+            }
+        }).encode()
+        req = urllib.request.Request(
+            f"{ERP_URL}/web/dataset/call_kw/stock.quant/search_read",
+            data=data,
+            headers={"Content-Type": "application/json", "Cookie": f"session_id={session_id}"}
+        )
+        stock = {}
+        for q in json.loads(urllib.request.urlopen(req, context=ctx).read())["result"]:
+            pid = q["product_id"][0]
+            avail = q.get("quantity", 0) - q.get("reserved_quantity", 0)
+            stock[pid] = stock.get(pid, 0) + avail
+
+        parts = []
+        for line in lines:
+            if not line.get("product_id"):
+                continue
+            pid = line["product_id"][0]
+            pname = line["product_id"][1]
+            avail = int(stock.get(pid, 0))
+            parts.append(f"{pname} 재고 {avail}개")
+        return " / ".join(parts)
+    except Exception as e:
+        print(f"[STOCK] Error: {e}")
+        return ""
+
+
 def extract_order_number(origin):
     if not origin:
         return ""
@@ -95,7 +152,7 @@ def extract_order_number(origin):
     return origin
 
 
-def send_slack(order):
+def send_slack(order, session_id=None):
     origin = order.get("origin") or ""
     order_num = extract_order_number(origin)
     amount = order.get("amount_total", 0)
@@ -103,6 +160,11 @@ def send_slack(order):
     ch = order.get("channel_type") or ""
     ch_label = "Amazon" if ch == "amazon" else "TikTok Shop"
     message = f"신규 주문 발생!!!\n{order_num} - {amount}$\n{customer}\n{ch_label}"
+
+    if session_id:
+        stock_info = get_stock_info(session_id, order["id"])
+        if stock_info:
+            message += f"\n{stock_info}"
 
     payload = json.dumps({"text": message}).encode()
     req = urllib.request.Request(
@@ -160,7 +222,7 @@ def run():
                         ch = o.get("channel_type") or ""
                         amount = o.get("amount_total", 0)
                         if ch in ALLOWED_CHANNELS and MIN_AMOUNT <= amount <= MAX_AMOUNT:
-                            send_slack(o)
+                            send_slack(o, session_id)
                             new_count += 1
                 if new_count > 0:
                     print(f"[{now}] 신규 주문 {new_count}건 알림 완료")

@@ -380,14 +380,14 @@
 
   @media (max-width: 1200px) {
     .chart-grid { grid-template-columns: 1fr; }
-    .funnel-grid { grid-template-columns: 1fr; gap: 16px; }
-    .funnel-card { border-radius: var(--r); padding: 24px 28px; display: flex !important; flex-direction: column !important; }
+    .funnel-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .funnel-card { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--r); padding: 24px 28px; overflow: hidden; }
     .funnel-card::before { border-radius: var(--r) var(--r) 0 0; }
-    .funnel-label { width: 100%; margin-bottom: 16px; font-size: 14px; }
-    .funnel-stat { width: 100%; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.06); }
-    .funnel-stat .funnel-stat-value { font-size: 28px; }
-    .funnel-stat-row { width: 100% !important; display: flex !important; justify-content: space-between !important; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); flex-shrink: 0; }
-    .funnel-stat-row:last-child { border-bottom: none; }
+    .funnel-label { grid-column: 1 / -1; margin-bottom: 16px; font-size: 14px; }
+    .funnel-stat { grid-column: 1 / -1; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .funnel-stat .funnel-stat-value { font-size: 26px; }
+    .funnel-stat-row { display: flex; justify-content: space-between; padding: 7px 16px 7px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px; }
+    .funnel-stat-row:last-child, .funnel-stat-row:nth-last-child(2):nth-child(odd) { border-bottom: none; }
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     .container { padding: 20px; }
     .nav-inner { padding: 0 20px; }
@@ -408,7 +408,8 @@
     .nav-right #user-email { display: none; }
     .tabs { flex-wrap: wrap; }
     .tab { font-size: 12px; padding: 5px 14px; }
-    .funnel-card { padding: 18px; border-radius: var(--r); grid-template-columns: 1fr; }
+    .funnel-card { padding: 18px 20px; border-radius: var(--r); }
+    .funnel-stat-row { font-size: 12px; padding: 6px 12px 6px 0; }
     .funnel-stat-row { font-size: 12px; padding: 6px 0; }
     .funnel-stat-value { font-size: 18px; }
     .chart-card { padding: 18px; }
@@ -430,7 +431,7 @@
     .kpi-sub { font-size: 10px !important; }
     .chart-card { padding: 14px; }
     .chart-title { font-size: 11px; margin-bottom: 10px; padding-bottom: 8px; }
-    .funnel-card { padding: 14px; }
+    .funnel-card { padding: 14px; grid-template-columns: 1fr; }
     .funnel-label { font-size: 12px; }
     .funnel-stat .funnel-stat-value { font-size: 22px; }
     .funnel-stat-row { font-size: 11px; padding: 5px 0; }
