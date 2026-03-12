@@ -331,16 +331,16 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .buyer-filter-select.filter-active{border-color:var(--red-border);background-color:var(--red-dim)}
   table{font-size:11px}
   .m-tile{padding:16px !important}
-  .bar-label{min-width:auto;font-size:11px;text-align:left;width:60px;flex-shrink:0}
+  .bar-label{min-width:50px !important;max-width:50px !important;font-size:11px !important;text-align:left !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bar-container{gap:6px;margin:4px 0}
-  .bar{height:30px;font-size:11px;padding-left:10px}
-  .region-bar-label{min-width:auto;font-size:11px;text-align:left;width:60px;flex-shrink:0}
+  .bar{height:28px;font-size:11px;padding-left:8px;white-space:nowrap;overflow:visible}
+  .region-bar-label{min-width:50px !important;max-width:50px !important;font-size:11px !important;text-align:left !important;overflow:hidden;text-overflow:ellipsis}
   .region-bar-row{gap:6px;margin:3px 0}
   .region-bar-fill{height:24px;font-size:10px;padding-left:8px}
-  .region-bar-count{min-width:auto;font-size:10px}
-  .region-bar-pct{min-width:auto;font-size:10px}
+  .region-bar-count{min-width:auto !important;font-size:10px}
+  .region-bar-pct{min-width:auto !important;font-size:10px}
   .cg-row{gap:6px !important}
-  .cg-row .cg-label{min-width:50px !important;font-size:11px !important;text-align:left !important}
+  .cg-row .cg-label{min-width:50px !important;max-width:50px !important;font-size:11px !important;text-align:left !important}
   .cg-row .cg-bar{height:24px !important}
   .donut-wrap{flex-direction:column;gap:16px;padding:8px 0}
   .donut-svg{width:120px !important;height:120px !important}
