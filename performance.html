@@ -1430,6 +1430,8 @@ function buildDoughnutChart(segments, opts) {
   var total = 0;
   segments.forEach(function(s) { total += (s.value || 0); });
   if (total === 0) return '<div style="color:var(--t4);text-align:center;padding:30px">No data</div>';
+  var activeCount = 0;
+  segments.forEach(function(s) { if (s.value > 0 && (s.value / total * 360) >= 0.5) activeCount++; });
   var uid = 'd' + Math.random().toString(36).substr(2, 6);
   var svg = '<svg viewBox="0 0 ' + size + ' ' + size + '" class="doughnut-svg" width="' + Math.min(size, 240) + '" height="' + Math.min(size, 240) + '">';
   var sa = -90;
@@ -1438,7 +1440,7 @@ function buildDoughnutChart(segments, opts) {
     if (a < 0.5) { sa += a; return; }
     var ea = sa + a, la = a > 180 ? 1 : 0;
     var sr = sa * Math.PI / 180, er = ea * Math.PI / 180;
-    if (segments.length === 1) {
+    if (activeCount === 1) {
       svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="' + seg.color + '" opacity=".85"/>';
       svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#1c1c1e"/>';
     } else {
