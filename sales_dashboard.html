@@ -259,9 +259,101 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .two-col{grid-template-columns:1fr}
   .metric-tiles{grid-template-columns:repeat(2,1fr)}
   .hero-kpi-value{font-size:56px !important}
-  .hero-kpi{padding:48px 20px 40px}
-  main,.nav-inner{padding-left:20px;padding-right:20px}
-  .section-heading{font-size:28px}
+  .hero-kpi{padding:36px 16px 28px}
+  .hero-kpi-sub{font-size:14px;margin-top:10px}
+  main,.nav-inner{padding-left:16px;padding-right:16px}
+  .section-heading{font-size:24px;margin-bottom:24px}
+  .section-head-row{margin-bottom:24px}
+  .card{padding:20px}
+  .m-tile{padding:20px 16px}
+  .m-tile-value{font-size:28px}
+  .m-tile-label{font-size:11px;margin-bottom:8px}
+  .m-tile-sub{font-size:12px;margin-top:6px}
+  .bar-label{min-width:80px;font-size:12px}
+  .bar{height:32px;font-size:12px}
+  .donut-wrap{flex-direction:column;gap:20px;padding:12px 0}
+  .donut-legend-item{font-size:13px}
+  .region-bar-label{min-width:80px;font-size:12px}
+  .region-bar-fill{height:26px;font-size:11px}
+  .funnel-step{padding:16px;gap:12px}
+  .funnel-step .step-count{font-size:32px;min-width:40px}
+  .funnel-step .step-label{font-size:13px}
+  .stat-row{font-size:13px;padding:9px 0}
+  .table-wrap{max-height:400px;-webkit-overflow-scrolling:touch}
+  .buyer-filters{gap:8px}
+  .buyer-search{min-width:0;font-size:13px;padding:8px 12px}
+  .buyer-filter-select{font-size:12px;padding:6px 28px 6px 10px}
+  .section-tag{font-size:12px}
+  .content-section{padding:40px 0 0}
+}
+@media(max-width:600px){
+  .metric-tiles{grid-template-columns:1fr 1fr;gap:1px}
+  .hero-kpi-value{font-size:44px !important;letter-spacing:-1px}
+  .hero-kpi{padding:28px 12px 20px}
+  .hero-kpi-tag{font-size:11px;margin-bottom:12px}
+  .hero-kpi-sub{font-size:13px}
+  main,.nav-inner{padding-left:12px;padding-right:12px}
+  .nav-inner{height:44px}
+  .nav-title{display:none}
+  .live-badge{display:none}
+  .section-heading{font-size:20px;margin-bottom:20px}
+  .card{padding:16px}
+  .m-tile{padding:16px 12px}
+  .m-tile-value{font-size:24px}
+  .m-tile-label{font-size:10px;letter-spacing:.5px;margin-bottom:6px}
+  .m-tile-sub{font-size:11px;margin-top:4px}
+  .bar-label{min-width:60px;font-size:11px}
+  .bar{height:28px;font-size:11px;border-radius:8px}
+  .bar-container{gap:8px}
+  .region-bar-label{min-width:60px;font-size:11px}
+  .region-bar-fill{height:22px;font-size:10px}
+  .region-bar-count{font-size:11px;min-width:28px}
+  .region-bar-pct{font-size:11px;min-width:36px}
+  .region-bar-row{gap:6px}
+  th{padding:8px 10px;font-size:10px}
+  td{padding:8px 10px;font-size:12px}
+  .compact-tbl th,.compact-tbl td{padding:8px;font-size:11px}
+  .funnel-step{padding:14px 12px;gap:10px}
+  .funnel-step .step-count{font-size:28px;min-width:36px}
+  .funnel-step .step-label{font-size:12px}
+  .stat-row{font-size:12px;padding:8px 0}
+  .section-tag{font-size:11px}
+  .content-section{padding:32px 0 0}
+  .badge{font-size:11px;padding:3px 8px}
+  .section-head-row{margin-bottom:20px;gap:8px}
+  .month-tab{padding:8px 16px;font-size:13px}
+  .week-tab{padding:3px 8px;font-size:10px}
+  .table-wrap{max-height:350px}
+  .buyer-search{padding:8px 10px;font-size:12px}
+  .buyer-filter-select{font-size:11px;padding:6px 24px 6px 8px}
+  .summary-sticky{padding-bottom:4px}
+  .footer-text{padding:32px 0 24px;font-size:11px}
+  .donut-wrap{gap:16px}
+  .donut-legend-item{font-size:12px;gap:8px}
+  .donut-legend-dot{width:10px;height:10px}
+  .card-title{font-size:11px;margin-bottom:14px;padding-bottom:10px}
+  .section-group-head{font-size:11px;margin-bottom:12px;padding-bottom:8px}
+  .dur-badge{font-size:10px;padding:3px 8px}
+  .stats-box{padding:12px 14px;margin-top:12px}
+  .refresh-btn{padding:4px 10px;font-size:11px}
+  .toggle-view-btn{padding:4px 10px;font-size:11px}
+  .line-chart-legend{gap:10px;padding:6px 0}
+  .line-chart-legend-item{font-size:9px}
+  .section-title{font-size:15px}
+  .region-tooltip-fixed{min-width:240px;padding:14px 16px}
+}
+@media(max-width:380px){
+  .hero-kpi-value{font-size:36px !important}
+  .m-tile-value{font-size:20px}
+  .m-tile{padding:12px 10px}
+  main{padding-left:8px;padding-right:8px}
+  .card{padding:12px}
+  .month-tab{padding:6px 12px;font-size:12px}
+  .section-heading{font-size:18px}
+  .nav-inner{padding:0 8px}
+  .bar-label{min-width:50px;font-size:10px}
+  .region-bar-label{min-width:50px;font-size:10px}
+  .buyer-filter-select{font-size:10px;padding:5px 20px 5px 6px}
 }
 </style>
 </head>

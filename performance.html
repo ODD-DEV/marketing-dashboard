@@ -175,6 +175,7 @@
   }
   @media (max-width: 768px) {
     .dp-weeks { display: none; }
+    .dp-range-label { display: none; }
   }
 
   /* KPI Cards */
@@ -380,12 +381,13 @@
   @media (max-width: 1200px) {
     .chart-grid { grid-template-columns: 1fr; }
     .funnel-grid { grid-template-columns: 1fr; gap: 16px; }
-    .funnel-card { border-radius: var(--r); padding: 28px 32px; display: flex; flex-wrap: wrap; gap: 0; }
+    .funnel-card { border-radius: var(--r); padding: 24px 28px; display: flex !important; flex-direction: column !important; }
     .funnel-card::before { border-radius: var(--r) var(--r) 0 0; }
     .funnel-label { width: 100%; margin-bottom: 16px; font-size: 14px; }
     .funnel-stat { width: 100%; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.06); }
     .funnel-stat .funnel-stat-value { font-size: 28px; }
-    .funnel-stat-row { width: 50%; box-sizing: border-box; padding: 8px 12px 8px 0; }
+    .funnel-stat-row { width: 100% !important; display: flex !important; justify-content: space-between !important; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); flex-shrink: 0; }
+    .funnel-stat-row:last-child { border-bottom: none; }
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     .container { padding: 20px; }
     .nav-inner { padding: 0 20px; }
@@ -395,37 +397,78 @@
     .kpi-value { font-size: 22px !important; }
     .kpi-label { font-size: 10px !important; }
     .kpi-sub { font-size: 11px !important; }
+    .kpi-card { padding: 18px; }
     .section-title { font-size: 14px; }
-    .container { padding: 16px; }
-    .nav-inner { padding: 0 16px; }
-    .dash-switcher { margin-left: 10px; }
+    .container { padding: 14px; }
+    .nav-inner { padding: 0 14px; }
+    .dash-switcher { margin-left: 8px; }
     .dash-switch { padding: 4px 12px; font-size: 11px; }
     .nav-right .badge { display: none; }
     .nav-right .date-range { display: none; }
+    .nav-right #user-email { display: none; }
     .tabs { flex-wrap: wrap; }
     .tab { font-size: 12px; padding: 5px 14px; }
-    /* Funnel cards - stacked with compact stat rows */
-    .funnel-card { padding: 20px; border-radius: var(--r); }
+    .funnel-card { padding: 18px; border-radius: var(--r); grid-template-columns: 1fr; }
     .funnel-stat-row { font-size: 12px; padding: 6px 0; }
     .funnel-stat-value { font-size: 18px; }
+    .chart-card { padding: 18px; }
+    .chart-title { font-size: 12px; }
+    .chart-grid { gap: 12px; }
+    .sticky-table { font-size: 12px; }
+    .sticky-table th, .sticky-table td { padding: 8px 10px; }
+    .date-picker-bar { gap: 8px; }
+    .dp-month { padding: 5px 14px; font-size: 12px; }
+    .dp-total { padding: 5px 14px; font-size: 11px; }
+    .dp-label { font-size: 12px; }
+    #admin-panel { width: 100%; right: -100%; }
   }
   @media (max-width: 600px) {
-    .kpi-grid { grid-template-columns: 1fr 1fr; }
-    .kpi-card { padding: 16px; }
-    .kpi-value { font-size: 20px !important; }
-    .chart-card { padding: 16px; }
-    .funnel-card { padding: 16px; }
-    .container { padding: 12px; }
-    .nav-inner { padding: 0 12px; height: 44px; }
-    .dash-switcher { margin-left: 8px; }
-    .dash-switch { padding: 3px 10px; font-size: 10px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 1px; }
+    .kpi-card { padding: 14px; }
+    .kpi-value { font-size: 18px !important; }
+    .kpi-label { font-size: 9px !important; letter-spacing: .5px; }
+    .kpi-sub { font-size: 10px !important; }
+    .chart-card { padding: 14px; }
+    .chart-title { font-size: 11px; margin-bottom: 10px; padding-bottom: 8px; }
+    .funnel-card { padding: 14px; }
+    .funnel-label { font-size: 12px; }
+    .funnel-stat .funnel-stat-value { font-size: 22px; }
+    .funnel-stat-row { font-size: 11px; padding: 5px 0; }
+    .funnel-stat-row span:first-child { font-size: 11px; }
+    .container { padding: 10px; }
+    .nav-inner { padding: 0 10px; height: 44px; }
+    .dash-switcher { margin-left: 6px; }
+    .dash-switch { padding: 3px 8px; font-size: 10px; }
     .live-badge { display: none; }
-    table { font-size: 11px; }
-    td, th { padding: 6px 8px; }
-    .date-picker-bar { gap: 6px; }
-    .dp-month { padding: 5px 12px; font-size: 12px; }
-    .tabs { gap: 2px; }
-    .tab { font-size: 11px; padding: 4px 10px; }
+    .nav-right button[onclick="signOut()"] { font-size: 9px; padding: 2px 8px; }
+    .nav-right #user-photo { width: 20px; height: 20px; }
+    table { font-size: 10px; }
+    td, th { padding: 6px 6px; }
+    .date-picker-bar { gap: 4px; }
+    .dp-month { padding: 4px 10px; font-size: 11px; }
+    .dp-total { padding: 4px 10px; font-size: 10px; }
+    .dp-label { font-size: 11px; margin-right: 0; }
+    .tabs { gap: 2px; padding: 3px; }
+    .tab { font-size: 10px; padding: 4px 10px; }
+    .section-title { font-size: 13px; gap: 6px; }
+    .chart-grid { gap: 10px; }
+    .sticky-table th, .sticky-table td { padding: 6px 6px; font-size: 10px; }
+    #admin-panel { width: 100%; right: -100%; padding: 16px; }
+    .auth-card { padding: 32px 24px; }
+    .line-chart-legend { gap: 10px; padding: 6px 0; }
+    .line-chart-legend-item { font-size: 9px; }
+  }
+  @media (max-width: 380px) {
+    .kpi-value { font-size: 16px !important; }
+    .kpi-card { padding: 12px; }
+    .container { padding: 8px; }
+    .nav-inner { padding: 0 8px; }
+    .dp-month { padding: 3px 8px; font-size: 10px; }
+    .tab { font-size: 9px; padding: 3px 8px; }
+    .chart-card { padding: 10px; }
+    .funnel-card { padding: 10px; }
+    .section-title { font-size: 12px; }
+    .dash-switch { font-size: 9px; padding: 3px 6px; }
   }
 </style>
 <!-- Firebase SDKs -->
