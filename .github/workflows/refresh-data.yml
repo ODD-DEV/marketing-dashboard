@@ -1,0 +1,42 @@
+name: Refresh Dashboard Data
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Refresh data from ERP/ReCharge/Google Sheets
+        env:
+          ERP_URL: ${{ secrets.ERP_URL }}
+          ERP_DB: ${{ secrets.ERP_DB }}
+          ERP_LOGIN: ${{ secrets.ERP_LOGIN }}
+          ERP_PASSWORD: ${{ secrets.ERP_PASSWORD }}
+          ERP_PARTNER_ID: ${{ secrets.ERP_PARTNER_ID }}
+          RECHARGE_API_TOKEN: ${{ secrets.RECHARGE_API_TOKEN }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_GIDS: ${{ secrets.GOOGLE_SHEET_GIDS }}
+        run: python scripts/refresh_data.py
+
+      - name: Commit and push if data changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.js address_cache.json
+          if git diff --cached --quiet; then
+            echo "No data changes detected"
+          else
+            git commit -m "Auto-refresh data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
