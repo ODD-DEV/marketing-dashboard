@@ -46,6 +46,18 @@
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 6px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
 
+  /* ═══ Nav ═══ */
+  .nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
+  .nav-inner{max-width:1440px;margin:0 auto;padding:0 28px;height:48px;display:flex;align-items:center;justify-content:space-between}
+  .nav-left{display:flex;align-items:center;gap:14px}
+  .nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4)}
+  .live-badge{font-size:7px;font-weight:600;color:var(--red);background:rgba(214,54,52,.1);border:1px solid rgba(214,54,52,.25);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+  .dash-switcher{display:flex;background:rgba(255,255,255,.06);border-radius:100px;padding:2px;margin-left:16px;border:1px solid rgba(255,255,255,.08)}
+  .dash-switch{padding:5px 16px;border-radius:100px;font-size:12px;font-weight:600;color:var(--t4);text-decoration:none;transition:all .2s;letter-spacing:.3px}
+  .dash-switch:hover{color:var(--t2)}
+  .dash-switch.active{background:var(--red);color:#fff}
+
   .container { max-width: 1440px; margin: 0 auto; padding: 24px 32px; }
 
   /* Tabs */
@@ -354,13 +366,49 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1200px) {
     .chart-grid { grid-template-columns: 1fr; }
     .funnel-grid { grid-template-columns: 1fr; }
-    .container { padding: 16px; }
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .container { padding: 20px; }
+    .nav-inner { padding: 0 20px; }
   }
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-value { font-size: 22px !important; }
+    .kpi-label { font-size: 10px !important; }
+    .kpi-sub { font-size: 11px !important; }
+    .chart-wrap { height: 260px; }
+    .chart-wrap-sm { height: 220px; }
+    .section-title { font-size: 14px; }
+    .container { padding: 16px; }
+    .nav-inner { padding: 0 16px; }
+    .dash-switcher { margin-left: 10px; }
+    .dash-switch { padding: 4px 12px; font-size: 11px; }
+    .nav-right .badge { display: none; }
+    .nav-right .date-range { display: none; }
+    .tabs { flex-wrap: wrap; }
+    .tab { font-size: 12px; padding: 5px 14px; }
+  }
+  @media (max-width: 600px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .kpi-card { padding: 16px; }
+    .kpi-value { font-size: 20px !important; }
+    .chart-card { padding: 16px; }
+    .chart-wrap { height: 220px; }
+    .chart-wrap-sm { height: 180px; }
+    .funnel-card { padding: 16px; }
+    .container { padding: 12px; }
+    .nav-inner { padding: 0 12px; height: 44px; }
+    .dash-switcher { margin-left: 8px; }
+    .dash-switch { padding: 3px 10px; font-size: 10px; }
+    .live-badge { display: none; }
+    table { font-size: 11px; }
+    td, th { padding: 6px 8px; }
+    .date-picker-bar { gap: 6px; }
+    .dp-month { padding: 5px 12px; font-size: 12px; }
+    .tabs { gap: 2px; }
+    .tab { font-size: 11px; padding: 4px 10px; }
   }
 </style>
 <!-- Firebase SDKs -->
@@ -394,6 +442,7 @@
 
 <div id="auth-gate">
   <div class="auth-card">
+    <div style="font-size:28px;font-weight:800;letter-spacing:-1px;color:#f5f5f7;margin-bottom:32px">ODD.</div>
     <h2>Performance Dashboard</h2>
     <p>@hanah1.com Google 계정으로 로그인해주세요</p>
     <button class="google-btn" onclick="signInWithGoogle()">
@@ -425,20 +474,27 @@
 <div id="dashboard-content" style="display:none;">
 
 <!-- Nav -->
-<nav style="position:sticky;top:0;z-index:100;padding:16px 32px;display:flex;align-items:center;gap:16px;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06)">
-  <span style="font-size:20px;font-weight:800;letter-spacing:-1px;color:#f5f5f7">ODD.</span>
-  <span style="font-size:14px;color:#a1a1a6;font-weight:500;border-left:1px solid rgba(255,255,255,.1);padding-left:16px">Performance Dashboard</span>
-  <span style="background:#d63634;color:#fff;font-size:9px;padding:2px 8px;border-radius:100px;font-weight:700;letter-spacing:.5px;text-transform:uppercase">LIVE</span>
-  <div style="flex:1"></div>
-  <span class="badge badge-meta" style="font-size:11px;">Meta</span>
-  <span class="badge badge-tiktok" style="font-size:11px;">TikTok</span>
-  <span class="date-range" id="dateRange" style="font-size:11px;">2026.02.08 - 2026.04.11 (USD 기준)</span>
-  <span id="lastUpdated" style="font-size:11px;color:var(--green);margin-left:4px;"></span>
-  <a href="index.html" style="padding:6px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.15);color:#a1a1a6;font-size:12px;font-weight:500;text-decoration:none;transition:all .2s;margin-right:4px" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='#f5f5f7'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='#a1a1a6'">Sales</a>
-  <div id="user-bar" style="display:none;align-items:center;gap:8px">
-    <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
-    <span id="user-email" style="font-size:11px;color:#86868b"></span>
-    <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:var(--sans)">로그아웃</button>
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <span style="font-size:20px;font-weight:800;letter-spacing:-1px;color:#f5f5f7">ODD.</span>
+      <div class="dash-switcher">
+        <a href="index.html" class="dash-switch">Sales</a>
+        <a href="performance.html" class="dash-switch active">Performance</a>
+      </div>
+      <span class="live-badge">LIVE</span>
+    </div>
+    <div class="nav-right">
+      <span class="badge badge-meta" style="font-size:11px;">Meta</span>
+      <span class="badge badge-tiktok" style="font-size:11px;">TikTok</span>
+      <span class="date-range" id="dateRange" style="font-size:11px;">2026.02.08 - 2026.04.11 (USD 기준)</span>
+      <span id="lastUpdated" style="font-size:11px;color:var(--green);margin-left:4px;"></span>
+      <div id="user-bar" style="display:none;align-items:center;gap:8px;margin-left:12px">
+        <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
+        <span id="user-email" style="font-size:11px;color:#86868b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:var(--sans)">로그아웃</button>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -505,6 +561,21 @@
         <div class="kpi-label">Avg CTR</div>
         <div class="kpi-value">5.5%</div>
         <div class="kpi-sub">Meta 기준</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">ROAS</div>
+        <div class="kpi-value">—</div>
+        <div class="kpi-sub">Revenue / Ad Spend</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">CPM</div>
+        <div class="kpi-value">—</div>
+        <div class="kpi-sub">Cost per 1K views</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Follow CPA</div>
+        <div class="kpi-value">—</div>
+        <div class="kpi-sub">Spend / Follows</div>
       </div>
     </div>
 
@@ -1091,11 +1162,20 @@
 
 <script>
 // Chart.js dark theme defaults (Sales Dashboard style)
-Chart.defaults.color = '#a1a1a6';
+Chart.defaults.color = 'rgba(255,255,255,.35)';
 Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
 Chart.defaults.font.family = "'Pretendard',-apple-system,sans-serif";
 Chart.defaults.plugins.legend.labels.usePointStyle = true;
 Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(28,28,30,.95)';
+Chart.defaults.plugins.tooltip.titleColor = '#a1a1a6';
+Chart.defaults.plugins.tooltip.bodyColor = '#f5f5f7';
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,.1)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.cornerRadius = 10;
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.titleFont = { weight: '500', size: 11 };
+Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
 Chart.defaults.elements.line.borderWidth = 1.5;
 Chart.defaults.elements.line.tension = 0.4;
 Chart.defaults.elements.point.radius = 0;
@@ -1487,6 +1567,21 @@ function updateOverviewForPeriod() {
   if (kpis[3]) { kpis[3].querySelector('.kpi-label').textContent = 'Profile Visits'; kpis[3].querySelector('.kpi-value').textContent = fn(Math.round(metaPV + tkPV)); kpis[3].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaPV)) + ' · TikTok ' + fn(Math.round(tkPV)); }
   if (kpis[4]) { kpis[4].querySelector('.kpi-label').textContent = 'Follows'; kpis[4].querySelector('.kpi-value').textContent = fn(Math.round(metaFollows + tkFollows)); kpis[4].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaFollows)) + ' · TikTok ' + fn(Math.round(tkFollows)); }
   if (kpis[5]) { kpis[5].querySelector('.kpi-label').textContent = 'Avg CTR'; kpis[5].querySelector('.kpi-value').textContent = ctr.toFixed(1) + '%'; kpis[5].querySelector('.kpi-sub').textContent = 'Meta 기준'; }
+
+  // ROAS — Revenue / Ad Spend (revenue data from Purchase row if available)
+  var totalRevenue = getSelectedSum(ms['Purchase value'] || ms['Revenue'] || ms['Purchase']) + getSelectedSum(ts['Purchase value'] || ts['Revenue'] || ts['Purchase']);
+  var roas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(2) : '—';
+  if (kpis[6]) { kpis[6].querySelector('.kpi-label').textContent = 'ROAS'; kpis[6].querySelector('.kpi-value').textContent = totalRevenue > 0 ? roas + 'x' : '—'; kpis[6].querySelector('.kpi-sub').textContent = totalRevenue > 0 ? 'Revenue $' + fn(Math.round(totalRevenue)) : 'Revenue data pending'; }
+
+  // CPM — Cost per 1K views
+  var totalViews2 = metaViews + tkViews;
+  var cpm = totalViews2 > 0 ? (totalSpend / totalViews2 * 1000) : 0;
+  if (kpis[7]) { kpis[7].querySelector('.kpi-label').textContent = 'CPM'; kpis[7].querySelector('.kpi-value').textContent = cpm > 0 ? '$' + cpm.toFixed(2) : '—'; kpis[7].querySelector('.kpi-sub').textContent = 'Cost per 1K views'; }
+
+  // Follow CPA — Spend / Follows
+  var totalFollows = metaFollows + tkFollows;
+  var followCPA = totalFollows > 0 ? (totalSpend / totalFollows) : 0;
+  if (kpis[8]) { kpis[8].querySelector('.kpi-label').textContent = 'Follow CPA'; kpis[8].querySelector('.kpi-value').textContent = followCPA > 0 ? '$' + followCPA.toFixed(2) : '—'; kpis[8].querySelector('.kpi-sub').textContent = 'Spend / Follows'; }
 
   const isAll = selectedWeeks.length === 5;
   [charts.weeklySpend, charts.weeklyCTR, charts.weeklyCVR, charts.weekly3s].forEach(chart => {

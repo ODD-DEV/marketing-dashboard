@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Shop Channel — ODD. Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/57868cb6368acd8f.woff2') format('woff2');font-weight:300;font-display:swap}
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/77de016475a91854.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/9387036ea37689ec.woff2') format('woff2');font-weight:600;font-display:swap}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+:root{
+  --bg:#000;--bg-raised:#1d1d1f;--bg-card:#1d1d1f;
+  --border:rgba(255,255,255,.12);--border-h:rgba(255,255,255,.2);
+  --t1:#f5f5f7;--t2:#d1d1d6;--t3:#a1a1a6;--t4:#86868b;--t5:#6e6e73;
+  --red:#bf2026;--red-light:#d4343a;--red-dim:rgba(191,32,38,.1);--red-glow:rgba(191,32,38,.25);--red-border:rgba(191,32,38,.25);
+  --green:#30d158;--orange:#ff9f0a;--pink:#ff375f;--purple:#bf5af2;--yellow:#ffd60a;--blue:#0a84ff;
+  --serif:'EditorsNote','Georgia','Times New Roman',serif;
+  --sans:'Pretendard',-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  --ease:cubic-bezier(.25,.46,.45,.94);--r:16px;--r-s:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:#000}
+body{font-family:var(--sans);background:#000;color:var(--t2);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+::selection{background:var(--pink);color:#fff}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+/* Nav */
+.nav{position:relative;top:0;z-index:100;background:rgba(0,0,0,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
+.nav-inner{max-width:1120px;margin:0 auto;padding:0 28px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.nav-left{display:flex;align-items:center;gap:14px}
+.logo-img{height:18px;width:auto;object-fit:contain;display:block}
+.nav-title{font-size:12px;color:var(--t4);font-weight:400;padding-left:14px;border-left:1px solid rgba(255,255,255,.12);letter-spacing:.5px}
+.live-badge{font-size:7px;font-weight:600;color:var(--pink);background:rgba(255,55,95,.1);border:1px solid rgba(255,55,95,.25);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
+.nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4)}
+.back-link{padding:5px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--t3);font-size:12px;font-weight:500;text-decoration:none;transition:all .2s;font-family:var(--sans)}
+.back-link:hover{border-color:rgba(255,255,255,.3);color:var(--t1);background:rgba(255,255,255,.05)}
+
+/* Main */
+main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
+
+/* Tabs */
+.tabs-area{padding:28px 0 0}
+.month-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.month-tab{padding:10px 22px;border-radius:100px;border:none;background:transparent;color:var(--t4);cursor:pointer;font-size:15px;font-weight:500;transition:all .2s;font-family:var(--sans)}
+.month-tab:hover{color:var(--t2);background:rgba(255,255,255,.06)}
+.month-tab.active{background:var(--pink);color:#fff;font-weight:600}
+.month-tab.all-tab{color:var(--t3)}
+.month-tab.all-tab:hover{color:var(--t2)}
+.month-tab.all-tab.active{background:var(--pink);color:#fff}
+.week-tabs{display:flex;gap:3px;flex-wrap:wrap;align-items:center;margin-top:8px;justify-content:center}
+.week-tab{padding:4px 12px;border-radius:100px;border:none;background:transparent;color:var(--t5);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s;font-family:var(--sans)}
+.week-tab:hover{color:var(--t3);background:rgba(255,255,255,.05)}
+.week-tab.active{background:rgba(255,55,95,.12);color:var(--pink);font-weight:600}
+
+/* Hero KPI */
+.hero-kpi{
+  text-align:center;
+  padding:56px 40px 48px;
+  position:relative;
+  animation:fadeUp .7s var(--ease) both;
+}
+.hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.hero-kpi-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t3);letter-spacing:.5px;margin-bottom:20px}
+.hero-kpi-tag::before{content:'';width:8px;height:8px;background:var(--pink);border-radius:50%;display:inline-block}
+.hero-kpi-value{font-family:var(--sans);font-size:clamp(64px,10vw,108px);color:var(--pink);line-height:1;letter-spacing:-2px;font-weight:700;transform:scaleX(.97);transform-origin:center}
+.hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400}
+
+/* Metric Tiles */
+.metric-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
+.m-tile{background:var(--bg-raised);padding:32px 24px;transition:all .35s var(--ease);position:relative;cursor:default}
+.m-tile::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,55,95,.08) 0%,transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
+.m-tile:hover{background:#2c2c2e}
+.m-tile:hover::after{opacity:1}
+.m-tile:hover .m-tile-value{color:var(--t1) !important}
+.m-tile-label{font-size:12px;color:var(--t4);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:12px}
+.m-tile-value{font-family:var(--sans);font-size:36px;line-height:1;letter-spacing:-1px;font-weight:700;transition:color .3s;animation:countUp .5s var(--ease) both}
+.m-tile-sub{font-size:13px;color:var(--t4);margin-top:10px;line-height:1.5}
+.m-tile-sub b{color:var(--t3);font-weight:600}
+
+/* Content Sections */
+.content-section{padding:56px 0 0;animation:fadeUp .5s var(--ease) both;position:relative;z-index:1;background:#000}
+.section-tag{font-size:14px;font-weight:600;color:var(--pink);letter-spacing:.5px;margin-bottom:8px}
+.section-heading{font-family:var(--sans);font-size:32px;color:var(--t1);font-weight:500;letter-spacing:-.5px;margin-bottom:32px;line-height:1.2}
+.section-head-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+.section-head-row .section-heading{margin-bottom:0}
+.toggle-hint{font-size:13px;color:var(--t4);font-weight:500;cursor:pointer;transition:color .2s}
+.toggle-hint:hover{color:var(--t2)}
+
+/* Cards */
+.card{background:var(--bg-raised);border-radius:var(--r);padding:28px;border:none;transition:background .2s}
+.card:hover{background:#242426}
+
+/* Titles */
+.section-title{font-size:20px;font-weight:600;color:var(--t1);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card-title{font-size:12px;font-weight:600;color:var(--t4);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-transform:uppercase;letter-spacing:1px}
+.card-title .ct-sub{font-size:13px;color:var(--t4);font-weight:400;text-transform:none;letter-spacing:0}
+
+/* Badges */
+.badge{background:rgba(255,255,255,.06);padding:4px 12px;border-radius:100px;font-size:12px;color:var(--t3);font-weight:500;border:none}
+.badge-review{background:rgba(255,55,95,.12);color:var(--pink);padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+
+/* Chart sublabel */
+.chart-sublabel{font-size:12px;color:var(--t4);margin:24px 0 14px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.chart-sublabel.pink{color:var(--pink)}
+
+/* Layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.two-col>.card{display:flex;flex-direction:column}
+
+/* Tables */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:12px 14px;font-size:11px;color:var(--t4);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:600;background:rgba(255,255,255,.03)}
+td{padding:12px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t2);transition:background .15s}
+tr:hover td{background:rgba(255,255,255,.03)}
+.text-right{text-align:right}.text-center{text-align:center}
+.table-wrap{max-height:500px;overflow-y:auto;overflow-x:auto;border-radius:var(--r);background:var(--bg-raised)}
+.table-wrap th{position:sticky;top:0;z-index:1;background:var(--bg-raised);backdrop-filter:blur(12px)}
+.compact-tbl{width:100%}.compact-tbl th,.compact-tbl td{padding:10px 12px;font-size:13px}
+
+/* Stat Rows */
+.stat-row{display:flex;justify-content:space-between;padding:11px 0;font-size:14px}
+.stat-row+.stat-row{border-top:1px solid rgba(255,255,255,.05)}
+.stat-row .label{color:var(--t3)}.stat-row .val{font-weight:600;letter-spacing:-.2px;color:var(--t2)}
+.highlight-review{background:rgba(255,55,95,.04)}
+.stats-box{margin-top:16px;padding:16px 20px;background:rgba(255,255,255,.03);border-radius:var(--r-s)}
+
+/* Colors */
+.green{color:var(--green)}.blue{color:var(--blue)}.purple{color:var(--purple)}.orange{color:var(--orange)}.red{color:var(--red)}.yellow{color:var(--yellow)}.pink{color:var(--pink)}
+
+/* Line Chart */
+.line-chart-container{position:relative;width:100%}
+.line-chart-svg{width:100%;display:block}
+.line-chart-legend{display:flex;gap:18px;justify-content:flex-end;margin-top:0;padding:10px 4px 0;flex-wrap:wrap}
+.line-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t3);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.line-chart-legend-dot{width:16px;height:1.5px;border-radius:1px;opacity:.7}
+
+/* Buyer Detail Section */
+.buyer-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.buyer-search{flex:1;min-width:200px;padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t1);font-size:14px;font-family:var(--sans);outline:none;transition:border-color .2s}
+.buyer-search:focus{border-color:rgba(255,55,95,.4);background:rgba(255,255,255,.06)}
+.buyer-search::placeholder{color:var(--t5)}
+.buyer-filter-select{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t2);font-size:13px;font-family:var(--sans);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1a6' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.buyer-filter-select:focus{border-color:rgba(255,55,95,.4)}
+.buyer-filter-select option{background:#1d1d1f;color:var(--t2)}
+.buyer-result-count{font-size:12px;color:var(--t4);margin-bottom:8px}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:20px}
+.loading-overlay::before{content:'';width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--pink);border-radius:50%;animation:spin .7s linear infinite}
+.loading-overlay span{font-size:13px;color:var(--t4);font-weight:500}
+.hidden{display:none}
+
+/* Footer */
+.footer-text{text-align:center;padding:48px 0 32px;color:var(--t5);font-size:12px;letter-spacing:.3px}
+
+/* Toggle View Button */
+.toggle-view-btn{padding:5px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--t3);cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;font-family:var(--sans)}
+.toggle-view-btn:hover{border-color:rgba(255,255,255,.3);color:var(--t1);background:rgba(255,255,255,.05)}
+.toggle-view-btn.active{background:rgba(255,55,95,.12);border-color:rgba(255,55,95,.3);color:var(--pink)}
+
+/* Unmatched tag */
+.badge-unmatched{background:var(--red-dim);color:var(--red);padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600}
+
+@media(max-width:900px){
+  .two-col{grid-template-columns:1fr}
+  .metric-tiles{grid-template-columns:repeat(2,1fr)}
+  .hero-kpi-value{font-size:56px !important}
+  .hero-kpi{padding:48px 20px 40px}
+  main,.nav-inner{padding-left:20px;padding-right:20px}
+  .section-heading{font-size:28px}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div id="auth-gate" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#000">
+  <div style="text-align:center">
+    <img src="https://odd-dev.github.io/marketing-dashboard/odd_logo_white.png" alt="ODD." style="height:32px;margin-bottom:32px;opacity:.8" onerror="this.style.display='none'">
+    <h2 style="font-family:Pretendard,-apple-system,sans-serif;color:#f5f5f7;font-size:22px;font-weight:600;margin-bottom:8px">Global Dashboard</h2>
+    <p style="color:#86868b;font-size:14px;margin-bottom:32px">@hanah1.com 계정으로 로그인하세요</p>
+    <button onclick="signInWithGoogle()" style="padding:12px 32px;border-radius:100px;border:none;background:#ff375f;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:Pretendard,sans-serif;transition:opacity .2s">Google 로그인</button>
+    <div id="auth-error" style="display:none;color:#ff453a;font-size:13px;margin-top:16px"></div>
+  </div>
+</div>
+
+<div id="dashboard-content" style="display:none">
+
+<div class="loading-overlay" id="loadingOverlay"><span>Loading TikTok Shop Channel</span></div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <img src="/odd_logo_white.png" class="logo-img" alt="ODD.">
+      <span class="nav-title">TikTok Shop Channel</span>
+      <span class="live-badge">LIVE</span>
+    </div>
+    <div class="nav-right">
+      <span id="dataStatus"></span>
+      <a href="index.html" class="back-link">&larr; Dashboard</a>
+      <div id="user-bar" style="display:none;align-items:center;gap:8px;margin-left:12px">
+        <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
+        <span id="user-email" style="font-size:11px;color:#86868b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:Pretendard,sans-serif">로그아웃</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="tabs-area">
+    <div class="month-tabs" id="monthTabs"></div>
+    <div class="week-tabs" id="weekTabs"></div>
+  </div>
+
+  <div id="summaryCards"></div>
+
+  <section class="content-section">
+    <div class="section-tag">Monthly</div>
+    <h2 class="section-heading">월별 매출 추이</h2>
+    <div class="card" id="monthlyChart" style="margin-bottom:16px;padding:28px 28px 20px"></div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Weekly</div>
+    <h2 class="section-heading">주간 매출 추이</h2>
+    <div class="card" id="weeklyChart" style="margin-bottom:16px;padding:28px 28px 20px"></div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Products</div>
+    <h2 class="section-heading">제품별 현황</h2>
+    <div class="card" id="productTable"></div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Reviews</div>
+    <div class="section-head-row" style="cursor:pointer" onclick="toggleReview()">
+      <h2 class="section-heading">리뷰건 상세</h2>
+      <span class="badge">Google Sheet 자동 매칭</span>
+      <span id="reviewToggle" class="toggle-hint">&#9654; 펼치기</span>
+    </div>
+    <div id="reviewWrap" style="display:none">
+      <div class="card" id="reviewDetail" style="margin-bottom:16px"></div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-tag">Customers</div>
+    <h2 class="section-heading">고객 상세</h2>
+    <div class="card">
+      <div class="card-title">TikTok Shop 전체 주문 <span class="ct-sub" id="buyerBadge"></span></div>
+      <div class="buyer-filters" id="buyerFilters">
+        <input type="text" class="buyer-search" id="buyerSearch" placeholder="고객명, 지역 등 검색..." oninput="filterBuyers()">
+        <select class="buyer-filter-select" id="buyerKitFilter" onchange="filterBuyers()"><option value="">전체 제품</option><option value="5day">5-day</option><option value="30day">30-day</option></select>
+        <select class="buyer-filter-select" id="buyerGenderFilter" onchange="filterBuyers()"><option value="">전체 성별</option><option value="F">여성</option><option value="M">남성</option><option value="U">미식별</option></select>
+        <select class="buyer-filter-select" id="buyerRegionFilter" onchange="filterBuyers()"><option value="">전체 지역</option></select>
+        <select class="buyer-filter-select" id="buyerRevFilter" onchange="filterBuyers()"><option value="">전체 유형</option><option value="review">리뷰</option><option value="normal">일반</option></select>
+      </div>
+      <div class="buyer-result-count" id="buyerResultCount"></div>
+      <div class="table-wrap" id="buyerTable" style="max-height:500px"></div>
+    </div>
+  </section>
+
+  <div class="footer-text" id="footer"></div>
+</main>
+
+</div><!-- end dashboard-content -->
+
+<script src="data.js" onerror="window.EMBEDDED_DATA=null"></script>
+<script>
+/* ═══ Globals ═══ */
+var DATA=null,selectedMonths=new Set(),selectedWeek=null;
+var ALL_MONTHS=[];
+var isAllMode=true;
+
+/* ═══ Utility Functions (from index.html) ═══ */
+function $(a){return'$'+Math.round(a).toLocaleString()}
+function getKit(p){return p<80?'5day':'30day'}
+function isValid(o){return o.t>=5&&o.s!=='cancel'}
+function getMonth(d){return d?d.substring(0,7):''}
+function fmtMon(y){var p=y.split('-');return(p[0]==='2025'?"'25 ":"'26 ")+parseInt(p[1])+'월'}
+function getWeekSunday(d){var x=new Date(d+'T12:00:00');x.setDate(x.getDate()-x.getDay());return x.toISOString().substring(0,10)}
+function fmtWeek(s){var a=new Date(s+'T12:00:00'),b=new Date(a);b.setDate(b.getDate()+6);return(a.getMonth()+1)+'/'+a.getDate()+' ~ '+(b.getMonth()+1)+'/'+b.getDate()}
+function timeAgo(d){var s=(Date.now()-d.getTime())/1000;if(s<60)return'방금';if(s<3600)return Math.floor(s/60)+'분 전';if(s<86400)return Math.floor(s/3600)+'시간 전';return Math.floor(s/86400)+'일 전'}
+
+function levenshtein(a,b){var m=a.length,n=b.length;if(!m)return n;if(!n)return m;var p=[],c=[];for(var j=0;j<=n;j++)p[j]=j;for(var i=1;i<=m;i++){c[0]=i;for(var j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));var t=p;p=c;c=t}return p[n]}
+
+function fuzzyNameMatch(name,nameList){var lower=name.toLowerCase().trim().replace(/\s+/g,' ');var oP=lower.split(' ');return nameList.some(function(rn){var rP=rn.split(' ');if(lower===rn)return true;if(rP.length>=2&&lower.indexOf(rP[0])>=0&&lower.indexOf(rP[rP.length-1])>=0)return true;if(oP.length>=2&&rn.indexOf(oP[0])>=0&&rn.indexOf(oP[oP.length-1])>=0)return true;if(oP.length===1&&oP[0].length>=3&&rP[0]===oP[0])return true;if(oP.length>=2&&rP.length>=2){var oF=oP[0],rF=rP[0],oL=oP[oP.length-1],rL=rP[rP.length-1];if(oF===rF&&oL.length>=3&&rL.length>=3&&oL.substring(0,3)===rL.substring(0,3))return true;if(oF.length>=3&&rF.length>=3&&oF.substring(0,3)===rF.substring(0,3)&&oL===rL)return true;if(oL===rL&&oL.length>=5)return true;if(oF.length>=3&&rF.length>=3&&oL.length>=3&&rL.length>=3&&oL.substring(0,3)===rL.substring(0,3)&&levenshtein(oF,rF)<=2)return true;if(oF===rF&&oL.length>=4&&rL.length>=4&&levenshtein(oL,rL)<=2)return true}if(oP.length===1&&oP[0].length>=4&&rP[0].length>=4&&levenshtein(oP[0],rP[0])<=2)return true;return false})}
+
+function isReview(n,c){if(!n||!DATA)return false;if(c==='tiktok_shop'){var l=DATA.tiktok_review_names;return l?fuzzyNameMatch(n,l):false}return false}
+
+/* ═══ Data Loading ═══ */
+async function loadData(){try{var r=await fetch('/api/data');if(r.ok){var d=await r.json();if(d.orders)return{data:d,source:'server'}}}catch(e){}try{var r=await fetch('data.json');if(r.ok){var d=await r.json();if(d.orders)return{data:d,source:'file'}}}catch(e){}if(window.EMBEDDED_DATA&&window.EMBEDDED_DATA.orders)return{data:window.EMBEDDED_DATA,source:'embedded'};return null}
+
+function updateStatus(s){var e=document.getElementById('dataStatus');if(!DATA){e.innerHTML='<span style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--red);box-shadow:0 0 5px rgba(191,32,38,.5)"></span> 데이터 없음';return}var t=DATA.updated_at,a=t?timeAgo(new Date(t)):'?',d=s==='server'?'background:var(--green);box-shadow:0 0 6px rgba(48,209,88,.5)':'background:var(--pink);box-shadow:0 0 5px rgba(255,55,95,.4)';var tts=DATA.orders.filter(function(o){return o.ch==='tiktok_shop'&&isValid(o)}).length;e.innerHTML='<span style="width:6px;height:6px;border-radius:50%;display:inline-block;'+d+'"></span> '+a+' 갱신 · TikTok Shop '+tts+'건'}
+
+/* ═══ Month/Week Tabs ═══ */
+function initMonths(){var m={};DATA.orders.forEach(function(o){if(o.d&&o.ch==='tiktok_shop'&&isValid(o))m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().forEach(function(v){ALL_MONTHS.push(v)});isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
+
+function renderMonthTabs(){var c=document.getElementById('monthTabs'),h='<button class="month-tab all-tab '+(isAllMode?'active':'')+'" data-m="all">전체</button>';ALL_MONTHS.forEach(function(m){var a=!isAllMode&&selectedMonths.has(m);h+='<button class="month-tab '+(a?'active':'')+'" data-m="'+m+'">'+fmtMon(m)+'</button>'});c.innerHTML=h;c.querySelectorAll('.month-tab').forEach(function(b){b.addEventListener('click',function(){var m=b.dataset.m;if(m==='all'){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}else{if(isAllMode){isAllMode=false;selectedMonths=new Set([m])}else{if(selectedMonths.has(m)){selectedMonths.delete(m);if(!selectedMonths.size){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}}else selectedMonths.add(m)}}selectedWeek=null;renderMonthTabs();renderWeekTabs();render()})})}
+
+function getWeeksInMonth(ym){var w={};DATA.orders.forEach(function(o){if(o.d&&o.ch==='tiktok_shop'&&isValid(o)&&getMonth(o.d)===ym){var s=getWeekSunday(o.d);w[s]=(w[s]||0)+1}});return Object.keys(w).sort()}
+
+function renderWeekTabs(){var c=document.getElementById('weekTabs');if(selectedMonths.size!==1){c.innerHTML='';selectedWeek=null;return}var mo=Array.from(selectedMonths)[0],wk=getWeeksInMonth(mo);if(!wk.length){c.innerHTML='';return}var h='<span style="font-size:11px;color:var(--t4);letter-spacing:.5px;font-weight:600;margin-right:4px">주간:</span><button class="week-tab '+(!selectedWeek?'active':'')+'" data-w="all">전체</button>';wk.forEach(function(w){h+='<button class="week-tab '+(selectedWeek===w?'active':'')+'" data-w="'+w+'">'+fmtWeek(w)+'</button>'});c.innerHTML=h;c.querySelectorAll('.week-tab').forEach(function(b){b.addEventListener('click',function(){var w=b.dataset.w;selectedWeek=(w==='all'||selectedWeek===w)?null:w;renderWeekTabs();render()})})}
+
+function getFiltered(){return DATA.orders.filter(function(o){return o.ch==='tiktok_shop'&&isValid(o)&&selectedMonths.has(getMonth(o.d))&&(!selectedWeek||getWeekSunday(o.d)===selectedWeek)})}
+
+/* ═══ Toggle helpers ═══ */
+function toggleReview(){var e=document.getElementById('reviewWrap'),t=document.getElementById('reviewToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='&#9660; 접기'}else{e.style.display='none';t.innerHTML='&#9654; 펼치기'}}
+
+/* ═══ Line Chart Builder (from index.html) ═══ */
+function monotonePath(pts){
+  if(pts.length<2)return'M'+pts[0].x+','+pts[0].y;
+  var N=pts.length,dx=[],dy=[],m=[],tk=[];
+  for(var i=0;i<N-1;i++){dx[i]=pts[i+1].x-pts[i].x;dy[i]=pts[i+1].y-pts[i].y;m[i]=dx[i]?dy[i]/dx[i]:0}
+  tk[0]=m[0];
+  for(var i=1;i<N-1;i++){if(m[i-1]*m[i]<=0)tk[i]=0;else{var a=dx[i-1]+dx[i];tk[i]=3*a/((a+dx[i])/m[i-1]+(a+dx[i-1])/m[i])}}
+  tk[N-1]=m[N-2];
+  var d='M'+pts[0].x.toFixed(1)+','+pts[0].y.toFixed(1);
+  for(var i=0;i<N-1;i++){
+    var h=dx[i]/3;
+    d+=' C'+(pts[i].x+h).toFixed(1)+','+(pts[i].y+tk[i]*h).toFixed(1)+' '+(pts[i+1].x-h).toFixed(1)+','+(pts[i+1].y-tk[i+1]*h).toFixed(1)+' '+pts[i+1].x.toFixed(1)+','+pts[i+1].y.toFixed(1);
+  }
+  return d;
+}
+
+function buildLineChart(labels,datasets,opts){
+  opts=opts||{};
+  var W=opts.width||900,H=opts.height||300,padL=48,padR=16,padT=24,padB=40;
+  var cW=W-padL-padR,cH=H-padT-padB;
+  var allVals=[];datasets.forEach(function(ds){ds.data.forEach(function(v){allVals.push(v)})});
+  var maxV=Math.max.apply(null,allVals)||1;
+  var mag=Math.pow(10,Math.floor(Math.log10(maxV)));
+  maxV=Math.ceil(maxV/mag*1.2)*mag;
+  var n=labels.length;if(n<2)return'<div style="color:var(--t4);text-align:center;padding:30px">Insufficient data</div>';
+  function getX(i){return padL+(i/(n-1))*cW}
+  function getY(v){return padT+cH-(v/maxV)*cH}
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">';
+  svg+='<defs>';
+  datasets.forEach(function(ds,di){
+    svg+='<filter id="glow_'+ds.id+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="'+(di===0?4:3)+'" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  });
+  svg+='</defs>';
+  var gs=4,baseY=padT+cH;
+  for(var g=1;g<=gs;g++){
+    var gv=Math.round(maxV/gs*g),gy=getY(gv);
+    svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(255,255,255,.07)" stroke-width="0.5" stroke-dasharray="3,4"/>';
+    svg+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" fill="rgba(255,255,255,.32)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">$'+(gv>=1000?(gv/1000).toFixed(1)+'k':gv)+'</text>';
+  }
+  svg+='<line x1="'+padL+'" y1="'+baseY+'" x2="'+(W-padR)+'" y2="'+baseY+'" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>';
+  var ls=Math.max(1,Math.floor(n/9));
+  for(var i=0;i<n;i++){if(i%ls===0||i===n-1)svg+='<text x="'+getX(i)+'" y="'+(H-8)+'" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">'+labels[i]+'</text>'}
+  var fillCfg=[{top:.20,mid:.06,bot:0},{top:.15,mid:.04,bot:0},{top:.12,mid:.03,bot:0},{top:.10,mid:.02,bot:0}];
+  for(var di=datasets.length-1;di>=0;di--){
+    var ds=datasets[di],fc=fillCfg[Math.min(di,fillCfg.length-1)];
+    var pts=[];for(var i=0;i<n;i++)pts.push({x:getX(i),y:getY(ds.data[i])});
+    var d=monotonePath(pts);
+    var areaD=d+' L'+pts[n-1].x+','+baseY+' L'+pts[0].x+','+baseY+' Z';
+    svg+='<defs><linearGradient id="ag_'+ds.id+'" x1="0" y1="0" x2="0" y2="1">';
+    svg+='<stop offset="0%" stop-color="'+ds.color+'" stop-opacity="'+fc.top+'"/>';
+    svg+='<stop offset="50%" stop-color="'+ds.color+'" stop-opacity="'+fc.mid+'"/>';
+    svg+='<stop offset="100%" stop-color="'+ds.color+'" stop-opacity="'+fc.bot+'"/>';
+    svg+='</linearGradient></defs>';
+    svg+='<path d="'+areaD+'" fill="url(#ag_'+ds.id+')" />';
+  }
+  for(var di=datasets.length-1;di>=0;di--){
+    var ds=datasets[di];
+    var pts=[];for(var i=0;i<n;i++)pts.push({x:getX(i),y:getY(ds.data[i])});
+    var d=monotonePath(pts);
+    var sw=di===0?1.5:1;
+    var lo=di===0?'.85':di===1?'.6':'.45';
+    svg+='<path d="'+d+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(sw+2)+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+(parseFloat(lo)*.3).toFixed(2)+'" filter="url(#glow_'+ds.id+')"/>';
+    svg+='<path d="'+d+'" fill="none" stroke="'+ds.color+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+lo+'"/>';
+  }
+  svg+='</svg>';
+  var leg='<div class="line-chart-legend">';
+  datasets.forEach(function(ds){leg+='<div class="line-chart-legend-item"><span class="line-chart-legend-dot" style="background:'+ds.color+'"></span>'+ds.label+'</div>'});
+  leg+='</div>';
+  return'<div class="line-chart-container">'+svg+leg+'</div>';
+}
+
+/* ═══ Main Render ═══ */
+function render(){
+  if(!DATA)return;
+  var f=getFiltered();
+  f.forEach(function(o){o._rev=isReview(o.c,o.ch);o._kit=getKit(o.t)});
+
+  var totalRev=0,cnt=0,k5={cnt:0,rev:0,revCnt:0,revRev:0},k30={cnt:0,rev:0,revCnt:0,revRev:0};
+  f.forEach(function(o){
+    totalRev+=o.t;cnt++;
+    var k=o._kit==='5day'?k5:k30;
+    k.cnt++;k.rev+=o.t;
+    if(o._rev){k.revCnt++;k.revRev+=o.t}
+  });
+  var reviewCnt=k5.revCnt+k30.revCnt;
+  var reviewRev=k5.revRev+k30.revRev;
+  var netRev=totalRev-reviewRev;
+
+  /* Sheet review count (all time vs filtered) */
+  var sheetReviewCount=isAllMode?(DATA.tiktok_review_entries||(DATA.tiktok_review_names||[]).length):reviewCnt;
+
+  renderSummary(totalRev,cnt,k5,k30,reviewCnt,reviewRev,netRev,sheetReviewCount);
+  renderMonthlyChart();
+  renderWeeklyChart(f);
+  renderProductTable(k5,k30);
+  renderReviewDetail(f);
+  renderBuyerDetail(f);
+  document.getElementById('footer').textContent='TikTok Shop Channel · '+cnt+'건 · '+$(totalRev)+' · '+(DATA.updated_at||'?').substring(0,16);
+}
+
+/* ═══ Summary / KPI ═══ */
+function renderSummary(totalRev,cnt,k5,k30,reviewCnt,reviewRev,netRev,sheetReviewCount){
+  document.getElementById('summaryCards').innerHTML=
+    '<div class="hero-kpi"><div class="hero-kpi-tag">TikTok Shop Channel</div><div class="hero-kpi-value">'+$(totalRev)+'</div><div class="hero-kpi-sub">Total Revenue · '+cnt+'건 · 5day '+k5.cnt+' / 30day '+k30.cnt+'</div></div>'+
+    '<div class="metric-tiles">'+
+    '<div class="m-tile"><div class="m-tile-label">Total Revenue</div><div class="m-tile-value" style="color:var(--pink)">'+$(totalRev)+'</div><div class="m-tile-sub">'+cnt+'건</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">5-Day Kit</div><div class="m-tile-value" style="color:var(--t1)">'+k5.cnt+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">'+$(k5.rev)+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">30-Day Kit</div><div class="m-tile-value" style="color:var(--t1)">'+k30.cnt+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">'+$(k30.rev)+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">Reviews</div><div class="m-tile-value" style="color:var(--yellow)">'+sheetReviewCount+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">매칭 <b>'+reviewCnt+'</b>건 · '+$(reviewRev)+'</div></div>'+
+    '<div class="m-tile"><div class="m-tile-label">Net Revenue</div><div class="m-tile-value" style="color:var(--green)">'+$(netRev)+'</div><div class="m-tile-sub">리뷰 제외 · -'+$(reviewRev)+'</div></div>'+
+    '</div>';
+}
+
+/* ═══ Monthly Chart ═══ */
+function renderMonthlyChart(){
+  var a=DATA.orders.filter(function(o){return o.ch==='tiktok_shop'&&isValid(o)});
+  var m={};ALL_MONTHS.forEach(function(v){m[v]={total:0,net:0}});
+  a.forEach(function(o){var v=getMonth(o.d);if(!m[v])return;m[v].total+=o.t;if(isReview(o.c,o.ch))m[v].net-=o.t});
+  ALL_MONTHS.forEach(function(v){m[v].net=m[v].total+m[v].net});
+  if(ALL_MONTHS.length<2){document.getElementById('monthlyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">월간 데이터 부족</div>';return}
+  var labels=ALL_MONTHS.map(function(v){return fmtMon(v)});
+  var datasets=[
+    {id:'tt_total',label:'Total',color:'#ff375f',data:ALL_MONTHS.map(function(v){return m[v].total})},
+    {id:'tt_net',label:'Net (리뷰제외)',color:'#30d158',data:ALL_MONTHS.map(function(v){return m[v].net})}
+  ];
+  document.getElementById('monthlyChart').innerHTML=buildLineChart(labels,datasets);
+}
+
+/* ═══ Weekly Chart ═══ */
+function renderWeeklyChart(f){
+  var w={};f.forEach(function(o){var s=getWeekSunday(o.d);if(!w[s])w[s]={total:0,net:0};var x=w[s];x.total+=o.t;if(o._rev)x.net-=o.t});
+  Object.keys(w).forEach(function(k){w[k].net=w[k].total+w[k].net});
+  var sorted=Object.entries(w).sort(function(a,b){return a[0].localeCompare(b[0])});
+  if(sorted.length<2){document.getElementById('weeklyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">주간 데이터 부족</div>';return}
+  var labels=sorted.map(function(e){return fmtWeek(e[0]).replace(' ~ ','~')});
+  var datasets=[
+    {id:'wk_total',label:'Total',color:'#ff375f',data:sorted.map(function(e){return e[1].total})},
+    {id:'wk_net',label:'Net (리뷰제외)',color:'#30d158',data:sorted.map(function(e){return e[1].net})}
+  ];
+  document.getElementById('weeklyChart').innerHTML=buildLineChart(labels,datasets);
+}
+
+/* ═══ Product Breakdown Table ═══ */
+function renderProductTable(k5,k30){
+  var k5Normal=k5.cnt-k5.revCnt,k30Normal=k30.cnt-k30.revCnt;
+  var h='<div class="card-title">TikTok Shop 제품별 현황 <span class="ct-sub">선택 기간</span></div>'+
+    '<div class="table-wrap" style="max-height:none"><table class="compact-tbl"><thead><tr><th>제품</th><th class="text-center">건수</th><th class="text-right">매출</th><th class="text-center">일반주문</th><th class="text-center" style="color:var(--yellow)">리뷰주문</th></tr></thead><tbody>'+
+    '<tr><td style="color:var(--pink);font-weight:600">5-day Kit</td><td class="text-center">'+k5.cnt+'</td><td class="text-right" style="color:var(--t1)">'+$(k5.rev)+'</td><td class="text-center">'+k5Normal+'</td><td class="text-center" style="color:var(--yellow)">'+(k5.revCnt||'-')+(k5.revCnt?' <span style="font-size:11px">'+$(k5.revRev)+'</span>':'')+'</td></tr>'+
+    '<tr><td style="color:var(--pink);font-weight:600">30-day Kit</td><td class="text-center">'+k30.cnt+'</td><td class="text-right" style="color:var(--t1)">'+$(k30.rev)+'</td><td class="text-center">'+k30Normal+'</td><td class="text-center" style="color:var(--yellow)">'+(k30.revCnt||'-')+(k30.revCnt?' <span style="font-size:11px">'+$(k30.revRev)+'</span>':'')+'</td></tr>'+
+    '<tr style="font-weight:600;border-top:1px solid var(--border-h)"><td style="color:var(--t1)">합계</td><td class="text-center" style="color:var(--t1)">'+(k5.cnt+k30.cnt)+'</td><td class="text-right" style="color:var(--t1)">'+$(k5.rev+k30.rev)+'</td><td class="text-center">'+(k5Normal+k30Normal)+'</td><td class="text-center" style="color:var(--yellow)">'+(k5.revCnt+k30.revCnt||'-')+(k5.revCnt+k30.revCnt?' <span style="font-size:11px">'+$(k5.revRev+k30.revRev)+'</span>':'')+'</td></tr>'+
+    '</tbody></table></div>';
+  document.getElementById('productTable').innerHTML=h;
+}
+
+/* ═══ Review Detail Section ═══ */
+function renderReviewDetail(f){
+  var rv=f.filter(function(o){return o._rev});
+  var nr=f.filter(function(o){return!o._rev});
+  rv.sort(function(a,b){return b.d.localeCompare(a.d)});
+
+  var r5=0,r30=0,r5r=0,r30r=0;
+  var matchedNames={};
+
+  /* Matched reviews table */
+  var h='<div class="card-title">리뷰 매칭 상세 <span class="ct-sub">TikTok Shop 리뷰 시트 &harr; ERP 매칭</span></div>';
+  h+='<div class="table-wrap" style="max-height:500px"><table><thead><tr><th>상태</th><th>고객명</th><th class="text-center">제품</th><th class="text-right">금액</th><th>날짜</th></tr></thead><tbody>';
+
+  rv.forEach(function(o){
+    var kl=o._kit,kc=o._kit==='5day'?'var(--red)':'var(--pink)';
+    if(o._kit==='5day'){r5++;r5r+=o.t}else{r30++;r30r+=o.t}
+    matchedNames[o.c.toLowerCase().trim()]=true;
+    h+='<tr class="highlight-review"><td><span class="badge-review">매칭</span></td><td style="color:var(--t1)">'+o.c+'</td><td class="text-center"><span style="color:'+kc+';font-size:11px;font-weight:600">'+kl+'</span></td><td class="text-right" style="color:var(--t1)">$'+o.t.toFixed(2)+'</td><td style="font-size:12px;color:var(--t3)">'+o.d.substring(5)+'</td></tr>';
+  });
+
+  /* Unmatched sheet names */
+  var unmatchedCount=0;
+  var sheetNames=DATA.tiktok_review_names||[];
+  var seen={};
+  sheetNames.forEach(function(rn){
+    if(seen[rn])return;seen[rn]=true;
+    var isMatched=false;
+    for(var k in matchedNames){if(k===rn||fuzzyNameMatch(k,[rn])){isMatched=true;break}}
+    if(!isMatched){
+      unmatchedCount++;
+      h+='<tr style="opacity:.45"><td><span class="badge-unmatched">시트</span></td><td>'+rn+'</td><td class="text-center" style="color:var(--t5)">-</td><td class="text-right" style="color:var(--t5)">-</td><td style="color:var(--t5)">시트</td></tr>';
+    }
+  });
+
+  h+='</tbody></table></div>';
+
+  /* Stats box */
+  var sheetCount=sheetNames.length;
+  var sheetEntries=DATA.tiktok_review_entries||sheetCount;
+  h+='<div class="stats-box">'+
+    '<div class="stat-row"><span class="label">시트 리뷰어 (TikTok Shop)</span><span class="val pink">'+sheetCount+'명 ('+sheetEntries+'건)</span></div>'+
+    '<div class="stat-row"><span class="label">ERP 매칭</span><span class="val pink">'+rv.length+'건 (5d:'+r5+' / 30d:'+r30+')</span></div>'+
+    '<div class="stat-row"><span class="label">미매칭 (시트에만)</span><span class="val purple">'+unmatchedCount+'명</span></div>'+
+    '<div class="stat-row"><span class="label">리뷰 매출</span><span class="val pink">'+$(rv.reduce(function(s,o){return s+o.t},0))+' (5d:'+$(r5r)+' / 30d:'+$(r30r)+')</span></div>'+
+    '<div class="stat-row"><span class="label">일반 주문</span><span class="val green">'+nr.length+'건 · '+$(nr.reduce(function(s,o){return s+o.t},0))+'</span></div>'+
+    '</div>';
+
+  document.getElementById('reviewDetail').innerHTML=h;
+}
+
+/* ═══ Customer List Table ═══ */
+var _buyerData=[];
+function renderBuyerDetail(f){
+  _buyerData=f.map(function(o){return{name:o.c,kit:o._kit,total:o.t,date:o.d,state:o.st||'',gender:o.g||'U',rev:o._rev}});
+  /* Populate region filter */
+  var regions={},rSel=document.getElementById('buyerRegionFilter');
+  f.forEach(function(o){if(o.st)regions[o.st]=true});
+  var rOpts='<option value="">전체 지역</option>';
+  Object.keys(regions).sort().forEach(function(r){rOpts+='<option value="'+r+'">'+r+'</option>'});
+  rSel.innerHTML=rOpts;
+  filterBuyers();
+}
+
+function filterBuyers(){
+  var q=(document.getElementById('buyerSearch').value||'').toLowerCase().trim();
+  var kF=document.getElementById('buyerKitFilter').value;
+  var gF=document.getElementById('buyerGenderFilter').value;
+  var rF=document.getElementById('buyerRegionFilter').value;
+  var rvF=document.getElementById('buyerRevFilter').value;
+
+  var filtered=_buyerData.filter(function(b){
+    if(kF&&b.kit!==kF)return false;
+    if(gF&&b.gender!==gF)return false;
+    if(rF&&b.state!==rF)return false;
+    if(rvF==='review'&&!b.rev)return false;
+    if(rvF==='normal'&&b.rev)return false;
+    if(q){
+      var searchStr=(b.name+' '+b.kit+' '+b.state+' '+(b.gender==='F'?'여성':b.gender==='M'?'남성':'미식별')+' '+b.date).toLowerCase();
+      if(searchStr.indexOf(q)<0)return false;
+    }
+    return true;
+  });
+  filtered.sort(function(a,b){return b.date.localeCompare(a.date)});
+
+  var gL={F:'여성',M:'남성',U:'미식별'};
+  document.getElementById('buyerBadge').textContent=filtered.length+'건 / 전체 '+_buyerData.length+'건';
+  document.getElementById('buyerResultCount').textContent='검색 결과: '+filtered.length+'건';
+
+  var h='<table><thead><tr><th>고객명</th><th class="text-center">제품</th><th class="text-right">금액</th><th class="text-center">날짜</th><th class="text-center">지역</th><th class="text-center">성별</th><th class="text-center">리뷰여부</th></tr></thead><tbody>';
+  filtered.slice(0,200).forEach(function(b){
+    var typeTag=b.rev?'<span class="badge-review">리뷰</span>':'<span style="font-size:11px;color:var(--t4)">일반</span>';
+    h+='<tr><td style="color:var(--t1)">'+b.name+'</td><td class="text-center"><span style="font-size:11px;font-weight:600;color:'+(b.kit==='5day'?'var(--pink)':'var(--yellow)')+'">'+b.kit+'</span></td><td class="text-right" style="color:var(--t1)">$'+b.total.toFixed(2)+'</td><td class="text-center" style="font-size:12px;color:var(--t3)">'+b.date.substring(5)+'</td><td class="text-center" style="font-size:12px;color:var(--t3)">'+(b.state||'-')+'</td><td class="text-center" style="color:'+(b.gender==='F'?'var(--pink)':b.gender==='M'?'var(--blue)':'var(--t4)')+'">'+gL[b.gender]+'</td><td class="text-center">'+typeTag+'</td></tr>';
+  });
+  if(filtered.length>200)h+='<tr><td colspan="7" style="text-align:center;color:var(--t4);padding:16px">상위 200건만 표시 (전체 '+filtered.length+'건)</td></tr>';
+  h+='</tbody></table>';
+  document.getElementById('buyerTable').innerHTML=h;
+}
+
+/* ═══ Count-up Animation ═══ */
+function animateCountUp(){
+  var els=document.querySelectorAll('.hero-kpi-value,.m-tile-value');
+  els.forEach(function(el){
+    var text=el.textContent.trim();
+    var match=text.match(/^\$?([\d,]+)/);
+    if(!match)return;
+    var target=parseInt(match[1].replace(/,/g,''));
+    if(isNaN(target)||target===0)return;
+    var prefix=text.startsWith('$')?'$':'';
+    var suffix=text.replace(/^\$?[\d,]+/,'');
+    var duration=900;
+    var startTime=null;
+    function easeOut(t){return 1-Math.pow(1-t,3)}
+    function step(ts){
+      if(!startTime)startTime=ts;
+      var p=Math.min((ts-startTime)/duration,1);
+      var val=Math.round(easeOut(p)*target);
+      el.textContent=prefix+val.toLocaleString()+suffix;
+      if(p<1)requestAnimationFrame(step);
+    }
+    el.textContent=prefix+'0'+suffix;
+    requestAnimationFrame(step);
+  });
+}
+
+/* ═══ Metric tile mouse-follow glow ═══ */
+document.addEventListener('mousemove',function(e){
+  document.querySelectorAll('.m-tile').forEach(function(tile){
+    var r=tile.getBoundingClientRect();
+    tile.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    tile.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+/* ═══ Wrap render with animations ═══ */
+var _origRender=render;
+render=function(){
+  _origRender.apply(this,arguments);
+  animateCountUp();
+};
+
+/* ═══ Init ═══ */
+(async function(){
+  var l=await loadData(),o=document.getElementById('loadingOverlay');
+  if(l){DATA=l.data;initMonths();render();updateStatus(l.source);o.classList.add('hidden')}
+  else{o.querySelector('span').textContent='데이터가 없습니다.';updateStatus(null)}
+})();
+</script>
+
+<script>
+/* ═══ Firebase Auth ═══ */
+const firebaseConfig = {
+  apiKey: "AIzaSyC-q4mncVKMU_XSaAXJk0iBuMbkmxwvQ5s",
+  authDomain: "odd-performance-dashboard.firebaseapp.com",
+  projectId: "odd-performance-dashboard",
+  storageBucket: "odd-performance-dashboard.firebasestorage.app",
+  messagingSenderId: "845033758092",
+  appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ hd: 'hanah1.com' });
+  auth.signInWithPopup(provider).catch(err => {
+    document.getElementById('auth-error').textContent = '로그인에 실패했습니다. 다시 시도해주세요.';
+    document.getElementById('auth-error').style.display = 'block';
+  });
+}
+function signOut() { auth.signOut().then(() => location.reload()); }
+
+auth.onAuthStateChanged(user => {
+  const gate = document.getElementById('auth-gate');
+  const content = document.getElementById('dashboard-content');
+  const userBar = document.getElementById('user-bar');
+  if (user) {
+    const email = user.email || '';
+    if (!email.endsWith('@hanah1.com')) {
+      document.getElementById('auth-error').textContent = '@hanah1.com 계정만 접속할 수 있습니다.';
+      document.getElementById('auth-error').style.display = 'block';
+      auth.signOut();
+      return;
+    }
+    gate.style.display = 'none';
+    content.style.display = 'block';
+    userBar.style.display = 'flex';
+    document.getElementById('user-photo').src = user.photoURL || '';
+    document.getElementById('user-email').textContent = email.split('@')[0];
+    db.collection('access_logs').add({
+      email: email,
+      displayName: user.displayName || '',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      userAgent: navigator.userAgent,
+      page: 'tiktok'
+    }).catch(() => {});
+  } else {
+    gate.style.display = 'flex';
+    content.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
