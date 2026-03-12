@@ -1325,8 +1325,23 @@ function syncPickerUI() {
   document.querySelectorAll('.dp-month, .dp-total').forEach(b => {
     b.classList.toggle('active', b.dataset.period === currentPeriod);
   });
+  // 월 선택 시에만 주간 버튼 노출, 전체 선택 시 숨김
+  const showWeeks = (currentPeriod === 'feb' || currentPeriod === 'mar' || currentPeriod === 'custom');
+  const febWeeks = [0, 1, 2];
+  const marWeeks = [3, 4];
+  document.querySelectorAll('.dp-weeks').forEach(el => {
+    el.style.display = showWeeks ? '' : 'none';
+  });
   document.querySelectorAll('.dp-week').forEach(b => {
-    b.classList.toggle('active', selectedWeeks.includes(parseInt(b.dataset.week)));
+    const idx = parseInt(b.dataset.week);
+    b.classList.toggle('active', selectedWeeks.includes(idx));
+    // 해당 월의 주간만 표시
+    if (currentPeriod === 'feb') b.style.display = febWeeks.includes(idx) ? '' : 'none';
+    else if (currentPeriod === 'mar') b.style.display = marWeeks.includes(idx) ? '' : 'none';
+    else b.style.display = '';
+  });
+  document.querySelectorAll('.dp-range-label').forEach(el => {
+    el.style.display = showWeeks ? '' : 'none';
   });
   if (selectedWeeks.length > 0) {
     const first = WEEK_RANGES[selectedWeeks[0]];
