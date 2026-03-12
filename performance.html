@@ -379,7 +379,12 @@
 
   @media (max-width: 1200px) {
     .chart-grid { grid-template-columns: 1fr; }
-    .funnel-grid { grid-template-columns: 1fr; }
+    .funnel-grid { grid-template-columns: 1fr; gap: 12px; }
+    .funnel-card { border-radius: var(--r); display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 0 20px; }
+    .funnel-card::before { border-radius: var(--r) var(--r) 0 0; }
+    .funnel-label { grid-column: 1 / -1; }
+    .funnel-stat { grid-column: 1; }
+    .funnel-stat + .funnel-stat-row { grid-column: 1 / -1; }
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     .container { padding: 20px; }
     .nav-inner { padding: 0 20px; }
@@ -398,6 +403,10 @@
     .nav-right .date-range { display: none; }
     .tabs { flex-wrap: wrap; }
     .tab { font-size: 12px; padding: 5px 14px; }
+    /* Funnel cards - stacked with compact stat rows */
+    .funnel-card { padding: 20px; border-radius: var(--r); }
+    .funnel-stat-row { font-size: 12px; padding: 6px 0; }
+    .funnel-stat-value { font-size: 18px; }
   }
   @media (max-width: 600px) {
     .kpi-grid { grid-template-columns: 1fr 1fr; }
@@ -547,8 +556,8 @@
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Total Views</div>
-        <div class="kpi-value">893K</div>
-        <div class="kpi-sub">Meta 660K · TikTok 233K</div>
+        <div class="kpi-value">893,000</div>
+        <div class="kpi-sub">Meta 660,000 · TikTok 233,000</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Total Clicks</div>
@@ -1171,8 +1180,8 @@
 <script>
 // ═══ SVG Chart Functions (replacing Chart.js) ═══
 let cachedSections = null;
-let currentPeriod = 'feb';
-let selectedWeeks = [0, 1, 2];
+let currentPeriod = 'mar';
+let selectedWeeks = [3, 4];
 
 const WEEK_RANGES = [
   { label: 'W1', start: '2/8', end: '2/14' },
@@ -1629,7 +1638,7 @@ function updateOverviewForPeriod() {
 
   const kpis = document.querySelectorAll('#tab-overview .kpi-card');
   if (kpis[0]) { kpis[0].querySelector('.kpi-label').textContent = 'Spend'; kpis[0].querySelector('.kpi-value').textContent = '$' + fn(Math.round(totalSpend)); kpis[0].querySelector('.kpi-sub').textContent = 'Meta $' + fn(Math.round(metaSpend)) + ' · TikTok $' + fn(Math.round(tkSpend)); kpis[0].querySelector('.kpi-value').style.color = ''; kpis[0].querySelector('.kpi-label').style.color = ''; kpis[0].querySelector('.kpi-label').classList.remove('kpi-accent'); }
-  if (kpis[1]) { kpis[1].querySelector('.kpi-label').textContent = 'Views'; const totalViews = metaViews + tkViews; kpis[1].querySelector('.kpi-value').textContent = totalViews >= 1000 ? fn(Math.round(totalViews/1000)) + 'K' : fn(Math.round(totalViews)); kpis[1].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaViews/1000)) + 'K · TikTok ' + fn(Math.round(tkViews/1000)) + 'K'; kpis[1].querySelector('.kpi-value').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').classList.add('kpi-accent'); }
+  if (kpis[1]) { kpis[1].querySelector('.kpi-label').textContent = 'Views'; const totalViews = metaViews + tkViews; kpis[1].querySelector('.kpi-value').textContent = fn(Math.round(totalViews)); kpis[1].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaViews)) + ' · TikTok ' + fn(Math.round(tkViews)); kpis[1].querySelector('.kpi-value').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').style.color = 'var(--blue)'; kpis[1].querySelector('.kpi-label').classList.add('kpi-accent'); }
   if (kpis[2]) { kpis[2].querySelector('.kpi-label').textContent = 'Clicks'; kpis[2].querySelector('.kpi-value').textContent = fn(Math.round(metaClicks)); kpis[2].querySelector('.kpi-sub').textContent = 'Avg CPC $' + (cpc > 0 ? cpc.toFixed(2) : '—') + ' (Meta)'; kpis[2].querySelector('.kpi-value').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').style.color = 'var(--meta-color)'; kpis[2].querySelector('.kpi-label').classList.add('kpi-accent'); }
   if (kpis[3]) { kpis[3].querySelector('.kpi-label').textContent = 'Profile Visits'; kpis[3].querySelector('.kpi-value').textContent = fn(Math.round(metaPV + tkPV)); kpis[3].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaPV)) + ' · TikTok ' + fn(Math.round(tkPV)); kpis[3].querySelector('.kpi-value').style.color = ''; kpis[3].querySelector('.kpi-label').style.color = ''; kpis[3].querySelector('.kpi-label').classList.remove('kpi-accent'); }
   if (kpis[4]) { kpis[4].querySelector('.kpi-label').textContent = 'Follows'; kpis[4].querySelector('.kpi-value').textContent = fn(Math.round(metaFollows + tkFollows)); kpis[4].querySelector('.kpi-sub').textContent = 'Meta ' + fn(Math.round(metaFollows)) + ' · TikTok ' + fn(Math.round(tkFollows)); kpis[4].querySelector('.kpi-value').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').style.color = 'var(--green)'; kpis[4].querySelector('.kpi-label').classList.add('kpi-accent'); }

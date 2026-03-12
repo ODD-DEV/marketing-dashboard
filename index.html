@@ -82,8 +82,19 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 
 /* ═══ Hero KPI — Apple-style centered hero ═══ */
 /* Sticky summary wrapper */
-.summary-sticky{position:sticky;top:48px;z-index:90;background:#000;padding-bottom:8px}
+.summary-sticky{position:sticky;top:48px;z-index:90;background:#000;padding-bottom:8px;transition:all .3s ease}
 .summary-sticky::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:24px;background:linear-gradient(to bottom,#000,transparent);pointer-events:none;z-index:89}
+/* Compact mode when scrolled */
+.summary-sticky.compact .hero-kpi{padding:12px 16px 8px}
+.summary-sticky.compact .hero-kpi-tag{display:none}
+.summary-sticky.compact .hero-kpi::after{display:none}
+.summary-sticky.compact .hero-kpi-value{font-size:28px !important;letter-spacing:-1px}
+.summary-sticky.compact .hero-kpi-sub{font-size:12px;margin-top:4px}
+.summary-sticky.compact .metric-tiles{gap:1px}
+.summary-sticky.compact .m-tile{padding:10px 14px}
+.summary-sticky.compact .m-tile-value{font-size:18px !important}
+.summary-sticky.compact .m-tile-label{font-size:9px !important;margin-bottom:4px}
+.summary-sticky.compact .m-tile-sub{display:none}
 
 .hero-kpi{
   text-align:center;
@@ -91,15 +102,16 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
   margin:0;
   position:relative;
   animation:fadeUp .7s var(--ease) both;
+  transition:padding .3s ease;
 }
 .hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
 .hero-kpi-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t3);letter-spacing:.5px;margin-bottom:20px}
 .hero-kpi-tag::before{content:'';width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block}
-.hero-kpi-value{font-family:var(--sans);font-size:clamp(64px,10vw,108px);color:var(--t1);line-height:1;letter-spacing:-2px;font-weight:700;transform:scaleX(.97);transform-origin:center}
-.hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400}
+.hero-kpi-value{font-family:var(--sans);font-size:clamp(64px,10vw,108px);color:var(--t1);line-height:1;letter-spacing:-2px;font-weight:700;transform:scaleX(.97);transform-origin:center;transition:font-size .3s ease}
+.hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400;transition:all .3s ease}
 
 /* ═══ Metric Tiles — Apple feature grid ═══ */
-.metric-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
+.metric-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden;transition:gap .3s ease}
 .m-tile{background:var(--bg-raised);padding:32px 24px;transition:all .35s var(--ease);position:relative;cursor:default}
 .m-tile::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(191,32,38,.08) 0%,transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
 .m-tile:hover{background:#2c2c2e}
@@ -263,17 +275,15 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .chart-hover-dot:hover~.chart-dot-visible[data-idx]{opacity:.8}
 
 @media(max-width:1200px){
-  .summary-sticky{position:relative;top:auto}
-  .summary-sticky::after{display:none}
-  .hero-kpi-value{font-size:48px !important}
+  .hero-kpi-value{font-size:56px !important}
   .hero-kpi{padding:32px 16px 24px}
 }
 @media(max-width:900px){
   .two-col{grid-template-columns:1fr}
   .metric-tiles{grid-template-columns:repeat(3,1fr)}
-  .hero-kpi-value{font-size:40px !important}
+  .hero-kpi-value{font-size:48px !important}
   .hero-kpi{padding:24px 16px 20px}
-  .hero-kpi-sub{font-size:12px !important}
+  .hero-kpi-sub{font-size:13px !important}
   main,.nav-inner{padding-left:16px;padding-right:16px}
   .section-heading{font-size:24px}
   .m-tile-value{font-size:24px !important}
@@ -281,6 +291,10 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .m-tile-label{font-size:10px !important}
   .dash-switcher{margin-left:10px}
   .dash-switch{padding:4px 12px;font-size:11px}
+  /* Compact sticky on tablet */
+  .summary-sticky.compact .hero-kpi-value{font-size:24px !important}
+  .summary-sticky.compact .m-tile-value{font-size:16px !important}
+  .summary-sticky.compact .metric-tiles{grid-template-columns:repeat(3,1fr)}
 }
 @media(max-width:600px){
   .metric-tiles{grid-template-columns:repeat(2,1fr)}
@@ -496,7 +510,7 @@ function renderSummary(st,gT,gC,tRR,tRC,rT,t5,t30,tSC){
     '<div class="m-tile" style="cursor:pointer" onclick="location.href=\'shopify.html\'"><div class="m-tile-label">Shopify</div><div class="m-tile-value" style="color:var(--green)">'+$(sh.rev)+'</div><div class="m-tile-sub">'+sh.cnt+'건 · 5d:'+sh.k5.cnt+' 30d:'+sh.k30.cnt+(shS?' · 구독:<b>'+shS+'</b>':'')+'</div></div>'+
     '<div class="m-tile" style="cursor:pointer" onclick="location.href=\'amazon.html\'"><div class="m-tile-label">Amazon</div><div class="m-tile-value" style="color:var(--orange)">'+$(am.rev)+'</div><div class="m-tile-sub">'+am.cnt+'건 · 5d:'+am.k5.cnt+' 30d:'+am.k30.cnt+(aR?' · 리뷰:<b>'+aR+'</b>':'')+'</div></div>'+
     '<div class="m-tile" style="cursor:pointer" onclick="location.href=\'tiktok.html\'"><div class="m-tile-label">TikTok</div><div class="m-tile-value" style="color:var(--pink)">'+$(tt.rev)+'</div><div class="m-tile-sub">'+tt.cnt+'건 · 5d:'+tt.k5.cnt+' 30d:'+tt.k30.cnt+(tR?' · 리뷰:<b>'+tR+'</b>':'')+'</div></div>'+
-    '<div class="m-tile"><div class="m-tile-label">판매건수</div><div class="m-tile-value" style="color:var(--t1)">'+gC+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">5day '+t5.cnt+' · 30day '+t30.cnt+'</div></div>'+
+    '<div class="m-tile" style="cursor:pointer" onclick="scrollToMonthlyTable()"><div class="m-tile-label">판매건수</div><div class="m-tile-value" style="color:var(--t1)">'+gC+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">건</span></div><div class="m-tile-sub">5day '+t5.cnt+' · 30day '+t30.cnt+'</div></div>'+
     '<div class="m-tile" style="cursor:pointer" onclick="document.getElementById(\'subSection\').scrollIntoView({behavior:\'smooth\',block:\'start\'})"><div class="m-tile-label" style="color:var(--red)">활성 구독</div><div class="m-tile-value" style="color:var(--red)">'+activeSubs.length+'<span style="font-size:16px;font-weight:400;color:var(--t3);margin-left:4px">명</span></div><div class="m-tile-sub">$'+activeSubs.reduce((s,a)=>s+a.amt,0)+'/월 · 취소 '+filteredCancel.length+'명</div></div>'+
     '</div>';
 }
@@ -973,6 +987,33 @@ render=function(){
   animateCountUp();
   requestAnimationFrame(function(){animateCharts()});
 };
+
+/* ═══ Sticky compact mode on scroll ═══ */
+(function(){
+  var sticky=document.getElementById('summaryCards');
+  var lastCompact=false;
+  window.addEventListener('scroll',function(){
+    if(!sticky)return;
+    var rect=sticky.getBoundingClientRect();
+    var isCompact=rect.top<=49;
+    if(isCompact!==lastCompact){
+      lastCompact=isCompact;
+      if(isCompact)sticky.classList.add('compact');
+      else sticky.classList.remove('compact');
+    }
+  },{passive:true});
+})();
+
+/* ═══ 판매건수 카드 클릭 → 월별 매출 비교 스크롤 + table 전환 ═══ */
+function scrollToMonthlyTable(){
+  /* Switch to table view */
+  if(monthlyViewMode==='chart'){toggleMonthlyView()}
+  /* Smooth scroll to monthly section */
+  var sec=document.getElementById('monthlyTable');
+  if(sec){
+    sec.closest('.content-section').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
 </script>
 </div><!-- end dashboard-content -->
 <div class="region-tooltip-fixed" id="regionTooltip"></div>
