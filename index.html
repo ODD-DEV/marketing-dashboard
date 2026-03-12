@@ -211,9 +211,14 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .dur-long{background:rgba(48,209,88,.08);color:var(--green)}
 
 /* ═══ Loading — Apple-style ═══ */
-.loading-overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:20px}
-.loading-overlay::before{content:'';width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--t3);border-radius:50%;animation:spin .7s linear infinite}
-.loading-overlay span{font-size:13px;color:var(--t4);font-weight:500}
+.loading-overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:24px;transition:opacity .5s ease}
+.loading-overlay.fade-out{opacity:0;pointer-events:none}
+.loading-overlay .loader-logo{position:relative;font-size:48px;font-weight:800;letter-spacing:-2px;color:rgba(255,255,255,.12);-webkit-user-select:none;user-select:none}
+.loading-overlay .loader-logo::after{content:'ODD.';position:absolute;left:0;top:0;color:var(--red);clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes logoFill{0%{clip-path:inset(100% 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
+.loading-overlay .loader-bar{width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.loading-overlay .loader-bar::after{content:'';display:block;height:100%;width:40%;background:var(--red);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite}
+@keyframes loaderSlide{0%{transform:translateX(-100%)}50%{transform:translateX(200%)}100%{transform:translateX(-100%)}}
 .hidden{display:none}
 
 /* ═══ Donut ═══ */
@@ -385,7 +390,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
 
 <div id="dashboard-content" style="display:none">
 
-<div class="loading-overlay" id="loadingOverlay"><span>Loading</span></div>
+<div class="loading-overlay" id="loadingOverlay"><div class="loader-logo">ODD.</div><div class="loader-bar"></div></div>
 
 <nav class="nav">
   <div class="nav-inner">
@@ -757,7 +762,7 @@ var AUTO_REFRESH_MS=300000,autoRefreshTimer=null;
 async function autoRefreshData(){try{var l=await loadData();if(l&&l.data.updated_at!==(DATA&&DATA.updated_at)){DATA=l.data;initMonths();render();updateStatus(l.source)}}catch(e){}}
 function startAutoRefresh(){if(autoRefreshTimer)clearInterval(autoRefreshTimer);autoRefreshTimer=setInterval(autoRefreshData,AUTO_REFRESH_MS)}
 
-(async function(){var l=await loadData(),o=document.getElementById('loadingOverlay');if(l){DATA=l.data;initMonths();render();updateStatus(l.source);o.classList.add('hidden');startAutoRefresh()}else{o.querySelector('span').textContent='데이터가 없습니다.';updateStatus(null)}})();
+(async function(){var l=await loadData(),o=document.getElementById('loadingOverlay');if(l){DATA=l.data;initMonths();render();updateStatus(l.source);o.classList.add('fade-out');setTimeout(function(){o.style.display='none'},500);startAutoRefresh()}else{o.innerHTML='<div class="loader-logo">ODD.</div><div style="color:var(--t4);font-size:13px;margin-top:8px">데이터를 불러올 수 없습니다.</div>';updateStatus(null)}})();
 
 /* Dash switcher drag */
 (function(){

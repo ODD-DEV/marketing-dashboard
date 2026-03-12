@@ -390,6 +390,8 @@
   .status-error { background: var(--red); box-shadow: 0 0 5px rgba(191,32,38,.5); }
 
   @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes logoFill{0%{clip-path:inset(100% 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
+  @keyframes loaderSlide{0%{transform:translateX(-100%)}50%{transform:translateX(200%)}100%{transform:translateX(-100%)}}
 
   @media (max-width: 1200px) {
     .chart-grid { grid-template-columns: 1fr; }
@@ -577,9 +579,9 @@
   </div>
 </nav>
 
-<div id="loadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px;">
-  <div style="width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--t3);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
-  <div style="color:var(--t3);font-size:13px;font-weight:500;">Google Sheets 데이터 로딩 중...</div>
+<div id="loadingOverlay" style="position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:24px;transition:opacity .5s ease">
+  <div class="loader-logo" style="position:relative;font-size:48px;font-weight:800;letter-spacing:-2px;color:rgba(255,255,255,.12);-webkit-user-select:none;user-select:none"><span style="visibility:hidden">ODD.</span><span style="position:absolute;left:0;top:0;color:var(--red);clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards">ODD.</span></div>
+  <div style="width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:40%;background:var(--red);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite"></div></div>
 </div>
 
 <div class="container">
@@ -2269,7 +2271,7 @@ function updateDashboard(rows) {
 
   var now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   document.getElementById('lastUpdated').innerHTML = '<span class="status-dot status-live"></span> Live<span class="live-time"> · ' + now + '</span>';
-  document.getElementById('loadingOverlay').style.display = 'none';
+  var lo=document.getElementById('loadingOverlay');lo.style.opacity='0';setTimeout(function(){lo.style.display='none'},500);
 }
 
 let liveConnected = false;
@@ -2281,7 +2283,7 @@ async function fetchSheetData() {
       console.warn('[Dashboard] file:// 프로토콜에서는 Google Sheets 연동 불가. http://localhost:8080/performance.html 로 접속하세요.');
       if (el) el.innerHTML = '<span class="status-dot status-error"></span> Offline';
       const lo = document.getElementById('loadingOverlay');
-      if (lo) lo.style.display = 'none';
+      if (lo){lo.style.opacity='0';setTimeout(function(){lo.style.display='none'},500)}
       return;
     }
     const resp = await fetch(SHEET_CSV_URL);
