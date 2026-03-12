@@ -56,10 +56,10 @@
   .nav-live-status .live-time{color:var(--t4)}
   .live-badge{font-size:7px;font-weight:600;color:var(--red);background:rgba(191,32,38,.1);border:1px solid rgba(191,32,38,.25);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
-  .dash-switcher{display:flex;background:rgba(255,255,255,.06);border-radius:100px;padding:2px;margin-left:16px;border:1px solid rgba(255,255,255,.08)}
+  .dash-switcher{display:flex;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:100px;padding:2px;margin-left:16px;border:1px solid rgba(255,255,255,.1);position:relative;touch-action:pan-x}
   .dash-switch{padding:5px 16px;border-radius:100px;font-size:12px;font-weight:600;color:var(--t4);text-decoration:none;transition:all .2s;letter-spacing:.3px}
   .dash-switch:hover{color:var(--t2)}
-  .dash-switch.active{background:var(--red);color:#fff}
+  .dash-switch.active{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(191,32,38,.3)}
 
   .container { max-width: 1440px; margin: 0 auto; padding: 24px 32px; animation: fadeUp .6s cubic-bezier(.25,.46,.45,.94) both; }
 
@@ -86,8 +86,8 @@
     font-family: var(--sans);
   }
   .tab:hover { color: var(--t2); background: rgba(255,255,255,.05); }
-  .tab.active { background: rgba(191,32,38,.15); color: var(--red); font-weight: 600; }
-  .tab.active[data-tab="tiktok"] { background: rgba(255,59,92,.15); color: var(--tiktok-color); }
+  .tab.active { background: var(--red); color: #fff; font-weight: 600; box-shadow: 0 2px 8px rgba(191,32,38,.3); }
+  .tab.active[data-tab="tiktok"] { background: var(--tiktok-color); color: #fff; box-shadow: 0 2px 8px rgba(255,59,92,.3); }
 
   /* Date Picker Bar */
   .date-picker-bar {
@@ -125,7 +125,7 @@
     font-family: var(--sans);
   }
   .dp-month:hover { color: var(--t2); background: rgba(255,255,255,.05); }
-  .dp-month.active { background: rgba(191,32,38,.15); color: var(--red); font-weight: 600; }
+  .dp-month.active { background: var(--red); color: #fff; font-weight: 600; box-shadow: 0 2px 8px rgba(191,32,38,.3); }
   .dp-sep {
     width: 1px;
     height: 22px;
@@ -146,7 +146,7 @@
     font-family: var(--sans);
   }
   .dp-total:hover { border-color: rgba(255,255,255,.15); color: var(--t2); }
-  .dp-total.active { border-color: rgba(191,32,38,.3); color: var(--red); background: rgba(191,32,38,.08); }
+  .dp-total.active { border-color: var(--red); color: #fff; background: var(--red); box-shadow: 0 2px 8px rgba(191,32,38,.3); }
   .dp-weeks {
     display: flex;
     align-items: center;
@@ -169,7 +169,7 @@
     font-family: var(--sans);
   }
   .dp-week:hover { background: rgba(255,255,255,.07); color: var(--t2); }
-  .dp-week.active { background: rgba(191,32,38,.12); color: var(--red); border-color: rgba(191,32,38,.25); }
+  .dp-week.active { background: var(--red); color: #fff; border-color: var(--red); box-shadow: 0 2px 6px rgba(191,32,38,.3); }
   .dp-range-label {
     font-size: 11px;
     color: rgba(191,32,38,.7);
