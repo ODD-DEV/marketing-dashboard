@@ -50,6 +50,7 @@
   .nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
   .nav-inner{max-width:1120px;margin:0 auto;padding:0 28px;height:48px;display:flex;align-items:center;justify-content:space-between}
   .nav-left{display:flex;align-items:center;gap:14px}
+  .logo-img{height:18px;width:auto;object-fit:contain;display:block}
   .nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4);white-space:nowrap;overflow:hidden;flex-shrink:1;min-width:0}
   .nav-live-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
   .nav-live-status .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -89,99 +90,25 @@
   .tab.active { background: rgba(191,32,38,.15); color: var(--red); font-weight: 600; }
   .tab.active[data-tab="tiktok"] { background: rgba(255,59,92,.15); color: var(--tiktok-color); }
 
-  /* Date Picker Bar */
-  .date-picker-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 22px;
-    flex-wrap: wrap;
-  }
-  .date-picker-bar .dp-label {
-    font-size: 13px;
-    color: var(--t3);
-    font-weight: 500;
-    margin-right: 2px;
-  }
-  .dp-group {
-    display: flex;
-    align-items: center;
-    background: rgba(255,255,255,.04);
-    border-radius: 100px;
-    padding: 3px;
-    gap: 3px;
-  }
-  .dp-month {
-    padding: 6px 18px;
-    border-radius: 100px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--t4);
-    border: none;
-    background: none;
-    transition: all .15s;
-    white-space: nowrap;
-    font-family: var(--sans);
-  }
-  .dp-month:hover { color: var(--t2); background: rgba(255,255,255,.05); }
-  .dp-month.active { background: rgba(191,32,38,.15); color: var(--red); font-weight: 600; }
-  .dp-sep {
-    width: 1px;
-    height: 22px;
-    background: rgba(255,255,255,.08);
-    margin: 0 2px;
-  }
-  .dp-total {
-    padding: 6px 18px;
-    border-radius: 100px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--t4);
-    border: 1px solid rgba(255,255,255,.08);
-    background: none;
-    transition: all .15s;
-    white-space: nowrap;
-    font-family: var(--sans);
-  }
-  .dp-total:hover { border-color: rgba(255,255,255,.15); color: var(--t2); }
-  .dp-total.active { border-color: rgba(191,32,38,.3); color: var(--red); background: rgba(191,32,38,.08); }
-  .dp-weeks {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 4px;
-  }
-  .dp-week {
-    padding: 6px 10px;
-    border-radius: 100px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--t4);
-    border: 1px solid transparent;
-    background: rgba(255,255,255,.03);
-    transition: all .15s;
-    text-align: center;
-    line-height: 1.3;
-    white-space: nowrap;
-    font-family: var(--sans);
-  }
-  .dp-week:hover { background: rgba(255,255,255,.07); color: var(--t2); }
-  .dp-week.active { background: rgba(191,32,38,.12); color: var(--red); border-color: rgba(191,32,38,.25); }
-  .dp-range-label {
-    font-size: 11px;
-    color: rgba(191,32,38,.7);
-    font-weight: 500;
-    margin-left: 6px;
-    white-space: nowrap;
-  }
+  /* Period Tabs (unified date picker) */
+  .period-area{padding:20px 0 0}
+  .period-tabs{display:flex;gap:3px;flex-wrap:wrap}
+  .period-tab{padding:10px 22px;border-radius:100px;border:none;background:transparent;color:var(--t4);cursor:pointer;font-size:15px;font-weight:500;transition:all .2s;font-family:var(--sans)}
+  .period-tab:hover{color:var(--t2);background:rgba(255,255,255,.06)}
+  .period-tab.active{background:rgba(191,32,38,.15);color:var(--red);font-weight:600}
+  .week-tabs{display:flex;gap:3px;flex-wrap:wrap;align-items:center;margin-top:8px}
+  .week-tab{padding:4px 12px;border-radius:100px;border:none;background:transparent;color:var(--t5);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s;font-family:var(--sans);text-align:center;line-height:1.3}
+  .week-tab span{font-size:10px;color:var(--t5);font-weight:400}
+  .week-tab:hover{color:var(--t3);background:rgba(255,255,255,.05)}
+  .week-tab.active{background:rgba(191,32,38,.1);color:var(--red);font-weight:600}
+  .week-tab.active span{color:var(--red)}
   @media (max-width: 768px) {
-    .date-picker-bar { flex-wrap: wrap; }
-    .dp-weeks { display: flex; flex-wrap: wrap; gap: 3px; margin-left: 0; width: 100%; margin-top: 8px; }
-    .dp-week { padding: 4px 10px; font-size: 10px; }
-    .dp-range-label { display: none; }
+    .period-area{padding-top:10px}
+    .period-tabs{gap:0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:100px;border:1px solid rgba(255,255,255,.08);padding:3px;scroll-snap-type:x mandatory}
+    .period-tabs::-webkit-scrollbar{display:none}
+    .period-tab{padding:7px 14px;font-size:12px;flex-shrink:0;scroll-snap-align:center;border-radius:100px;white-space:nowrap}
+    .week-tabs{gap:2px;justify-content:center}
+    .week-tab{padding:3px 10px;font-size:10px}
   }
 
   /* KPI Cards */
@@ -435,9 +362,6 @@
     .chart-grid { gap: 12px; }
     .sticky-table { font-size: 12px; }
     .sticky-table th, .sticky-table td { padding: 8px 10px; }
-    .date-picker-bar { gap: 8px; }
-    .dp-month { padding: 5px 14px; font-size: 12px; }
-    .dp-total { padding: 5px 14px; font-size: 11px; }
     .dp-label { font-size: 12px; }
     #admin-panel { width: 100%; right: -100%; }
   }
@@ -468,10 +392,6 @@
     .nav-right #user-photo { width: 20px; height: 20px; }
     table { font-size: 10px; }
     td, th { padding: 6px 6px; }
-    .date-picker-bar { gap: 4px; }
-    .dp-month { padding: 4px 10px; font-size: 11px; }
-    .dp-total { padding: 4px 10px; font-size: 10px; }
-    .dp-label { font-size: 11px; margin-right: 0; }
     .tabs { gap: 2px; padding: 3px; }
     .tab { font-size: 10px; padding: 4px 10px; }
     .section-title { font-size: 13px; gap: 6px; }
@@ -555,7 +475,7 @@
 <nav class="nav">
   <div class="nav-inner">
     <div class="nav-left">
-      <img src="odd_logo_white.png" style="height:18px;width:auto;object-fit:contain;display:block" alt="ODD.">
+      <img src="odd_logo_white.png" class="logo-img" alt="ODD.">
       <div class="dash-switcher">
         <a href="index.html" class="dash-switch">Sales</a>
         <a href="performance.html" class="dash-switch active">Performance</a>
@@ -586,25 +506,24 @@
     <button class="tab" data-tab="funnel" onclick="switchTab('funnel')">Funnel 분석</button>
   </div>
 
+  <!-- Unified Date Picker -->
+  <div class="period-area">
+    <div class="period-tabs" id="periodTabs">
+      <button class="period-tab active" data-period="total" onclick="switchPeriod('total')">전체</button>
+      <button class="period-tab" data-period="mar" onclick="switchPeriod('mar')">3월</button>
+      <button class="period-tab" data-period="feb" onclick="switchPeriod('feb')">2월</button>
+    </div>
+    <div class="week-tabs" id="weekTabs" style="display:none">
+      <button class="week-tab" data-week="0" onclick="toggleWeek(0)">W1<br><span>2/8</span></button>
+      <button class="week-tab" data-week="1" onclick="toggleWeek(1)">W2<br><span>2/15</span></button>
+      <button class="week-tab" data-week="2" onclick="toggleWeek(2)">W3<br><span>2/22</span></button>
+      <button class="week-tab" data-week="3" onclick="toggleWeek(3)">W4<br><span>3/1</span></button>
+      <button class="week-tab" data-week="4" onclick="toggleWeek(4)">W5<br><span>3/8</span></button>
+    </div>
+  </div>
+
   <!-- OVERVIEW TAB -->
   <div id="tab-overview" class="view-toggle active">
-    <div class="date-picker-bar">
-      <span class="dp-label">기간</span>
-      <div class="dp-group">
-        <button class="dp-month" data-period="feb" onclick="switchPeriod('feb')">2월</button>
-        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
-        <span class="dp-sep"></span>
-        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
-      </div>
-      <div class="dp-weeks">
-        <button class="dp-week" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
-        <button class="dp-week" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
-        <button class="dp-week" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
-        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
-        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
-      </div>
-      <span class="dp-range-label" id="dpRangeLabel">3/1 – 3/14</span>
-    </div>
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-label">Total Spend</div>
@@ -732,24 +651,6 @@
 
   <!-- META TAB -->
   <div id="tab-meta" class="view-toggle">
-    <div class="date-picker-bar">
-      <span class="dp-label">기간</span>
-      <div class="dp-group">
-        <button class="dp-month" data-period="feb" onclick="switchPeriod('feb')">2월</button>
-        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
-        <span class="dp-sep"></span>
-        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
-      </div>
-      <div class="dp-weeks">
-        <button class="dp-week" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
-        <button class="dp-week" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
-        <button class="dp-week" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
-        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
-        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
-      </div>
-      <span class="dp-range-label">3/1 – 3/14</span>
-    </div>
-
     <div class="kpi-grid" id="metaKpiGrid">
       <div class="kpi-card">
         <div class="kpi-label">Meta Spend</div>
@@ -874,24 +775,6 @@
 
   <!-- TIKTOK TAB -->
   <div id="tab-tiktok" class="view-toggle">
-    <div class="date-picker-bar">
-      <span class="dp-label">기간</span>
-      <div class="dp-group">
-        <button class="dp-month" data-period="feb" onclick="switchPeriod('feb')">2월</button>
-        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
-        <span class="dp-sep"></span>
-        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
-      </div>
-      <div class="dp-weeks">
-        <button class="dp-week" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
-        <button class="dp-week" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
-        <button class="dp-week" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
-        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
-        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
-      </div>
-      <span class="dp-range-label">3/1 – 3/14</span>
-    </div>
-
     <div class="kpi-grid" id="tiktokKpiGrid">
       <div class="kpi-card">
         <div class="kpi-label">TikTok Spend</div>
@@ -1032,23 +915,6 @@
 
   <!-- FUNNEL TAB -->
   <div id="tab-funnel" class="view-toggle">
-    <div class="date-picker-bar" id="funnelPicker">
-      <span class="dp-label">기간</span>
-      <div class="dp-group">
-        <button class="dp-month" data-period="feb" onclick="switchPeriod('feb')">2월</button>
-        <button class="dp-month" data-period="mar" onclick="switchPeriod('mar')">3월</button>
-        <span class="dp-sep"></span>
-        <button class="dp-total" data-period="total" onclick="switchPeriod('total')">전체</button>
-      </div>
-      <div class="dp-weeks">
-        <button class="dp-week" data-week="0" onclick="toggleWeek(0)">W1<br>2/8</button>
-        <button class="dp-week" data-week="1" onclick="toggleWeek(1)">W2<br>2/15</button>
-        <button class="dp-week" data-week="2" onclick="toggleWeek(2)">W3<br>2/22</button>
-        <button class="dp-week" data-week="3" onclick="toggleWeek(3)">W4<br>3/1</button>
-        <button class="dp-week" data-week="4" onclick="toggleWeek(4)">W5<br>3/8</button>
-      </div>
-      <span class="dp-range-label">3/1 – 3/14</span>
-    </div>
     <div class="section-title">Meta — Funnel Stage 비교 (TOF / MOF / BOF)</div>
 
     <div class="funnel-grid">
@@ -1322,33 +1188,23 @@ function toggleWeek(idx) {
 }
 
 function syncPickerUI() {
-  document.querySelectorAll('.dp-month, .dp-total').forEach(b => {
+  // Period tabs
+  document.querySelectorAll('.period-tab').forEach(b => {
     b.classList.toggle('active', b.dataset.period === currentPeriod);
   });
-  // 월 선택 시에만 주간 버튼 노출, 전체 선택 시 숨김
+  // 월 선택 시에만 주간 버튼 노출
   const showWeeks = (currentPeriod === 'feb' || currentPeriod === 'mar' || currentPeriod === 'custom');
   const febWeeks = [0, 1, 2];
   const marWeeks = [3, 4];
-  document.querySelectorAll('.dp-weeks').forEach(el => {
-    el.style.display = showWeeks ? '' : 'none';
-  });
-  document.querySelectorAll('.dp-week').forEach(b => {
+  var weekRow = document.getElementById('weekTabs');
+  if (weekRow) weekRow.style.display = showWeeks ? '' : 'none';
+  document.querySelectorAll('.week-tab').forEach(b => {
     const idx = parseInt(b.dataset.week);
     b.classList.toggle('active', selectedWeeks.includes(idx));
-    // 해당 월의 주간만 표시
     if (currentPeriod === 'feb') b.style.display = febWeeks.includes(idx) ? '' : 'none';
     else if (currentPeriod === 'mar') b.style.display = marWeeks.includes(idx) ? '' : 'none';
     else b.style.display = '';
   });
-  document.querySelectorAll('.dp-range-label').forEach(el => {
-    el.style.display = showWeeks ? '' : 'none';
-  });
-  if (selectedWeeks.length > 0) {
-    const first = WEEK_RANGES[selectedWeeks[0]];
-    const last = WEEK_RANGES[selectedWeeks[selectedWeeks.length - 1]];
-    const rangeText = first.start + ' – ' + last.end;
-    document.querySelectorAll('.dp-range-label').forEach(el => el.textContent = rangeText);
-  }
 }
 
 const weekLabels = ['W1 (2/8-14)', 'W2 (2/15-21)', 'W3 (2/22-28)', 'W4 (3/1-7)', 'W5 (3/8-14)'];
