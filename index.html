@@ -308,9 +308,23 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .monthly-sticky-tbl thead th:first-child{position:sticky;left:0;z-index:3;background:#1d1d1f}
 .monthly-sticky-tbl tbody td:first-child{position:sticky;left:0;z-index:1;background:#1d1d1f;white-space:nowrap}
 @media(max-width:600px){
-  .metric-tiles{grid-template-columns:repeat(2,1fr)}
-  .hero-kpi-value{font-size:48px !important}
-  .hero-kpi{padding:20px 12px 16px}
+  .metric-tiles{grid-template-columns:repeat(3,1fr)}
+  .hero-kpi-value{font-size:36px !important}
+  .hero-kpi{padding:12px 12px 8px}
+  .hero-kpi-tag{display:none}
+  .hero-kpi::after{display:none}
+  .hero-kpi-sub{font-size:12px !important;margin-top:4px}
+  .m-tile{padding:10px 12px !important}
+  .m-tile-label{font-size:9px !important;margin-bottom:4px !important}
+  .m-tile-value{font-size:18px !important}
+  .m-tile-sub{font-size:9px !important;margin-top:4px}
+  .summary-sticky{top:44px;padding-bottom:4px}
+  .summary-sticky.compact .hero-kpi{padding:8px 12px 6px}
+  .summary-sticky.compact .hero-kpi-value{font-size:28px !important}
+  .summary-sticky.compact .hero-kpi-sub{font-size:11px;margin-top:2px}
+  .summary-sticky.compact .m-tile{padding:8px 10px !important}
+  .summary-sticky.compact .m-tile-value{font-size:14px !important}
+  .summary-sticky.compact .m-tile-label{font-size:8px !important;margin-bottom:2px !important}
   main,.nav-inner{padding-left:12px;padding-right:12px}
   .nav-inner{height:44px}
   .section-heading{font-size:20px}
