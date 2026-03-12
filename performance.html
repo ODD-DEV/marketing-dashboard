@@ -49,7 +49,10 @@
   .nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
   .nav-inner{max-width:1440px;margin:0 auto;padding:0 28px;height:48px;display:flex;align-items:center;justify-content:space-between}
   .nav-left{display:flex;align-items:center;gap:14px}
-  .nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4)}
+  .nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4);white-space:nowrap;overflow:hidden;flex-shrink:1;min-width:0}
+  .nav-live-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
+  .nav-live-status .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .nav-live-status .live-time{color:var(--t4)}
   .live-badge{font-size:7px;font-weight:600;color:var(--red);background:rgba(214,54,52,.1);border:1px solid rgba(214,54,52,.25);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
   .dash-switcher{display:flex;background:rgba(255,255,255,.06);border-radius:100px;padding:2px;margin-left:16px;border:1px solid rgba(255,255,255,.08)}
@@ -450,6 +453,7 @@
     .dash-switcher { margin-left: 6px; }
     .dash-switch { padding: 3px 8px; font-size: 10px; }
     .live-badge { display: none; }
+    .nav-live-status .live-time { display: none; }
     .nav-right button[onclick="signOut()"] { font-size: 9px; padding: 2px 8px; }
     .nav-right #user-photo { width: 20px; height: 20px; }
     table { font-size: 10px; }
@@ -553,13 +557,10 @@
         <a href="index.html" class="dash-switch">Sales</a>
         <a href="performance.html" class="dash-switch active">Performance</a>
       </div>
-      <span class="live-badge">LIVE</span>
     </div>
     <div class="nav-right">
-      <span class="badge badge-meta" style="font-size:11px;">Meta</span>
-      <span class="badge badge-tiktok" style="font-size:11px;">TikTok</span>
-      <span class="date-range" id="dateRange" style="font-size:11px;">2026.02.08 - 2026.04.11 (USD 기준)</span>
-      <div id="user-bar" style="display:none;align-items:center;gap:8px;margin-left:12px">
+      <span id="lastUpdated" class="nav-live-status"></span>
+      <div id="user-bar" style="display:none;align-items:center;gap:8px">
         <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
         <span id="user-email" style="font-size:11px;color:#86868b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:var(--sans)">로그아웃</button>
@@ -567,9 +568,6 @@
     </div>
   </div>
 </nav>
-<div class="data-status-bar">
-  <span id="lastUpdated"></span>
-</div>
 
 <div id="loadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px;">
   <div style="width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--t3);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
@@ -2259,7 +2257,8 @@ function updateDashboard(rows) {
 
   updateFunnelForPeriod();
 
-  document.getElementById('lastUpdated').innerHTML = '<span class="status-dot status-live"></span> 방금 갱신 · Google Sheets Live';
+  var now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('lastUpdated').innerHTML = '<span class="status-dot status-live"></span> Live<span class="live-time"> · ' + now + '</span>';
   document.getElementById('loadingOverlay').style.display = 'none';
 }
 
@@ -2270,7 +2269,7 @@ async function fetchSheetData() {
   try {
     if (window.location.protocol === 'file:') {
       console.warn('[Dashboard] file:// 프로토콜에서는 Google Sheets 연동 불가. http://localhost:8080/performance.html 로 접속하세요.');
-      if (el) el.innerHTML = '<span class="status-dot status-error"></span> Offline — localhost:8080 으로 접속 필요';
+      if (el) el.innerHTML = '<span class="status-dot status-error"></span> Offline';
       const lo = document.getElementById('loadingOverlay');
       if (lo) lo.style.display = 'none';
       return;
