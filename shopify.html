@@ -62,9 +62,6 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 .week-tab:hover{color:var(--t3);background:rgba(255,255,255,.05)}
 .week-tab.active{background:var(--red-dim);color:var(--red);font-weight:600}
 
-/* Header hero */
-.page-header{position:relative;padding:48px 0 0;animation:fadeUp .7s var(--ease) both}
-
 /* Hero KPI */
 .hero-kpi{text-align:center;padding:32px 40px 36px;margin:0;position:relative;animation:fadeUp .7s var(--ease) both}
 .hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
@@ -259,14 +256,6 @@ tr:hover td{background:rgba(255,255,255,.03)}
 </nav>
 
 <main>
-  <div class="page-header">
-    <div style="text-align:center;margin-bottom:8px">
-      <span style="font-size:14px;font-weight:600;color:var(--green);letter-spacing:.5px">Shopify (D2C)</span>
-    </div>
-    <h1 style="text-align:center;font-family:var(--sans);font-size:clamp(32px,5vw,48px);color:var(--t1);font-weight:600;letter-spacing:-1px;margin-bottom:4px">Shopify (D2C) Channel</h1>
-    <p style="text-align:center;font-size:14px;color:var(--t4);margin-bottom:0">Direct-to-Consumer sales via Shopify</p>
-  </div>
-
   <div class="tabs-area">
     <div class="month-tabs" id="monthTabs"></div>
     <div class="week-tabs" id="weekTabs"></div>
