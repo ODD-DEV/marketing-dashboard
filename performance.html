@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ODD. Performance Dashboard</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --bg: #000;
@@ -227,8 +226,19 @@
     border-radius: 50%;
     display: inline-block;
   }
-  .chart-wrap { height: 320px; width: 100%; }
-  .chart-wrap-sm { height: 260px; width: 100%; }
+  .chart-wrap { width: 100%; }
+  .chart-wrap-sm { width: 100%; }
+  .svg-chart-container { width: 100%; }
+  .line-chart-container{position:relative;width:100%}
+  .line-chart-svg{width:100%;display:block}
+  .line-chart-legend{display:flex;gap:18px;justify-content:flex-end;margin-top:0;padding:10px 4px 0;flex-wrap:wrap}
+  .line-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t3);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+  .line-chart-legend-dot{width:16px;height:1.5px;border-radius:1px;opacity:.7}
+  .doughnut-chart-container{position:relative;width:100%;display:flex;flex-direction:column;align-items:center}
+  .doughnut-svg{display:block}
+  .doughnut-legend{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;padding:12px 0 0}
+  .doughnut-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);font-weight:500}
+  .doughnut-legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
 
   /* Funnel Section */
   .funnel-section { margin-bottom: 24px; }
@@ -378,8 +388,6 @@
     .kpi-value { font-size: 22px !important; }
     .kpi-label { font-size: 10px !important; }
     .kpi-sub { font-size: 11px !important; }
-    .chart-wrap { height: 260px; }
-    .chart-wrap-sm { height: 220px; }
     .section-title { font-size: 14px; }
     .container { padding: 16px; }
     .nav-inner { padding: 0 16px; }
@@ -395,8 +403,6 @@
     .kpi-card { padding: 16px; }
     .kpi-value { font-size: 20px !important; }
     .chart-card { padding: 16px; }
-    .chart-wrap { height: 220px; }
-    .chart-wrap-sm { height: 180px; }
     .funnel-card { padding: 16px; }
     .container { padding: 12px; }
     .nav-inner { padding: 0 12px; height: 44px; }
@@ -582,23 +588,23 @@
     <div class="chart-grid">
       <div class="chart-card full">
         <div class="chart-title"><span class="dot" style="background:var(--meta-color)"></span>Weekly Spend ($) — Meta vs TikTok</div>
-        <div class="chart-wrap"><canvas id="chartWeeklySpend"></canvas></div>
+        <div class="chart-wrap"><div id="chartWeeklySpend" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card full">
         <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Weekly CTR (%) — Meta vs TikTok</div>
-        <div class="chart-wrap-sm"><canvas id="chartWeeklyCTR"></canvas></div>
+        <div class="chart-wrap-sm"><div id="chartWeeklyCTR" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card full">
         <div class="chart-title"><span class="dot" style="background:var(--green)"></span>Weekly Profile Visit → Follow CVR (%) — Meta vs TikTok</div>
-        <div class="chart-wrap-sm"><canvas id="chartWeeklyCVR"></canvas></div>
+        <div class="chart-wrap-sm"><div id="chartWeeklyCVR" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card full">
         <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Weekly 3s+ Video Views — Meta vs TikTok</div>
-        <div class="chart-wrap"><canvas id="chartWeekly3s"></canvas></div>
+        <div class="chart-wrap"><div id="chartWeekly3s" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--bof-color)"></span>Channel Spend 비율</div>
-        <div class="chart-wrap"><canvas id="chartSpendPie"></canvas></div>
+        <div class="chart-wrap"><div id="chartSpendPie" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Engagement 비교</div>
@@ -785,15 +791,15 @@
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Meta CTR% Weekly Trend</div>
-        <div class="chart-wrap"><canvas id="chartMetaCTR"></canvas></div>
+        <div class="chart-wrap"><div id="chartMetaCTR" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Video Completion Funnel (TOF)</div>
-        <div class="chart-wrap"><canvas id="chartVideoFunnel"></canvas></div>
+        <div class="chart-wrap"><div id="chartVideoFunnel" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card full">
         <div class="chart-title"><span class="dot" style="background:var(--green)"></span>Meta — Weekly Video View Rate (%) by Funnel</div>
-        <div class="chart-wrap"><canvas id="chartMetaVideoRate"></canvas></div>
+        <div class="chart-wrap"><div id="chartMetaVideoRate" class="svg-chart-container"></div></div>
       </div>
     </div>
   </div>
@@ -943,15 +949,15 @@
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok Video Completion Rates</div>
-        <div class="chart-wrap"><canvas id="chartTiktokVideo"></canvas></div>
+        <div class="chart-wrap"><div id="chartTiktokVideo" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--green)"></span>TikTok Engagement Breakdown</div>
-        <div class="chart-wrap"><canvas id="chartTiktokEngagement"></canvas></div>
+        <div class="chart-wrap"><div id="chartTiktokEngagement" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card full">
         <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok — Daily Video View Rate (%)</div>
-        <div class="chart-wrap"><canvas id="chartTiktokVideoRate"></canvas></div>
+        <div class="chart-wrap"><div id="chartTiktokVideoRate" class="svg-chart-container"></div></div>
       </div>
     </div>
   </div>
@@ -1048,27 +1054,27 @@
     <div class="chart-grid" style="margin-top: 24px;">
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>Funnel — Spend 배분</div>
-        <div class="chart-wrap"><canvas id="chartFunnelSpend"></canvas></div>
+        <div class="chart-wrap"><div id="chartFunnelSpend" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>Funnel — CPC 비교</div>
-        <div class="chart-wrap"><canvas id="chartFunnelCPC"></canvas></div>
+        <div class="chart-wrap"><div id="chartFunnelCPC" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--bof-color)"></span>Funnel — CTR 비교</div>
-        <div class="chart-wrap"><canvas id="chartFunnelCTR"></canvas></div>
+        <div class="chart-wrap"><div id="chartFunnelCTR" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--green)"></span>Funnel — Follow CPA 비교</div>
-        <div class="chart-wrap"><canvas id="chartFunnelFollowCPA"></canvas></div>
+        <div class="chart-wrap"><div id="chartFunnelFollowCPA" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--meta-color)"></span>Funnel — Follow 수 비교</div>
-        <div class="chart-wrap"><canvas id="chartFunnelFollows"></canvas></div>
+        <div class="chart-wrap"><div id="chartFunnelFollows" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>Funnel — 3s+ Video View Rate 비교</div>
-        <div class="chart-wrap"><canvas id="chartFunnelVideoRate"></canvas></div>
+        <div class="chart-wrap"><div id="chartFunnelVideoRate" class="svg-chart-container"></div></div>
       </div>
     </div>
 
@@ -1134,56 +1140,34 @@
     <div class="chart-grid" style="margin-top: 24px;">
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--tof-color)"></span>TikTok Funnel — Spend 배분</div>
-        <div class="chart-wrap"><canvas id="chartTkFunnelSpend"></canvas></div>
+        <div class="chart-wrap"><div id="chartTkFunnelSpend" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--mof-color)"></span>TikTok Funnel — Follow CPA 비교</div>
-        <div class="chart-wrap"><canvas id="chartTkFunnelFollowCPA"></canvas></div>
+        <div class="chart-wrap"><div id="chartTkFunnelFollowCPA" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--bof-color)"></span>TikTok Funnel — Follow 수 비교</div>
-        <div class="chart-wrap"><canvas id="chartTkFunnelFollows"></canvas></div>
+        <div class="chart-wrap"><div id="chartTkFunnelFollows" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--green)"></span>TikTok Funnel — 2s+ Video View Rate</div>
-        <div class="chart-wrap"><canvas id="chartTkFunnelVideoRate"></canvas></div>
+        <div class="chart-wrap"><div id="chartTkFunnelVideoRate" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--tiktok-color)"></span>TikTok Funnel — Profile Visit 비교</div>
-        <div class="chart-wrap"><canvas id="chartTkFunnelPV"></canvas></div>
+        <div class="chart-wrap"><div id="chartTkFunnelPV" class="svg-chart-container"></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><span class="dot" style="background:var(--meta-color)"></span>TikTok Funnel — Reach 비교</div>
-        <div class="chart-wrap"><canvas id="chartTkFunnelReach"></canvas></div>
+        <div class="chart-wrap"><div id="chartTkFunnelReach" class="svg-chart-container"></div></div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// Chart.js dark theme defaults (Sales Dashboard style)
-Chart.defaults.color = 'rgba(255,255,255,.35)';
-Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
-Chart.defaults.font.family = "'Pretendard',-apple-system,sans-serif";
-Chart.defaults.plugins.legend.labels.usePointStyle = true;
-Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
-Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(28,28,30,.95)';
-Chart.defaults.plugins.tooltip.titleColor = '#a1a1a6';
-Chart.defaults.plugins.tooltip.bodyColor = '#f5f5f7';
-Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,.1)';
-Chart.defaults.plugins.tooltip.borderWidth = 1;
-Chart.defaults.plugins.tooltip.cornerRadius = 10;
-Chart.defaults.plugins.tooltip.padding = 12;
-Chart.defaults.plugins.tooltip.titleFont = { weight: '500', size: 11 };
-Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
-Chart.defaults.elements.line.borderWidth = 1.5;
-Chart.defaults.elements.line.tension = 0.4;
-Chart.defaults.elements.point.radius = 0;
-Chart.defaults.elements.point.hoverRadius = 4;
-Chart.defaults.scale.grid = { color: 'rgba(255,255,255,.04)' };
-Chart.defaults.animation = false;
-
-const charts = {};
+// ═══ SVG Chart Functions (replacing Chart.js) ═══
 let cachedSections = null;
 let currentPeriod = 'feb';
 let selectedWeeks = [0, 1, 2];
@@ -1247,211 +1231,262 @@ function syncPickerUI() {
 
 const weekLabels = ['W1 (2/8-14)', 'W2 (2/15-21)', 'W3 (2/22-28)', 'W4 (3/1-7)', 'W5 (3/8-14)'];
 
-// Weekly Spend
-charts.weeklySpend = new Chart(document.getElementById('chartWeeklySpend'), {
-  type: 'line',
-  data: {
-    labels: weekLabels,
-    datasets: [
-      { label: 'Meta', data: [339.83, 3089.18, 3653.33, 1913.57, 104.08], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, borderWidth: 3 },
-      { label: 'TikTok', data: [0, 0, 841.03, 0, 0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, borderWidth: 3 }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString() } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } } } }
+/* ═══ SVG Line Chart — Premium layered glass style (from Sales Dashboard) ═══ */
+function buildLineChart(labels, datasets, opts) {
+  opts = opts || {};
+  var W = opts.width || 900, H = opts.height || 300, padL = 52, padR = 16, padT = 24, padB = 40;
+  var cW = W - padL - padR, cH = H - padT - padB;
+  var yFormat = opts.yFormat || function(v) { return '$' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v); };
+  var allVals = [];
+  datasets.forEach(function(ds) { ds.data.forEach(function(v) { if (v != null) allVals.push(v); }); });
+  var maxV = Math.max.apply(null, allVals) || 1;
+  if (maxV < 1) { maxV = Math.ceil(maxV * 10) / 10 * 1.2; }
+  else { var mag = Math.pow(10, Math.floor(Math.log10(maxV))); maxV = Math.ceil(maxV / mag * 1.2) * mag; }
+  if (maxV === 0) maxV = 1;
+  var n = labels.length;
+  if (n < 2) return '<div style="color:var(--t4);text-align:center;padding:30px">Insufficient data</div>';
+  function getX(i) { return padL + (i / (n - 1)) * cW; }
+  function getY(v) { if (v == null) return padT + cH; return padT + cH - (v / maxV) * cH; }
+  function monotonePath(pts) {
+    if (pts.length < 2) return 'M' + pts[0].x + ',' + pts[0].y;
+    var N = pts.length, dx = [], dy = [], m = [], tk = [];
+    for (var i = 0; i < N - 1; i++) { dx[i] = pts[i+1].x - pts[i].x; dy[i] = pts[i+1].y - pts[i].y; m[i] = dx[i] ? dy[i] / dx[i] : 0; }
+    tk[0] = m[0];
+    for (var i = 1; i < N - 1; i++) { if (m[i-1] * m[i] <= 0) tk[i] = 0; else { var a = dx[i-1] + dx[i]; tk[i] = 3 * a / ((a + dx[i]) / m[i-1] + (a + dx[i-1]) / m[i]); } }
+    tk[N-1] = m[N-2];
+    var d = 'M' + pts[0].x.toFixed(1) + ',' + pts[0].y.toFixed(1);
+    for (var i = 0; i < N - 1; i++) { var h = dx[i] / 3; d += ' C' + (pts[i].x + h).toFixed(1) + ',' + (pts[i].y + tk[i]*h).toFixed(1) + ' ' + (pts[i+1].x - h).toFixed(1) + ',' + (pts[i+1].y - tk[i+1]*h).toFixed(1) + ' ' + pts[i+1].x.toFixed(1) + ',' + pts[i+1].y.toFixed(1); }
+    return d;
+  }
+  var uid = 'c' + Math.random().toString(36).substr(2, 6);
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">';
+  svg += '<defs>';
+  datasets.forEach(function(ds, di) {
+    svg += '<filter id="glow_' + uid + '_' + di + '" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="' + (di === 0 ? 4 : 3) + '" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  });
+  svg += '</defs>';
+  var gs = 4, baseY = padT + cH;
+  for (var g = 1; g <= gs; g++) {
+    var gv = maxV / gs * g, gy = getY(gv);
+    svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(255,255,255,.07)" stroke-width="0.5" stroke-dasharray="3,4"/>';
+    svg += '<text x="' + (padL - 8) + '" y="' + (gy + 3) + '" text-anchor="end" fill="rgba(255,255,255,.32)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">' + yFormat(gv) + '</text>';
+  }
+  svg += '<line x1="' + padL + '" y1="' + baseY + '" x2="' + (W - padR) + '" y2="' + baseY + '" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>';
+  var ls = Math.max(1, Math.floor(n / 9));
+  for (var i = 0; i < n; i++) { if (i % ls === 0 || i === n - 1) svg += '<text x="' + getX(i) + '" y="' + (H - 8) + '" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">' + labels[i] + '</text>'; }
+  var fillCfg = [{top:.20,mid:.06,bot:0},{top:.15,mid:.04,bot:0},{top:.12,mid:.03,bot:0},{top:.10,mid:.02,bot:0}];
+  for (var di = datasets.length - 1; di >= 0; di--) {
+    var ds = datasets[di], fc = fillCfg[Math.min(di, fillCfg.length - 1)];
+    var pts = []; for (var i = 0; i < n; i++) pts.push({x: getX(i), y: getY(ds.data[i] != null ? ds.data[i] : 0)});
+    var d = monotonePath(pts);
+    var areaD = d + ' L' + pts[n-1].x + ',' + baseY + ' L' + pts[0].x + ',' + baseY + ' Z';
+    svg += '<defs><linearGradient id="ag_' + uid + '_' + di + '" x1="0" y1="0" x2="0" y2="1">';
+    svg += '<stop offset="0%" stop-color="' + ds.color + '" stop-opacity="' + fc.top + '"/>';
+    svg += '<stop offset="50%" stop-color="' + ds.color + '" stop-opacity="' + fc.mid + '"/>';
+    svg += '<stop offset="100%" stop-color="' + ds.color + '" stop-opacity="' + fc.bot + '"/>';
+    svg += '</linearGradient></defs>';
+    svg += '<path d="' + areaD + '" fill="url(#ag_' + uid + '_' + di + ')" />';
+  }
+  for (var di = datasets.length - 1; di >= 0; di--) {
+    var ds = datasets[di];
+    var pts = []; for (var i = 0; i < n; i++) pts.push({x: getX(i), y: getY(ds.data[i] != null ? ds.data[i] : 0)});
+    var d = monotonePath(pts);
+    var sw = di === 0 ? 1.5 : 1;
+    var lo = di === 0 ? '.85' : di === 1 ? '.6' : '.45';
+    svg += '<path d="' + d + '" fill="none" stroke="' + ds.color + '" stroke-width="' + (sw + 2) + '" stroke-linecap="round" stroke-linejoin="round" opacity="' + (parseFloat(lo) * .3).toFixed(2) + '" filter="url(#glow_' + uid + '_' + di + ')"/>';
+    svg += '<path d="' + d + '" fill="none" stroke="' + ds.color + '" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round" opacity="' + lo + '"/>';
+  }
+  var ds0 = datasets[0], pts0 = [];
+  for (var i = 0; i < n; i++) pts0.push({x: getX(i), y: getY(ds0.data[i] != null ? ds0.data[i] : 0)});
+  for (var i = 0; i < n; i++) {
+    var vals = '';
+    datasets.forEach(function(ds) { var v = ds.data[i]; vals += ds.label + ': ' + (v != null ? yFormat(v) : 'N/A') + '\\n'; });
+    svg += '<circle cx="' + pts0[i].x.toFixed(1) + '" cy="' + pts0[i].y.toFixed(1) + '" r="12" fill="transparent" style="cursor:pointer" class="chart-hover-dot" data-idx="' + i + '" data-labels="' + labels[i] + '" data-vals="' + encodeURIComponent(vals) + '"/>';
+    svg += '<circle cx="' + pts0[i].x.toFixed(1) + '" cy="' + pts0[i].y.toFixed(1) + '" r="3" fill="' + ds0.color + '" opacity="0" class="chart-dot-visible" data-idx="' + i + '"/>';
+  }
+  svg += '<line x1="0" y1="' + padT + '" x2="0" y2="' + baseY + '" stroke="rgba(255,255,255,.15)" stroke-width="0.5" stroke-dasharray="3,3" class="chart-hover-line" style="display:none"/>';
+  svg += '</svg>';
+  var leg = '<div class="line-chart-legend">';
+  datasets.forEach(function(ds) { leg += '<div class="line-chart-legend-item"><span class="line-chart-legend-dot" style="background:' + ds.color + '"></span>' + ds.label + '</div>'; });
+  leg += '</div>';
+  return '<div class="line-chart-container" style="position:relative">' + svg + leg + '<div class="chart-tooltip" style="display:none;position:absolute;background:rgba(28,28,30,.95);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;font-size:11px;color:#f5f5f7;pointer-events:none;z-index:10;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)"></div></div>';
+}
+
+/* ═══ SVG Doughnut Chart ═══ */
+function buildDoughnutChart(segments, opts) {
+  opts = opts || {};
+  var size = opts.size || 200, R = size * 0.42, r = R * 0.58, cx = size / 2, cy = size / 2;
+  var total = 0;
+  segments.forEach(function(s) { total += (s.value || 0); });
+  if (total === 0) return '<div style="color:var(--t4);text-align:center;padding:30px">No data</div>';
+  var uid = 'd' + Math.random().toString(36).substr(2, 6);
+  var svg = '<svg viewBox="0 0 ' + size + ' ' + size + '" class="doughnut-svg" width="' + Math.min(size, 240) + '" height="' + Math.min(size, 240) + '">';
+  var sa = -90;
+  segments.forEach(function(seg, si) {
+    var p = seg.value / total, a = p * 360;
+    if (a < 0.5) { sa += a; return; }
+    var ea = sa + a, la = a > 180 ? 1 : 0;
+    var sr = sa * Math.PI / 180, er = ea * Math.PI / 180;
+    if (segments.length === 1) {
+      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="' + seg.color + '" opacity=".85"/>';
+      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#1c1c1e"/>';
+    } else {
+      var x1 = cx + R * Math.cos(sr), y1 = cy + R * Math.sin(sr);
+      var x2 = cx + R * Math.cos(er), y2 = cy + R * Math.sin(er);
+      var x3 = cx + r * Math.cos(er), y3 = cy + r * Math.sin(er);
+      var x4 = cx + r * Math.cos(sr), y4 = cy + r * Math.sin(sr);
+      svg += '<path d="M' + x1.toFixed(2) + ',' + y1.toFixed(2) + ' A' + R + ',' + R + ' 0 ' + la + ' 1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' L' + x3.toFixed(2) + ',' + y3.toFixed(2) + ' A' + r + ',' + r + ' 0 ' + la + ' 0 ' + x4.toFixed(2) + ',' + y4.toFixed(2) + ' Z" fill="' + seg.color + '" opacity=".85" style="transition:opacity .2s;cursor:pointer" onmouseover="this.setAttribute(\'opacity\',\'1\')" onmouseout="this.setAttribute(\'opacity\',\'.85\')"/>';
+    }
+    sa = ea;
+  });
+  var centerText = opts.centerText || '';
+  if (centerText) svg += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" fill="#f5f5f7" font-size="' + (size * 0.1) + '" font-weight="700" font-family="Pretendard,sans-serif" letter-spacing="-0.5">' + centerText + '</text>';
+  svg += '</svg>';
+  var leg = '<div class="doughnut-legend">';
+  segments.forEach(function(s) {
+    var pct = (s.value / total * 100).toFixed(1);
+    leg += '<div class="doughnut-legend-item"><span class="doughnut-legend-dot" style="background:' + s.color + '"></span>' + s.label + ' (' + pct + '%)</div>';
+  });
+  leg += '</div>';
+  return '<div class="doughnut-chart-container">' + svg + leg + '</div>';
+}
+
+/* Mousemove handler for SVG chart hover interaction */
+document.addEventListener('mousemove', function(e) {
+  var container = e.target.closest('.line-chart-container');
+  if (!container) return;
+  var dot = e.target.closest('.chart-hover-dot');
+  var tooltip = container.querySelector('.chart-tooltip');
+  var line = container.querySelector('.chart-hover-line');
+  var dots = container.querySelectorAll('.chart-dot-visible');
+  if (dot) {
+    var vals = decodeURIComponent(dot.dataset.vals).replace(/\\n/g, '<br>');
+    tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:4px;color:var(--t3)">' + dot.dataset.labels + '</div>' + vals;
+    tooltip.style.display = 'block';
+    var cx = parseFloat(dot.getAttribute('cx')), cy = parseFloat(dot.getAttribute('cy'));
+    var svgEl = container.querySelector('svg'), rect = svgEl.getBoundingClientRect();
+    var vb = svgEl.getAttribute('viewBox').split(' ');
+    var xRatio = cx / parseFloat(vb[2]), yRatio = cy / parseFloat(vb[3]);
+    tooltip.style.left = (xRatio * rect.width - tooltip.offsetWidth / 2) + 'px';
+    tooltip.style.top = (yRatio * rect.height - tooltip.offsetHeight - 12) + 'px';
+    if (line) { line.style.display = ''; line.setAttribute('x1', cx); line.setAttribute('x2', cx); }
+    var idx = dot.dataset.idx;
+    dots.forEach(function(d) { d.setAttribute('opacity', d.dataset.idx === idx ? '.9' : '0'); });
+  } else {
+    tooltip.style.display = 'none';
+    if (line) line.style.display = 'none';
+    dots.forEach(function(d) { d.setAttribute('opacity', '0'); });
+  }
 });
 
-// Weekly CTR
-charts.weeklyCTR = new Chart(document.getElementById('chartWeeklyCTR'), {
-  type: 'line',
-  data: {
-    labels: weekLabels,
-    datasets: [
-      { label: 'Meta CTR', data: [5.9, 7.1, 4.4, 2.9, 0.3], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.1)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, pointHoverRadius: 8 },
-      { label: 'TikTok CTR', data: [null, null, 0.0, null, null], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.1)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, pointHoverRadius: 8, spanGaps: false }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y + '%' : 'N/A') } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => v + '%' }, title: { display: true, text: 'CTR (%)' } } } }
-});
+/* Format helpers for chart Y-axis */
+var fmtDollar = function(v) { return '$' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : typeof v === 'number' ? v.toFixed(v < 10 ? 2 : 0) : v); };
+var fmtPct = function(v) { return (typeof v === 'number' ? v.toFixed(1) : v) + '%'; };
+var fmtK = function(v) { return v >= 1000 ? (v/1000).toFixed(0) + 'K' : (typeof v === 'number' ? Math.round(v) : v); };
+var fmtNum = function(v) { return typeof v === 'number' ? v.toLocaleString() : v; };
 
-// Weekly CVR
-charts.weeklyCVR = new Chart(document.getElementById('chartWeeklyCVR'), {
-  type: 'line',
-  data: {
-    labels: weekLabels,
-    datasets: [
-      { label: 'Meta CVR', data: [0.0, 1.2, 1.5, 0.0, 0.0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.1)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, pointHoverRadius: 8 },
-      { label: 'TikTok CVR', data: [null, null, 1.0, null, null], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.1)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, pointHoverRadius: 8, spanGaps: false }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y + '%' : 'N/A') } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => v + '%' }, title: { display: true, text: 'Profile Visit → Follow CVR (%)' } } } }
-});
-
-// Weekly 3s+
-charts.weekly3s = new Chart(document.getElementById('chartWeekly3s'), {
-  type: 'line',
-  data: {
-    labels: weekLabels,
-    datasets: [
-      { label: 'Meta 3s+ Views', data: [56, 101648, 115425, 39890, 0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, pointBackgroundColor: '#4f8df9', pointRadius: 5, borderWidth: 3 },
-      { label: 'TikTok 2s+ Views', data: [0, 0, 126670, 0, 0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, pointBackgroundColor: '#ff3b5c', pointRadius: 5, borderWidth: 3 }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0) + 'K' } } } }
-});
-
-// Spend Pie
-charts.spendPie = new Chart(document.getElementById('chartSpendPie'), {
-  type: 'doughnut',
-  data: { labels: ['Meta TOF', 'Meta MOF', 'Meta BOF', 'TikTok TOF'], datasets: [{ data: [5758.53, 1009.51, 314.30, 841.03], backgroundColor: ['#38bdf8', '#a78bfa', '#f97316', '#ff3b5c'], borderWidth: 0 }] },
-  options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { padding: 16 } } } }
-});
-
-// Meta CTR Weekly
-charts.metaCTR = new Chart(document.getElementById('chartMetaCTR'), {
-  type: 'line',
-  data: {
-    labels: ['W1', 'W2', 'W3', 'W4', 'W5'],
-    datasets: [
-      { label: 'Meta Sum CTR', data: [5.9, 7.1, 4.4, 2.9, 0.3], borderColor: '#4f8df9', fill: false },
-      { label: 'TOF CTR', data: [6.4, 7.1, 5.0, 4.3, 0], borderColor: '#38bdf8', borderDash: [5,5], fill: false },
-      { label: 'MOF CTR', data: [5.3, 5.4, 2.5, 2.3, 0], borderColor: '#a78bfa', borderDash: [5,5], fill: false },
-      { label: 'BOF CTR', data: [0.7, 0.7, 1.0, 1.1, 0.3], borderColor: '#f97316', borderDash: [5,5], fill: false }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
-});
-
-// Meta Video Funnel
-charts.videoFunnel = new Chart(document.getElementById('chartVideoFunnel'), {
-  type: 'line',
-  data: { labels: ['3s+', '25%', '50%', '75%', '95%'], datasets: [{ label: 'Video Views', data: [220790, 199544, 133591, 88305, 66620], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, pointRadius: 5, pointBackgroundColor: '#4f8df9', borderWidth: 3 }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + ' views (' + Math.round(ctx.parsed.y/220790*100) + '%)' } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0) + 'K' } } } }
-});
-
-// Meta Video View Rate
-charts.metaVideoRate = new Chart(document.getElementById('chartMetaVideoRate'), {
-  type: 'line',
-  data: {
-    labels: weekLabels,
-    datasets: [
-      { label: '3s+ Rate', data: [0, 38, 31, 26, 0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.08)', fill: true, pointRadius: 5 },
-      { label: '25% Rate', data: [0, 36, 29, 23, 0], borderColor: '#38bdf8', borderDash: [4,4], fill: false, pointRadius: 4 },
-      { label: '50% Rate', data: [0, 25, 18, 12, 0], borderColor: '#a78bfa', borderDash: [4,4], fill: false, pointRadius: 4 },
-      { label: '75% Rate', data: [0, 17, 69, 7, 0], borderColor: '#f97316', borderDash: [4,4], fill: false, pointRadius: 4 },
-      { label: '95% Rate', data: [0, 13, 9, 5, 0], borderColor: '#f87171', borderDash: [4,4], fill: false, pointRadius: 4 }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 80, ticks: { callback: v => v + '%' }, title: { display: true, text: 'View Rate (%)' } } } }
-});
-
-// TikTok Video Completion
-charts.tiktokVideo = new Chart(document.getElementById('chartTiktokVideo'), {
-  type: 'line',
-  data: { labels: ['2s+ (54%)', '25% (39%)', '50% (27%)', '75% (13%)', '100% (6%)'], datasets: [{ label: 'Video Views', data: [126670, 90506, 62553, 29178, 12893], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#ff3b5c' }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-});
-
-// TikTok Engagement
-charts.tiktokEngagement = new Chart(document.getElementById('chartTiktokEngagement'), {
-  type: 'doughnut',
-  data: { labels: ['Likes — 426 (82.7%)', 'Comments — 51 (9.9%)', 'Saves — 35 (6.8%)', 'Shares — 3 (0.6%)'], datasets: [{ data: [426, 51, 35, 3], backgroundColor: ['#ff3b5c', '#f97316', '#a78bfa', '#38bdf8'], borderWidth: 0 }] },
-  options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(ctx) { const total = ctx.dataset.data.reduce((a,b) => a+b, 0); const pct = (ctx.parsed / total * 100).toFixed(1); return ctx.label.split(' — ')[0] + ': ' + ctx.parsed.toLocaleString() + ' (' + pct + '%)'; } } } } }
-});
-
-// TikTok Video View Rate
-charts.tiktokVideoRate = new Chart(document.getElementById('chartTiktokVideoRate'), {
-  type: 'line',
-  data: {
-    labels: ['2/23', '2/24', '2/25', '2/26', '2/27'],
-    datasets: [
-      { label: '2s+ Rate', data: [55, 55, 53, 54, 55], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.08)', fill: true, pointRadius: 5 },
-      { label: '25% Rate', data: [40, 40, 37, 38, 40], borderColor: '#f97316', borderDash: [4,4], fill: false, pointRadius: 4 },
-      { label: '50% Rate', data: [28, 28, 25, 26, 27], borderColor: '#a78bfa', borderDash: [4,4], fill: false, pointRadius: 4 },
-      { label: '75% Rate', data: [13, 13, 12, 12, 13], borderColor: '#38bdf8', borderDash: [4,4], fill: false, pointRadius: 4 },
-      { label: '100% Rate', data: [6, 6, 5, 5, 6], borderColor: '#30d158', borderDash: [4,4], fill: false, pointRadius: 4 }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 70, ticks: { callback: v => v + '%' }, title: { display: true, text: 'View Rate (%)' } } } }
-});
-
-// Funnel Spend
-charts.funnelSpend = new Chart(document.getElementById('chartFunnelSpend'), {
-  type: 'doughnut',
-  data: { labels: ['TOF — $5,759 (81.3%)', 'MOF — $1,010 (14.3%)', 'BOF — $314 (4.4%)'], datasets: [{ data: [5758.53, 1009.51, 314.30], backgroundColor: ['#38bdf8', '#a78bfa', '#f97316'], borderWidth: 0 }] },
-  options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(ctx) { const total = ctx.dataset.data.reduce((a,b) => a+b, 0); const pct = (ctx.parsed / total * 100).toFixed(1); return ctx.label.split(' — ')[0] + ': $' + ctx.parsed.toLocaleString(undefined, {minimumFractionDigits:2}) + ' (' + pct + '%)'; } } } } }
-});
-
-// Funnel CPC
-charts.funnelCPC = new Chart(document.getElementById('chartFunnelCPC'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'CPC ($)', data: [0.17, 0.44, 2.07], borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } } }
-});
-
-// Funnel CTR
-charts.funnelCTR = new Chart(document.getElementById('chartFunnelCTR'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'CTR (%)', data: [6.1, 2.7, 1.0], borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
-});
-
-// Funnel Follow CPA
-charts.funnelFollowCPA = new Chart(document.getElementById('chartFunnelFollowCPA'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follow CPA ($)', data: [13.68, 18.03, 39.29], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } } }
-});
-
-// Funnel Follows
-charts.funnelFollows = new Chart(document.getElementById('chartFunnelFollows'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follows', data: [421, 56, 8], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { const total = 485; const pct = (ctx.parsed.y / total * 100).toFixed(1); return 'Follows: ' + ctx.parsed.y + ' (' + pct + '%)'; } } } }, scales: { y: { beginAtZero: true } } }
-});
-
-// Funnel 3s+ Video View Rate
-charts.funnelVideoRate = new Chart(document.getElementById('chartFunnelVideoRate'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: '3s+ View Rate', data: [39, 4.0, 16], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8', '#a78bfa', '#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '3s+ View Rate: ' + ctx.parsed.y + '%' } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
-});
-
-// TikTok Funnel Charts
-charts.tkFunnelSpend = new Chart(document.getElementById('chartTkFunnelSpend'), {
-  type: 'doughnut',
-  data: { labels: ['TOF — $0', 'MOF — $0', 'BOF — $0'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#38bdf8', '#a78bfa', '#f97316'], borderWidth: 0 }] },
-  options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(ctx) { const total = ctx.dataset.data.reduce((a,b) => a+b, 0) || 1; return ctx.label.split(' — ')[0] + ': $' + ctx.parsed.toLocaleString(undefined, {minimumFractionDigits:2}) + ' (' + (ctx.parsed/total*100).toFixed(1) + '%)'; } } } } }
-});
-
-charts.tkFunnelFollowCPA = new Chart(document.getElementById('chartTkFunnelFollowCPA'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follow CPA ($)', data: [0,0,0], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } } }
-});
-
-charts.tkFunnelFollows = new Chart(document.getElementById('chartTkFunnelFollows'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Follows', data: [0,0,0], borderColor: '#4f8df9', backgroundColor: 'rgba(79,141,249,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-});
-
-charts.tkFunnelVideoRate = new Chart(document.getElementById('chartTkFunnelVideoRate'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: '2s+ View Rate', data: [0,0,0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '2s+ View Rate: ' + ctx.parsed.y.toFixed(1) + '%' } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
-});
-
-charts.tkFunnelPV = new Chart(document.getElementById('chartTkFunnelPV'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Profile Visits', data: [0,0,0], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-});
-
-charts.tkFunnelReach = new Chart(document.getElementById('chartTkFunnelReach'), {
-  type: 'line',
-  data: { labels: ['TOF', 'MOF', 'BOF'], datasets: [{ label: 'Reach', data: [0,0,0], borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.15)', fill: true, tension: 0.3, pointRadius: 6, pointBackgroundColor: ['#38bdf8','#a78bfa','#f97316'] }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-});
+/* Helper to render initial default charts */
+function renderInitialCharts() {
+  // Overview line charts
+  document.getElementById('chartWeeklySpend').innerHTML = buildLineChart(weekLabels, [
+    {id:'wm',label:'Meta',color:'#4f8df9',data:[339.83,3089.18,3653.33,1913.57,104.08]},
+    {id:'wt',label:'TikTok',color:'#ff3b5c',data:[0,0,841.03,0,0]}
+  ], {yFormat: fmtDollar});
+  document.getElementById('chartWeeklyCTR').innerHTML = buildLineChart(weekLabels, [
+    {id:'mc',label:'Meta CTR',color:'#4f8df9',data:[5.9,7.1,4.4,2.9,0.3]},
+    {id:'tc',label:'TikTok CTR',color:'#ff3b5c',data:[0,0,0.0,0,0]}
+  ], {yFormat: fmtPct, height:260});
+  document.getElementById('chartWeeklyCVR').innerHTML = buildLineChart(weekLabels, [
+    {id:'mcv',label:'Meta CVR',color:'#4f8df9',data:[0.0,1.2,1.5,0.0,0.0]},
+    {id:'tcv',label:'TikTok CVR',color:'#ff3b5c',data:[0,0,1.0,0,0]}
+  ], {yFormat: fmtPct, height:260});
+  document.getElementById('chartWeekly3s').innerHTML = buildLineChart(weekLabels, [
+    {id:'m3',label:'Meta 3s+ Views',color:'#4f8df9',data:[56,101648,115425,39890,0]},
+    {id:'t3',label:'TikTok 2s+ Views',color:'#ff3b5c',data:[0,0,126670,0,0]}
+  ], {yFormat: fmtK});
+  // Spend Pie
+  document.getElementById('chartSpendPie').innerHTML = buildDoughnutChart([
+    {label:'Meta TOF',value:5758.53,color:'#38bdf8'},{label:'Meta MOF',value:1009.51,color:'#a78bfa'},
+    {label:'Meta BOF',value:314.30,color:'#f97316'},{label:'TikTok TOF',value:841.03,color:'#ff3b5c'}
+  ]);
+  // Meta CTR
+  document.getElementById('chartMetaCTR').innerHTML = buildLineChart(['W1','W2','W3','W4','W5'], [
+    {id:'msc',label:'Meta Sum CTR',color:'#4f8df9',data:[5.9,7.1,4.4,2.9,0.3]},
+    {id:'tofc',label:'TOF CTR',color:'#38bdf8',data:[6.4,7.1,5.0,4.3,0]},
+    {id:'mofc',label:'MOF CTR',color:'#a78bfa',data:[5.3,5.4,2.5,2.3,0]},
+    {id:'bofc',label:'BOF CTR',color:'#f97316',data:[0.7,0.7,1.0,1.1,0.3]}
+  ], {yFormat: fmtPct});
+  // Meta Video Funnel
+  document.getElementById('chartVideoFunnel').innerHTML = buildLineChart(['3s+','25%','50%','75%','95%'], [
+    {id:'vf',label:'Video Views',color:'#4f8df9',data:[220790,199544,133591,88305,66620]}
+  ], {yFormat: fmtK});
+  // Meta Video Rate
+  document.getElementById('chartMetaVideoRate').innerHTML = buildLineChart(weekLabels, [
+    {id:'vr3',label:'3s+ Rate',color:'#4f8df9',data:[0,38,31,26,0]},
+    {id:'vr25',label:'25% Rate',color:'#38bdf8',data:[0,36,29,23,0]},
+    {id:'vr50',label:'50% Rate',color:'#a78bfa',data:[0,25,18,12,0]},
+    {id:'vr75',label:'75% Rate',color:'#f97316',data:[0,17,69,7,0]},
+    {id:'vr95',label:'95% Rate',color:'#f87171',data:[0,13,9,5,0]}
+  ], {yFormat: fmtPct});
+  // TikTok Video Completion
+  document.getElementById('chartTiktokVideo').innerHTML = buildLineChart(['2s+ (54%)','25% (39%)','50% (27%)','75% (13%)','100% (6%)'], [
+    {id:'tv',label:'Video Views',color:'#ff3b5c',data:[126670,90506,62553,29178,12893]}
+  ], {yFormat: fmtK});
+  // TikTok Engagement
+  document.getElementById('chartTiktokEngagement').innerHTML = buildDoughnutChart([
+    {label:'Likes 426',value:426,color:'#ff3b5c'},{label:'Comments 51',value:51,color:'#f97316'},
+    {label:'Saves 35',value:35,color:'#a78bfa'},{label:'Shares 3',value:3,color:'#38bdf8'}
+  ]);
+  // TikTok Video Rate
+  document.getElementById('chartTiktokVideoRate').innerHTML = buildLineChart(['2/23','2/24','2/25','2/26','2/27'], [
+    {id:'tvr2',label:'2s+ Rate',color:'#ff3b5c',data:[55,55,53,54,55]},
+    {id:'tvr25',label:'25% Rate',color:'#f97316',data:[40,40,37,38,40]},
+    {id:'tvr50',label:'50% Rate',color:'#a78bfa',data:[28,28,25,26,27]},
+    {id:'tvr75',label:'75% Rate',color:'#38bdf8',data:[13,13,12,12,13]},
+    {id:'tvr100',label:'100% Rate',color:'#30d158',data:[6,6,5,5,6]}
+  ], {yFormat: fmtPct});
+  // Funnel Spend (doughnut)
+  document.getElementById('chartFunnelSpend').innerHTML = buildDoughnutChart([
+    {label:'TOF $5,759',value:5758.53,color:'#38bdf8'},{label:'MOF $1,010',value:1009.51,color:'#a78bfa'},
+    {label:'BOF $314',value:314.30,color:'#f97316'}
+  ]);
+  // Funnel line charts
+  document.getElementById('chartFunnelCPC').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'fcpc',label:'CPC ($)',color:'#a78bfa',data:[0.17,0.44,2.07]}
+  ], {yFormat: fmtDollar});
+  document.getElementById('chartFunnelCTR').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'fctr',label:'CTR (%)',color:'#38bdf8',data:[6.1,2.7,1.0]}
+  ], {yFormat: fmtPct});
+  document.getElementById('chartFunnelFollowCPA').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'ffcpa',label:'Follow CPA ($)',color:'#f97316',data:[13.68,18.03,39.29]}
+  ], {yFormat: fmtDollar});
+  document.getElementById('chartFunnelFollows').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'ff',label:'Follows',color:'#4f8df9',data:[421,56,8]}
+  ], {yFormat: fmtNum});
+  document.getElementById('chartFunnelVideoRate').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'fvr',label:'3s+ View Rate',color:'#ff3b5c',data:[39,4.0,16]}
+  ], {yFormat: fmtPct});
+  // TikTok Funnel charts
+  document.getElementById('chartTkFunnelSpend').innerHTML = buildDoughnutChart([
+    {label:'TOF',value:0,color:'#38bdf8'},{label:'MOF',value:0,color:'#a78bfa'},{label:'BOF',value:0,color:'#f97316'}
+  ]);
+  document.getElementById('chartTkFunnelFollowCPA').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkfcpa',label:'Follow CPA ($)',color:'#f97316',data:[0,0,0]}
+  ], {yFormat: fmtDollar});
+  document.getElementById('chartTkFunnelFollows').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkff',label:'Follows',color:'#4f8df9',data:[0,0,0]}
+  ], {yFormat: fmtNum});
+  document.getElementById('chartTkFunnelVideoRate').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkvr',label:'2s+ View Rate',color:'#ff3b5c',data:[0,0,0]}
+  ], {yFormat: fmtPct});
+  document.getElementById('chartTkFunnelPV').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkpv',label:'Profile Visits',color:'#ff3b5c',data:[0,0,0]}
+  ], {yFormat: fmtNum});
+  document.getElementById('chartTkFunnelReach').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkr',label:'Reach',color:'#38bdf8',data:[0,0,0]}
+  ], {yFormat: fmtNum});
+}
+renderInitialCharts();
 
 // =============================================
 // GOOGLE SHEETS LIVE DATA FETCHER
@@ -1583,35 +1618,53 @@ function updateOverviewForPeriod() {
   var followCPA = totalFollows > 0 ? (totalSpend / totalFollows) : 0;
   if (kpis[8]) { kpis[8].querySelector('.kpi-label').textContent = 'Follow CPA'; kpis[8].querySelector('.kpi-value').textContent = followCPA > 0 ? '$' + followCPA.toFixed(2) : '—'; kpis[8].querySelector('.kpi-sub').textContent = 'Spend / Follows'; }
 
-  const isAll = selectedWeeks.length === 5;
-  [charts.weeklySpend, charts.weeklyCTR, charts.weeklyCVR, charts.weekly3s].forEach(chart => {
-    if (!chart) return;
-    chart.data.datasets.forEach(ds => {
-      if (!isAll && ds.data) {
-        ds.pointBackgroundColor = ds.data.map((_, i) => selectedWeeks.includes(i) ? ds.borderColor : 'rgba(128,128,128,0.3)');
-        ds.pointRadius = ds.data.map((_, i) => selectedWeeks.includes(i) ? 5 : 3);
-        ds.segment = { borderColor: ctx => { const idx = ctx.p0DataIndex; if (selectedWeeks.includes(idx) && selectedWeeks.includes(idx + 1)) return undefined; return 'rgba(128,128,128,0.25)'; }};
-      } else { ds.pointBackgroundColor = ds.borderColor; ds.pointRadius = 4; ds.segment = undefined; }
-    });
-    chart.update();
-  });
+  // Re-render SVG charts with live data
+  if (S.metaSum && S.metaSum['Expense']) {
+    var metaSpendW = getWeekly(S.metaSum['Expense']);
+    var tkSpendW = (S.tiktokTOF || S.tiktokSum || {})['Expense'] ? getWeekly((S.tiktokTOF || S.tiktokSum || {})['Expense']) : [0,0,0,0,0];
+    document.getElementById('chartWeeklySpend').innerHTML = buildLineChart(weekLabels, [
+      {id:'wm',label:'Meta',color:'#4f8df9',data:metaSpendW},
+      {id:'wt',label:'TikTok',color:'#ff3b5c',data:tkSpendW}
+    ], {yFormat: fmtDollar});
+  }
+  if (S.metaSum && S.metaSum['CTR(%)']) {
+    var metaCTRw = getWeekly(S.metaSum['CTR(%)']).map(function(v) { return v || 0; });
+    document.getElementById('chartWeeklyCTR').innerHTML = buildLineChart(weekLabels, [
+      {id:'mc',label:'Meta CTR',color:'#4f8df9',data:metaCTRw},
+      {id:'tc',label:'TikTok CTR',color:'#ff3b5c',data:[0,0,0,0,0]}
+    ], {yFormat: fmtPct, height:260});
+  }
+  // Weekly CVR
+  if (S.metaSum && S.metaSum['Profile visit -> Follow CVR(%)']) {
+    var metaCVRw = getWeekly(S.metaSum['Profile visit -> Follow CVR(%)']).map(function(v){return v||0;});
+    document.getElementById('chartWeeklyCVR').innerHTML = buildLineChart(weekLabels, [
+      {id:'mcv',label:'Meta CVR',color:'#4f8df9',data:metaCVRw},
+      {id:'tcv',label:'TikTok CVR',color:'#ff3b5c',data:[0,0,0,0,0]}
+    ], {yFormat: fmtPct, height:260});
+  }
+  if (S.metaSum && S.metaSum['3s+ video views']) {
+    var meta3sw = getWeekly(S.metaSum['3s+ video views']);
+    var ts2 = S.tiktokTOF || S.tiktokSum || {};
+    var tk3sw = (ts2['2s+ video views'] || ts2['3s+ video views']) ? getWeekly(ts2['2s+ video views'] || ts2['3s+ video views']) : [0,0,0,0,0];
+    document.getElementById('chartWeekly3s').innerHTML = buildLineChart(weekLabels, [
+      {id:'m3',label:'Meta 3s+ Views',color:'#4f8df9',data:meta3sw},
+      {id:'t3',label:'TikTok 2s+ Views',color:'#ff3b5c',data:tk3sw}
+    ], {yFormat: fmtK});
+  }
 
-  if (charts.spendPie) {
-    const mt = S.metaTOF || {}, mm = S.metaMOF || {}, mb = S.metaBOF || {};
-    const tt = S.tiktokTOF || {}, tm = S.tiktokMOF || {}, tb = S.tiktokBOF || {};
+  // Spend Pie
+  {
+    const mt2 = S.metaTOF || {}, mm2 = S.metaMOF || {}, mb2 = S.metaBOF || {};
+    const tt2 = S.tiktokTOF || {}, tm2 = S.tiktokMOF || {}, tb2 = S.tiktokBOF || {};
     const segs = [
-      { label: 'Meta TOF', val: getSelectedSum(mt['Expense']), color: '#38bdf8' },
-      { label: 'Meta MOF', val: getSelectedSum(mm['Expense']), color: '#a78bfa' },
-      { label: 'Meta BOF', val: getSelectedSum(mb['Expense']), color: '#f97316' },
-      { label: 'TikTok TOF', val: getSelectedSum(tt['Expense']), color: '#ff3b5c' },
-      { label: 'TikTok MOF', val: getSelectedSum(tm['Expense']), color: '#fb923c' },
-      { label: 'TikTok BOF', val: getSelectedSum(tb['Expense']), color: '#fbbf24' },
-    ].filter(s => s.val > 0);
-    const total = segs.reduce((a, s) => a + s.val, 0) || 1;
-    charts.spendPie.data.labels = segs.map(s => `${s.label} — $${fn(Math.round(s.val))} (${(s.val/total*100).toFixed(1)}%)`);
-    charts.spendPie.data.datasets[0].data = segs.map(s => s.val);
-    charts.spendPie.data.datasets[0].backgroundColor = segs.map(s => s.color);
-    charts.spendPie.update();
+      { label: 'Meta TOF', value: getSelectedSum(mt2['Expense']), color: '#38bdf8' },
+      { label: 'Meta MOF', value: getSelectedSum(mm2['Expense']), color: '#a78bfa' },
+      { label: 'Meta BOF', value: getSelectedSum(mb2['Expense']), color: '#f97316' },
+      { label: 'TikTok TOF', value: getSelectedSum(tt2['Expense']), color: '#ff3b5c' },
+      { label: 'TikTok MOF', value: getSelectedSum(tm2['Expense']), color: '#fb923c' },
+      { label: 'TikTok BOF', value: getSelectedSum(tb2['Expense']), color: '#fbbf24' },
+    ].filter(function(s) { return s.value > 0; });
+    document.getElementById('chartSpendPie').innerHTML = buildDoughnutChart(segs);
   }
 
   const metaLikes = getSelectedSum(ms['Content like']);
@@ -1689,6 +1742,35 @@ function updateMetaForPeriod() {
     const vals = [ fn(Math.round(v)), fn(Math.round(reach)) || '—', fn(Math.round(c)), v > 0 ? (c / v * 100).toFixed(1) + '%' : '—', c > 0 ? '$' + (s / c).toFixed(2) : '—', v > 0 ? '$' + (s / v * 1000).toFixed(2) : '—', fn(Math.round(profV)), fn(Math.round(f)), f > 0 ? '$' + (s / f).toFixed(2) : '—', fn(Math.round(v3s)), v > 0 ? (v3s / v * 100).toFixed(0) + '%' : '—' ];
     vals.forEach((val, i) => { if (rows[i]) rows[i].textContent = val || '—'; });
   });
+
+  // Re-render Meta CTR by funnel SVG
+  if (ms['CTR(%)']) {
+    var msCTRw = getWeekly(ms['CTR(%)']).map(function(v){return v||0;});
+    var tofCTRw = mt['CTR(%)'] ? getWeekly(mt['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    var mofCTRw = mm['CTR(%)'] ? getWeekly(mm['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    var bofCTRw = mb['CTR(%)'] ? getWeekly(mb['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    document.getElementById('chartMetaCTR').innerHTML = buildLineChart(['W1','W2','W3','W4','W5'], [
+      {id:'msc',label:'Meta Sum CTR',color:'#4f8df9',data:msCTRw},
+      {id:'tofc',label:'TOF CTR',color:'#38bdf8',data:tofCTRw},
+      {id:'mofc',label:'MOF CTR',color:'#a78bfa',data:mofCTRw},
+      {id:'bofc',label:'BOF CTR',color:'#f97316',data:bofCTRw}
+    ], {yFormat: fmtPct});
+  }
+  // Re-render Meta Video View Rate SVG
+  if (ms['3s+ video views rate']) {
+    var vr3w = getWeekly(ms['3s+ video views rate'] || []).map(function(v){return v||0;});
+    var vr25w = ms['25% video views rate'] ? getWeekly(ms['25% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    var vr50w = ms['50% video views rate'] ? getWeekly(ms['50% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    var vr75w = ms['75% video views rate'] ? getWeekly(ms['75% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    var vr95w = ms['95% video views rate'] ? getWeekly(ms['95% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    document.getElementById('chartMetaVideoRate').innerHTML = buildLineChart(weekLabels, [
+      {id:'vr3',label:'3s+ Rate',color:'#4f8df9',data:vr3w},
+      {id:'vr25',label:'25% Rate',color:'#38bdf8',data:vr25w},
+      {id:'vr50',label:'50% Rate',color:'#a78bfa',data:vr50w},
+      {id:'vr75',label:'75% Rate',color:'#f97316',data:vr75w},
+      {id:'vr95',label:'95% Rate',color:'#f87171',data:vr95w}
+    ], {yFormat: fmtPct});
+  }
 
   const fwTable = document.querySelector('#metaFunnelWeeklyTable tbody');
   if (fwTable) {
@@ -1788,28 +1870,33 @@ function updateTiktokForPeriod() {
     vals.forEach((val, i) => { if (rows[i]) rows[i].textContent = val || '—'; });
   });
 
-  if (charts.tiktokVideo) {
+  // TikTok Video Completion SVG
+  {
     const tv2s = getSelectedSum(ts['2s+ video views'] || ts['3s+ video views']);
     const tv25 = getSelectedSum(ts['25% video views']);
     const tv50 = getSelectedSum(ts['50% video views']);
     const tv75 = getSelectedSum(ts['75% video views']);
     const tv100 = getSelectedSum(ts['100% video views']);
     const tvViews = getSelectedSum(ts['View']) || 1;
-    charts.tiktokVideo.data.datasets[0].data = [tv2s, tv25, tv50, tv75, tv100];
-    charts.tiktokVideo.data.labels = [ `2s+ (${tvViews > 1 ? Math.round(tv2s/tvViews*100) : 0}%)`, `25% (${tvViews > 1 ? Math.round(tv25/tvViews*100) : 0}%)`, `50% (${tvViews > 1 ? Math.round(tv50/tvViews*100) : 0}%)`, `75% (${tvViews > 1 ? Math.round(tv75/tvViews*100) : 0}%)`, `100% (${tvViews > 1 ? Math.round(tv100/tvViews*100) : 0}%)` ];
-    charts.tiktokVideo.options.plugins.tooltip = { callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' views (' + (tvViews > 1 ? Math.round(ctx.parsed.y/tvViews*100) : 0) + '%)'; } } };
-    charts.tiktokVideo.update();
+    document.getElementById('chartTiktokVideo').innerHTML = buildLineChart(
+      [`2s+ (${tvViews > 1 ? Math.round(tv2s/tvViews*100) : 0}%)`, `25% (${tvViews > 1 ? Math.round(tv25/tvViews*100) : 0}%)`, `50% (${tvViews > 1 ? Math.round(tv50/tvViews*100) : 0}%)`, `75% (${tvViews > 1 ? Math.round(tv75/tvViews*100) : 0}%)`, `100% (${tvViews > 1 ? Math.round(tv100/tvViews*100) : 0}%)`],
+      [{id:'tv',label:'Video Views',color:'#ff3b5c',data:[tv2s,tv25,tv50,tv75,tv100]}],
+      {yFormat: fmtK}
+    );
   }
 
-  if (charts.tiktokEngagement) {
+  // TikTok Engagement SVG
+  {
     const eLikes = getSelectedSum(ts['Content like']);
     const eComments = getSelectedSum(ts['Content comment']);
     const eSaves = getSelectedSum(ts['Content save']);
     const eShares = getSelectedSum(ts['Content share']);
-    const eTotal = eLikes + eComments + eSaves + eShares || 1;
-    charts.tiktokEngagement.data.labels = [ `Likes — ${fn(Math.round(eLikes))} (${(eLikes/eTotal*100).toFixed(1)}%)`, `Comments — ${fn(Math.round(eComments))} (${(eComments/eTotal*100).toFixed(1)}%)`, `Saves — ${fn(Math.round(eSaves))} (${(eSaves/eTotal*100).toFixed(1)}%)`, `Shares — ${fn(Math.round(eShares))} (${(eShares/eTotal*100).toFixed(1)}%)` ];
-    charts.tiktokEngagement.data.datasets[0].data = [eLikes, eComments, eSaves, eShares];
-    charts.tiktokEngagement.update();
+    document.getElementById('chartTiktokEngagement').innerHTML = buildDoughnutChart([
+      {label:'Likes ' + fn(Math.round(eLikes)), value:eLikes, color:'#ff3b5c'},
+      {label:'Comments ' + fn(Math.round(eComments)), value:eComments, color:'#f97316'},
+      {label:'Saves ' + fn(Math.round(eSaves)), value:eSaves, color:'#a78bfa'},
+      {label:'Shares ' + fn(Math.round(eShares)), value:eShares, color:'#38bdf8'}
+    ]);
   }
 
   const tkFwTable = document.querySelector('#tiktokFunnelWeeklyTable tbody');
@@ -1885,16 +1972,36 @@ function updateFunnelForPeriod() {
   });
 
   const tofSpend = getSelectedSum(mt['Expense']); const mofSpend = getSelectedSum(mm['Expense']); const bofSpend = getSelectedSum(mb['Expense']);
-  if (charts.funnelSpend) { const total = tofSpend + mofSpend + bofSpend || 1; charts.funnelSpend.data.labels = [ `TOF — $${fn(Math.round(tofSpend))} (${(tofSpend/total*100).toFixed(1)}%)`, `MOF — $${fn(Math.round(mofSpend))} (${(mofSpend/total*100).toFixed(1)}%)`, `BOF — $${fn(Math.round(bofSpend))} (${(bofSpend/total*100).toFixed(1)}%)` ]; charts.funnelSpend.data.datasets[0].data = [tofSpend, mofSpend, bofSpend]; charts.funnelSpend.update(); }
+  document.getElementById('chartFunnelSpend').innerHTML = buildDoughnutChart([
+    {label:'TOF $' + fn(Math.round(tofSpend)), value:tofSpend, color:'#38bdf8'},
+    {label:'MOF $' + fn(Math.round(mofSpend)), value:mofSpend, color:'#a78bfa'},
+    {label:'BOF $' + fn(Math.round(bofSpend)), value:bofSpend, color:'#f97316'}
+  ]);
   const tofClicks = getSelectedSum(mt['Click']); const mofClicks = getSelectedSum(mm['Click']); const bofClicks = getSelectedSum(mb['Click']);
-  if (charts.funnelCPC) { charts.funnelCPC.data.datasets[0].data = [ tofClicks > 0 ? tofSpend/tofClicks : 0, mofClicks > 0 ? mofSpend/mofClicks : 0, bofClicks > 0 ? bofSpend/bofClicks : 0 ]; charts.funnelCPC.update(); }
+  document.getElementById('chartFunnelCPC').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'fcpc',label:'CPC ($)',color:'#a78bfa',data:[tofClicks>0?tofSpend/tofClicks:0, mofClicks>0?mofSpend/mofClicks:0, bofClicks>0?bofSpend/bofClicks:0]}
+  ], {yFormat: fmtDollar});
   const tofViews = getSelectedSum(mt['View']); const mofViews = getSelectedSum(mm['View']); const bofViews = getSelectedSum(mb['View']);
-  if (charts.funnelCTR) { charts.funnelCTR.data.datasets[0].data = [ tofViews > 0 ? tofClicks/tofViews*100 : 0, mofViews > 0 ? mofClicks/mofViews*100 : 0, bofViews > 0 ? bofClicks/bofViews*100 : 0 ]; charts.funnelCTR.update(); }
+  document.getElementById('chartFunnelCTR').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'fctr',label:'CTR (%)',color:'#38bdf8',data:[tofViews>0?tofClicks/tofViews*100:0, mofViews>0?mofClicks/mofViews*100:0, bofViews>0?bofClicks/bofViews*100:0]}
+  ], {yFormat: fmtPct});
   const tofFollow = getSelectedSum(mt['Follow']); const mofFollow = getSelectedSum(mm['Follow']); const bofFollow = getSelectedSum(mb['Follow']);
-  if (charts.funnelFollowCPA) { charts.funnelFollowCPA.data.datasets[0].data = [ tofFollow > 0 ? tofSpend/tofFollow : 0, mofFollow > 0 ? mofSpend/mofFollow : 0, bofFollow > 0 ? bofSpend/bofFollow : 0 ]; charts.funnelFollowCPA.update(); }
-  if (charts.funnelFollows) { charts.funnelFollows.data.datasets[0].data = [tofFollow, mofFollow, bofFollow]; charts.funnelFollows.update(); }
-  if (charts.funnelVideoRate) { const tof3s = getSelectedSum(mt['3s+ video views']); const mof3s = getSelectedSum(mm['3s+ video views']); const bof3s = getSelectedSum(mb['3s+ video views']); charts.funnelVideoRate.data.datasets[0].data = [ tofViews > 0 ? tof3s/tofViews*100 : 0, mofViews > 0 ? mof3s/mofViews*100 : 0, bofViews > 0 ? bof3s/bofViews*100 : 0 ]; charts.funnelVideoRate.update(); }
-  if (charts.videoFunnel && mt['3s+ video views']) { const vf3s = getSelectedSum(mt['3s+ video views']); const vf25 = getSelectedSum(mt['25% video views']); const vf50 = getSelectedSum(mt['50% video views']); const vf75 = getSelectedSum(mt['75% video views']); const vf95 = getSelectedSum(mt['95% video views']); const vfBase = vf3s || 1; charts.videoFunnel.data.datasets[0].data = [vf3s, vf25, vf50, vf75, vf95]; charts.videoFunnel.data.labels = [ `3s+ (100%)`, `25% (${Math.round(vf25/vfBase*100)}%)`, `50% (${Math.round(vf50/vfBase*100)}%)`, `75% (${Math.round(vf75/vfBase*100)}%)`, `95% (${Math.round(vf95/vfBase*100)}%)` ]; charts.videoFunnel.options.plugins.tooltip.callbacks.label = function(ctx) { return ctx.parsed.y.toLocaleString() + ' views (' + Math.round(ctx.parsed.y/vfBase*100) + '%)'; }; charts.videoFunnel.update(); }
+  document.getElementById('chartFunnelFollowCPA').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'ffcpa',label:'Follow CPA ($)',color:'#f97316',data:[tofFollow>0?tofSpend/tofFollow:0, mofFollow>0?mofSpend/mofFollow:0, bofFollow>0?bofSpend/bofFollow:0]}
+  ], {yFormat: fmtDollar});
+  document.getElementById('chartFunnelFollows').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'ff',label:'Follows',color:'#4f8df9',data:[tofFollow, mofFollow, bofFollow]}
+  ], {yFormat: fmtNum});
+  { const tof3s = getSelectedSum(mt['3s+ video views']); const mof3s = getSelectedSum(mm['3s+ video views']); const bof3s = getSelectedSum(mb['3s+ video views']);
+  document.getElementById('chartFunnelVideoRate').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'fvr',label:'3s+ View Rate',color:'#ff3b5c',data:[tofViews>0?tof3s/tofViews*100:0, mofViews>0?mof3s/mofViews*100:0, bofViews>0?bof3s/bofViews*100:0]}
+  ], {yFormat: fmtPct}); }
+  if (mt['3s+ video views']) { const vf3s = getSelectedSum(mt['3s+ video views']); const vf25 = getSelectedSum(mt['25% video views']); const vf50 = getSelectedSum(mt['50% video views']); const vf75 = getSelectedSum(mt['75% video views']); const vf95 = getSelectedSum(mt['95% video views']); const vfBase = vf3s || 1;
+  document.getElementById('chartVideoFunnel').innerHTML = buildLineChart(
+    [`3s+ (100%)`, `25% (${Math.round(vf25/vfBase*100)}%)`, `50% (${Math.round(vf50/vfBase*100)}%)`, `75% (${Math.round(vf75/vfBase*100)}%)`, `95% (${Math.round(vf95/vfBase*100)}%)`],
+    [{id:'vf',label:'Video Views',color:'#4f8df9',data:[vf3s,vf25,vf50,vf75,vf95]}],
+    {yFormat: fmtK}
+  ); }
 
   const tt = S.tiktokTOF || {}; const tm = S.tiktokMOF || {}; const tb = S.tiktokBOF || {};
   const tkSections = [tt, tm, tb];
@@ -1919,14 +2026,29 @@ function updateFunnelForPeriod() {
   });
 
   const ttSpend = getSelectedSum(tt['Expense']); const tmSpend = getSelectedSum(tm['Expense']); const tbSpend = getSelectedSum(tb['Expense']);
-  if (charts.tkFunnelSpend) { const total = ttSpend + tmSpend + tbSpend || 1; charts.tkFunnelSpend.data.labels = [ `TOF — $${fn(Math.round(ttSpend))} (${(ttSpend/total*100).toFixed(1)}%)`, `MOF — $${fn(Math.round(tmSpend))} (${(tmSpend/total*100).toFixed(1)}%)`, `BOF — $${fn(Math.round(tbSpend))} (${(tbSpend/total*100).toFixed(1)}%)` ]; charts.tkFunnelSpend.data.datasets[0].data = [ttSpend, tmSpend, tbSpend]; charts.tkFunnelSpend.update(); }
+  document.getElementById('chartTkFunnelSpend').innerHTML = buildDoughnutChart([
+    {label:'TOF $' + fn(Math.round(ttSpend)), value:ttSpend, color:'#38bdf8'},
+    {label:'MOF $' + fn(Math.round(tmSpend)), value:tmSpend, color:'#a78bfa'},
+    {label:'BOF $' + fn(Math.round(tbSpend)), value:tbSpend, color:'#f97316'}
+  ]);
   const ttFollow = getSelectedSum(tt['Follow']); const tmFollow = getSelectedSum(tm['Follow']); const tbFollow = getSelectedSum(tb['Follow']);
-  if (charts.tkFunnelFollowCPA) { charts.tkFunnelFollowCPA.data.datasets[0].data = [ ttFollow > 0 ? ttSpend/ttFollow : 0, tmFollow > 0 ? tmSpend/tmFollow : 0, tbFollow > 0 ? tbSpend/tbFollow : 0 ]; charts.tkFunnelFollowCPA.update(); }
-  if (charts.tkFunnelFollows) { charts.tkFunnelFollows.data.datasets[0].data = [ttFollow, tmFollow, tbFollow]; charts.tkFunnelFollows.update(); }
+  document.getElementById('chartTkFunnelFollowCPA').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkfcpa',label:'Follow CPA ($)',color:'#f97316',data:[ttFollow>0?ttSpend/ttFollow:0, tmFollow>0?tmSpend/tmFollow:0, tbFollow>0?tbSpend/tbFollow:0]}
+  ], {yFormat: fmtDollar});
+  document.getElementById('chartTkFunnelFollows').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkff',label:'Follows',color:'#4f8df9',data:[ttFollow, tmFollow, tbFollow]}
+  ], {yFormat: fmtNum});
   const ttViews = getSelectedSum(tt['View']); const tmViews = getSelectedSum(tm['View']); const tbViews = getSelectedSum(tb['View']);
-  if (charts.tkFunnelVideoRate) { const tt2s = getSelectedSum(tt['2s+ video views'] || tt['3s+ video views']); const tm2s = getSelectedSum(tm['2s+ video views'] || tm['3s+ video views']); const tb2s = getSelectedSum(tb['2s+ video views'] || tb['3s+ video views']); charts.tkFunnelVideoRate.data.datasets[0].data = [ ttViews > 0 ? tt2s/ttViews*100 : 0, tmViews > 0 ? tm2s/tmViews*100 : 0, tbViews > 0 ? tb2s/tbViews*100 : 0 ]; charts.tkFunnelVideoRate.update(); }
-  if (charts.tkFunnelPV) { charts.tkFunnelPV.data.datasets[0].data = [ getSelectedSum(tt['Profile visit']), getSelectedSum(tm['Profile visit']), getSelectedSum(tb['Profile visit']) ]; charts.tkFunnelPV.update(); }
-  if (charts.tkFunnelReach) { charts.tkFunnelReach.data.datasets[0].data = [ getSelectedSum(tt['Reach']), getSelectedSum(tm['Reach']), getSelectedSum(tb['Reach']) ]; charts.tkFunnelReach.update(); }
+  { const tt2s = getSelectedSum(tt['2s+ video views'] || tt['3s+ video views']); const tm2s = getSelectedSum(tm['2s+ video views'] || tm['3s+ video views']); const tb2s = getSelectedSum(tb['2s+ video views'] || tb['3s+ video views']);
+  document.getElementById('chartTkFunnelVideoRate').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkvr',label:'2s+ View Rate',color:'#ff3b5c',data:[ttViews>0?tt2s/ttViews*100:0, tmViews>0?tm2s/tmViews*100:0, tbViews>0?tb2s/tbViews*100:0]}
+  ], {yFormat: fmtPct}); }
+  document.getElementById('chartTkFunnelPV').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkpv',label:'Profile Visits',color:'#ff3b5c',data:[getSelectedSum(tt['Profile visit']), getSelectedSum(tm['Profile visit']), getSelectedSum(tb['Profile visit'])]}
+  ], {yFormat: fmtNum});
+  document.getElementById('chartTkFunnelReach').innerHTML = buildLineChart(['TOF','MOF','BOF'], [
+    {id:'tkr',label:'Reach',color:'#38bdf8',data:[getSelectedSum(tt['Reach']), getSelectedSum(tm['Reach']), getSelectedSum(tb['Reach'])]}
+  ], {yFormat: fmtNum});
 }
 
 function updateDashboard(rows) {
@@ -1947,9 +2069,7 @@ function updateDashboard(rows) {
   const metaFollows = getSelectedSum(ms['Follow']);
   const meta3s = getSelectedSum(ms['3s+ video views']);
 
-  if (ms['Expense'] && charts.weeklySpend) { charts.weeklySpend.data.datasets[0].data = getWeekly(ms['Expense']); charts.weeklySpend.data.datasets[1].data = ts['Expense'] ? getWeekly(ts['Expense']) : [0,0,0,0,0]; charts.weeklySpend.update(); }
-  if (ms['CTR(%)'] && charts.weeklyCTR) { charts.weeklyCTR.data.datasets[0].data = getWeekly(ms['CTR(%)']).map(v => v || null); charts.weeklyCTR.update(); }
-  if (ms['3s+ video views'] && charts.weekly3s) { charts.weekly3s.data.datasets[0].data = getWeekly(ms['3s+ video views']); if (ts['2s+ video views'] || ts['3s+ video views']) charts.weekly3s.data.datasets[1].data = getWeekly(ts['2s+ video views'] || ts['3s+ video views']); charts.weekly3s.update(); }
+  // Weekly charts are now rendered in updateOverviewForPeriod() via SVG
 
   const metaTable = document.querySelector('#metaWeeklySummaryTable tbody');
   if (metaTable && ms['Expense']) {
