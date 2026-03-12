@@ -803,6 +803,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             if success:
+                auto_push_to_github()
                 with open(DATA_PATH) as f:
                     data = json.load(f)
                 self.wfile.write(json.dumps({
@@ -867,13 +868,42 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             pass
 
 
+def auto_push_to_github():
+    """data.js 변경 시 자동으로 GitHub에 push (GitHub Pages 실시간 반영)"""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", "data.js"],
+            cwd=str(DIR), capture_output=True, text=True, timeout=10
+        )
+        if "data.js" not in result.stdout:
+            return  # 변경 없음
+        subprocess.run(["git", "add", "data.js"], cwd=str(DIR), timeout=10)
+        subprocess.run(
+            ["git", "commit", "-m", f"data: auto-update {datetime.now().strftime('%m/%d %H:%M')}"],
+            cwd=str(DIR), capture_output=True, timeout=10
+        )
+        push = subprocess.run(
+            ["git", "push", "origin", "main"],
+            cwd=str(DIR), capture_output=True, text=True, timeout=30
+        )
+        if push.returncode == 0:
+            print(f"[GIT] ✓ data.js pushed to GitHub at {datetime.now().strftime('%H:%M:%S')}")
+        else:
+            print(f"[GIT] Push failed: {push.stderr.strip()}")
+    except Exception as e:
+        print(f"[GIT] Error: {e}")
+
+
 def auto_refresh_loop():
-    """백그라운드에서 5분마다 데이터 자동 갱신"""
+    """백그라운드에서 5분마다 데이터 자동 갱신 + GitHub push"""
     while True:
         time.sleep(REFRESH_INTERVAL)
         try:
             print(f"[AUTO] Auto-refresh at {datetime.now().strftime('%H:%M:%S')}")
-            refresh_data()
+            success = refresh_data()
+            if success:
+                auto_push_to_github()
         except Exception as e:
             print(f"[AUTO] Error: {e}")
 
