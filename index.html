@@ -55,6 +55,9 @@ body{font-family:var(--sans);background:#000;color:var(--t2);line-height:1.55;fo
 .nav-title{font-size:12px;color:var(--t4);font-weight:400;padding-left:14px;border-left:1px solid rgba(255,255,255,.12);letter-spacing:.5px}
 .live-badge{font-size:7px;font-weight:600;color:var(--red);background:var(--red-dim);border:1px solid var(--red-border);padding:2px 8px;border-radius:100px;letter-spacing:1.5px;animation:pulse 3s ease-in-out infinite}
 .nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4);white-space:nowrap;overflow:hidden;flex-shrink:1;min-width:0}
+.nav-live-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
+.nav-live-status .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.nav-live-status .live-time{color:var(--t4)}
 .refresh-btn{padding:5px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--t3);cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;font-family:var(--sans)}
 .refresh-btn:hover{border-color:rgba(255,255,255,.3);color:var(--t1);background:rgba(255,255,255,.05)}
 .refresh-btn.loading{opacity:.3;pointer-events:none}
@@ -314,7 +317,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
   .nav-title{display:none}
   .live-badge{display:none}
   .nav-right{gap:8px}
-  .data-status-bar{font-size:11px;padding:5px 12px}
+  .nav-live-status .live-time{display:none}
   .tabs-area{padding-top:16px}
   .month-tabs{gap:2px}
   .month-tab{padding:6px 10px;font-size:11px}
@@ -352,9 +355,9 @@ tr:hover td{background:rgba(255,255,255,.03)}
         <a href="index.html" class="dash-switch active">Sales</a>
         <a href="performance.html" class="dash-switch">Performance</a>
       </div>
-      <span class="live-badge">LIVE</span>
     </div>
     <div class="nav-right">
+      <span id="dataStatus" class="nav-live-status"></span>
       <div id="user-bar" style="display:none;align-items:center;gap:8px">
         <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
         <span id="user-email" style="font-size:11px;color:#86868b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
@@ -363,9 +366,6 @@ tr:hover td{background:rgba(255,255,255,.03)}
     </div>
   </div>
 </nav>
-<div class="data-status-bar">
-  <span id="dataStatus"></span>
-</div>
 
 <main>
   <div class="tabs-area">
@@ -480,7 +480,7 @@ function isSub(o){return o.ch==='shopify'&&getKit(o.t)==='30day'&&fuzzyNameMatch
 function getSubCc(o){if(!o._sub)return 0;var l=o.c.toLowerCase().trim();if(subCcMap[l])return subCcMap[l];for(var n in subCcMap)if(fuzzyNameMatch(l,[n]))return subCcMap[n];return 1}
 async function loadData(){try{const r=await fetch('/api/data');if(r.ok){const d=await r.json();if(d.orders)return{data:d,source:'server'}}}catch{}try{const r=await fetch('data.json');if(r.ok){const d=await r.json();if(d.orders)return{data:d,source:'file'}}}catch{}if(window.EMBEDDED_DATA&&window.EMBEDDED_DATA.orders)return{data:window.EMBEDDED_DATA,source:'embedded'};return null}
 async function doRefresh(){try{const r=await fetch('/api/refresh');const j=await r.json();if(j.ok){const l=await loadData();if(l){DATA=l.data;initMonths();render();updateStatus(l.source)}}}catch(e){const l=await loadData();if(l){DATA=l.data;initMonths();render();updateStatus(l.source)}}}
-function updateStatus(s){const e=document.getElementById('dataStatus');if(!DATA){e.innerHTML='<span class="status-dot status-error"></span> 데이터 없음';return}const now=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});e.innerHTML='<span class="status-dot status-live"></span> Live · '+now}
+function updateStatus(s){const e=document.getElementById('dataStatus');if(!DATA){e.innerHTML='<span class="status-dot status-error"></span> 데이터 없음';return}const now=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});e.innerHTML='<span class="status-dot status-live"></span> Live<span class="live-time"> · '+now+'</span>'}
 function getMonth(d){return d?d.substring(0,7):''}
 function fmtMon(y){var p=y.split('-');return(p[0]==='2025'?"'25 ":"'26 ")+parseInt(p[1])+'월'}
 function $(a){return'$'+Math.round(a).toLocaleString()}
