@@ -628,24 +628,32 @@ function renderInventory(){
   });
   h+='</tbody></table>';
   el.innerHTML=h;
-  // Count-up animation for inventory numbers
-  setTimeout(function(){
-    document.querySelectorAll('.inv-count').forEach(function(el){
-      var target=parseInt(el.dataset.target)||0;
-      var duration=1000,start=performance.now();
-      function tick(now){
-        var t=Math.min((now-start)/duration,1);
-        var ease=1-Math.pow(1-t,3);
-        el.textContent=Math.round(ease*target).toLocaleString();
-        if(t<1)requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    });
-    // Bar fill animation
-    document.querySelectorAll('.inv-bar').forEach(function(bar){
-      requestAnimationFrame(function(){bar.style.width=bar.dataset.pct+'%'});
-    });
-  },100);
+  // Animate when inventory section scrolls into view
+  var invSection=document.getElementById('inventorySection');
+  if(invSection&&window.IntersectionObserver){
+    var invObs=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          invObs.disconnect();
+          document.querySelectorAll('.inv-count').forEach(function(c){
+            var target=parseInt(c.dataset.target)||0;
+            var duration=1000,start=performance.now();
+            function tick(now){
+              var t=Math.min((now-start)/duration,1);
+              var ease=1-Math.pow(1-t,3);
+              c.textContent=Math.round(ease*target).toLocaleString();
+              if(t<1)requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+          });
+          document.querySelectorAll('.inv-bar').forEach(function(bar){
+            requestAnimationFrame(function(){bar.style.width=bar.dataset.pct+'%'});
+          });
+        }
+      });
+    },{threshold:0.2});
+    invObs.observe(invSection);
+  }
 }
 
 function renderReview(f){
