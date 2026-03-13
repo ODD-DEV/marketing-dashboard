@@ -6,8 +6,6 @@
 <title>ODD. Content Studio</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <style>
 :root {
   --bg:#000;--bg-raised:#1c1c1e;--bg-input:#0d0d0f;--border:rgba(255,255,255,.06);
@@ -232,113 +230,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
   .carousel-container{padding:8px 0}
   .slide-card{width:140px;margin-right:6px}
 }
-/* ── AI UI ── */
-.settings-btn{position:fixed;top:20px;right:72px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:200}
-.settings-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
-.settings-btn svg{width:17px;height:17px}
-.settings-btn .dot-on{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--green);border:2px solid var(--bg)}
-.ai-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;justify-content:center}
-.ai-modal-bg.open{opacity:1;pointer-events:auto}
-.ai-modal{background:#1a1a1c;border:1px solid var(--border);border-radius:20px;width:420px;max-width:calc(100vw - 32px);padding:28px;transform:scale(.95);transition:transform .3s}
-.ai-modal-bg.open .ai-modal{transform:scale(1)}
-.ai-modal h3{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:20px}
-.ai-fg{margin-bottom:16px}
-.ai-fg label{font-size:11px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
-.ai-fg input,.ai-fg select{width:100%;padding:11px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--t1);font-size:13px;font-family:var(--sans);outline:none}
-.ai-fg input:focus{border-color:rgba(191,32,38,.4)}
-.ai-fg input::placeholder{color:var(--t5)}
-.ai-fg select{appearance:none;cursor:pointer}
-.ai-fg select option{background:#1a1a1c}
-.ai-fg .hint{font-size:10px;color:var(--t5);margin-top:5px}
-.ai-save-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;margin-top:8px}
-.ai-save-btn:hover{background:#d4343a}
-.ai-response{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:28px 28px 20px;margin-bottom:12px;animation:fadeUp .4s ease both}
-.ai-response .ai-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--red)}
-.ai-response .ai-label .dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:aiBlink 1.5s ease infinite}
-.ai-text{font-size:14px;line-height:1.75;color:var(--t2);word-break:break-word}
-.ai-text h1,.ai-text h2,.ai-text h3{color:var(--t1);margin:20px 0 10px;letter-spacing:-.2px}
-.ai-text h1{font-size:18px;font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.ai-text h2{font-size:15px;font-weight:700}
-.ai-text h3{font-size:13px;font-weight:600;color:var(--t2)}
-.ai-text strong{color:var(--t1);font-weight:600}
-.ai-text em{color:var(--t3);font-style:italic}
-.ai-text code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;font-size:12px;font-family:'SF Mono',Menlo,monospace}
-.ai-text pre{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px;margin:14px 0;overflow-x:auto}
-.ai-text pre code{background:none;padding:0;font-size:12px;line-height:1.6}
-.ai-text ul,.ai-text ol{margin:10px 0;padding-left:20px}
-.ai-text li{margin:6px 0;line-height:1.65;color:var(--t2)}
-.ai-text li::marker{color:var(--t4)}
-.ai-text p{margin:10px 0}.ai-text p:first-child{margin-top:0}.ai-text p:last-child{margin-bottom:0}
-.ai-text blockquote{border-left:3px solid var(--red);padding:8px 14px;margin:14px 0;color:var(--t3);background:rgba(255,255,255,.02);border-radius:0 8px 8px 0}
-.ai-text hr{border:none;border-top:1px solid var(--border);margin:18px 0}
-.ai-text table{border-collapse:collapse;margin:14px 0;width:100%;font-size:13px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-.ai-text th,.ai-text td{border:1px solid var(--border);padding:8px 12px;text-align:left}
-.ai-text th{background:rgba(255,255,255,.05);font-weight:600;color:var(--t1);font-size:12px;text-transform:uppercase;letter-spacing:.3px}
-.ai-text td{color:var(--t2)}
-.ai-text tr:hover td{background:rgba(255,255,255,.02)}
-/* Metric highlight cards inside AI response */
-.ai-text .metric-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
-.ai-text .metric-card{flex:1;min-width:120px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
-.ai-text .metric-card .label{font-size:11px;color:var(--t4);margin-bottom:4px}
-.ai-text .metric-card .value{font-size:18px;font-weight:700;color:var(--t1)}
-.streaming-cursor::after{content:'';display:inline-block;width:2px;height:14px;background:var(--red);margin-left:2px;vertical-align:text-bottom;animation:aiBlink .6s step-end infinite}
-@keyframes aiBlink{50%{opacity:0}}
-.ai-actions{display:flex;gap:6px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
-.ai-copy-btn{padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s}
-.ai-copy-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
-@media(max-width:600px){.settings-btn{top:16px;right:64px}}
-
-/* ── Drive Panel ── */
-.drive-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s}
-.drive-overlay.open{opacity:1;pointer-events:auto}
-.drive-panel{position:fixed;top:0;right:0;bottom:0;width:480px;max-width:100vw;background:var(--bg);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
-.drive-panel.open{transform:translateX(0)}
-.drive-header{position:sticky;top:0;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1}
-.drive-title{font-size:14px;font-weight:600;color:var(--t2)}
-.drive-close{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.drive-close:hover{background:rgba(255,255,255,.1);color:var(--t1)}
-.drive-search{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
-.drive-search input{flex:1;background:none;border:none;outline:none;color:var(--t2);font-size:13px;font-family:var(--sans)}
-.drive-search input::placeholder{color:var(--t5)}
-.drive-search-count{font-size:11px;color:var(--t5);white-space:nowrap}
-.drive-login{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:16px}
-.drive-login p{font-size:13px;color:var(--t4);text-align:center}
-.drive-login-btn{padding:10px 24px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--t2);cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:all .2s;display:flex;align-items:center;gap:8px}
-.drive-login-btn:hover{background:rgba(255,255,255,.1)}
-.drive-login-btn svg{width:18px;height:18px}
-.drive-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px}
-.drive-item{position:relative;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .15s;aspect-ratio:1;background:var(--bg-raised)}
-.drive-item:hover{border-color:rgba(255,255,255,.2)}
-.drive-item.selected{border-color:var(--red)}
-.drive-item img{width:100%;height:100%;object-fit:cover}
-.drive-item .vid-badge{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center}
-.drive-item .vid-badge svg{width:10px;height:10px;fill:#fff}
-.drive-item .check{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;background:var(--red);display:none;align-items:center;justify-content:center}
-.drive-item.selected .check{display:flex}
-.drive-item .check svg{width:10px;height:10px;fill:#fff}
-.drive-item-name{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.drive-footer{position:sticky;bottom:0;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.drive-footer .count{font-size:12px;color:var(--t4)}
-.drive-attach-btn{padding:8px 20px;border-radius:100px;border:none;background:var(--red);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--sans);transition:all .15s}
-.drive-attach-btn:hover{background:#d4343a}
-.drive-attach-btn:disabled{background:var(--t5);cursor:not-allowed}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-
-<!-- AI Settings Button -->
-<button class="settings-btn" onclick="openAISettings()">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-  <span class="dot-on" id="aiDot" style="display:none"></span>
-</button>
-<div class="ai-modal-bg" id="aiModalBg" onclick="if(event.target===this)closeAISettings()">
-  <div class="ai-modal">
-    <h3>ODD AI Settings</h3>
-    <input type="hidden" id="aiKeyInput">
-    <div class="ai-fg"><label>Model</label><select id="aiModelSelect"><option value="claude-sonnet-4-20250514">Sonnet 4 (Fast)</option><option value="claude-opus-4-20250514">Opus 4 (Best)</option><option value="claude-haiku-4-5-20251001">Haiku 4.5 (Fastest)</option></select></div>
-    <button class="ai-save-btn" onclick="saveAISettings()">Save</button>
-  </div>
-</div>
 
 <!-- History Button -->
 <button class="history-btn" id="historyBtn" onclick="openHistory()">
@@ -358,35 +254,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
   <div id="historyContent"></div>
 </div>
 
-<!-- Drive Panel -->
-<div class="drive-overlay" id="driveOverlay" onclick="closeDrive()"></div>
-<div class="drive-panel" id="drivePanel">
-  <div class="drive-header">
-    <span class="drive-title">콘텐츠 에셋</span>
-    <button class="drive-close" onclick="closeDrive()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-  </div>
-  <div class="drive-search" id="driveSearchBar" style="display:none">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="driveSearchInput" placeholder="파일명 검색..." oninput="filterDriveFiles()">
-    <span class="drive-search-count" id="driveSearchCount"></span>
-  </div>
-  <div id="driveContent">
-    <div class="drive-login" id="driveLogin">
-      <p>Google Drive에 연결하여<br>콘텐츠 에셋을 불러옵니다</p>
-      <button class="drive-login-btn" onclick="driveSignIn()">
-        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Google 계정으로 연결
-      </button>
-    </div>
-  </div>
-  <div class="drive-footer" id="driveFooter" style="display:none">
-    <span class="count" id="driveCount">0개 선택</span>
-    <button class="drive-attach-btn" id="driveAttachBtn" onclick="attachDriveFiles()" disabled>첨부하기</button>
-  </div>
-</div>
-
 <div class="landing" id="landing">
   <div class="logo-area">
     <img src="odd_logo_white.png" alt="ODD.">
@@ -403,9 +270,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
         </div>
         <div class="input-actions">
           <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
-          <button class="input-icon-btn" onclick="openDrive()" title="Drive 에셋">
-            <svg viewBox="0 0 87.3 78" style="width:20px;height:20px"><path d="M6.6 66.85L29.1 29.4h29.1l-22.5 37.45z" fill="#0066DA"/><path d="M58.2 29.4L35.7 66.85h51.6l22.5-37.45z" fill="#00AC47" transform="translate(-29.1)"/><path d="M29.1 0L6.6 37.45 29.1 74.9 51.6 37.45z" fill="#EA4335" transform="translate(7.3 -7.5) scale(.9)"/></svg>
-          </button>
           <button class="input-icon-btn" onclick="document.getElementById('fileInput').click()" title="파일 첨부">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
           </button>
@@ -462,6 +326,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 
 <div class="toast" id="toast"></div>
 
+<script src="data.js"></script>
 <script>
 // ── State ──
 const state = { type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1', contentFormat:'feed', detectedMode:null };
@@ -530,125 +395,93 @@ function oddHashtags(ch, isAd, contentTheme) {
   return [...new Set(tags)].slice(0, max).join(' ');
 }
 
-// ── ODD. 캡션 훅 풀 (텐션 레벨별) ──
-const HOOKS = {
-  tof: {
-    1: ['Not Salad, But Salad.','Your salad doesn\'t need a bowl.','Prep time: zero.','Before the first bite — that\'s where it starts.','A simpler way to do what salad does.'],
-    2: ['Who has time for salads anymore?','The food changed. Your body didn\'t.','We drifted from how we were designed to eat.','What if the best routine takes no prep at all?','Skip the bowl. Keep the benefits.'],
-    3: ['Nature\'s rare reward became a constant additive.','Don\'t blame sugar. We changed its form.','The ritual before the meal matters more than the meal.','We didn\'t change the formula. We decoded it.','Every bite tells a story. This one starts before.']
-  },
-  mof: {
-    1: ['Why Salad? Not the bowl — the benefits.','What\'s in M-01? Built for the before-meal moment.','Fiber-forward support for digestion and gut balance.'],
-    2: ['Salad slows digestion. Delphinol® smooths the spike.','42% less impact from carbs. One ingredient. One bottle.','What if your body met carbs differently?'],
-    3: ['We decoded what salad does — then distilled it.','Decoded from Nature. Refined by Science.','The human body comes equipped with an original design.']
-  },
-  bof: {
-    1: ['Your salad is ready. No prep. No waste.','Start your smarter routine.','M-01 carries the ritual of salad into your everyday routine.'],
-    2: ['Love It in 60 Days or Get Your Money Back.','The simplest way to replace what salad does.','No prep. No waste. Just your rhythm.'],
-    3: ['Meeting sugar with intention, not fear.','We return wellness to its original design.','Before you eat — that\'s M-01\'s moment.']
-  }
-};
+// ── ODD. 크리에이티브 브리프 엔진 ──
+// 이 도구는 "캡션을 조합"하는 것이 아니라, ODD. 톤앤매너에 맞는 "크리에이티브 방향성 브리프"를 생성한다.
+// 실제 캡션 작성은 이 브리프를 기반으로 Claude 스킬이 담당한다.
 
-// ── ODD. 캡션 본문 템플릿 ──
-function cleanPromptForCaption(prompt) {
-  // 사용자의 요청 문장을 캡션에 넣지 않고, 핵심 주제만 추출
-  if (!prompt) return 'M-01, the pre-meal ritual that changes everything';
-  // 요청/지시어 제거
-  let cleaned = prompt.replace(/캡션\s*작성해\s*줘?|캡션\s*써\s*줘?|해\s*줘?고?|알려\s*줘?|추천해?\s*줘?|만들어\s*줘?|보여\s*줘?|설명\s*해?\s*줘?|업로드\s*하려고|하려고\s*하는데|그\s*안에\s*들어갈|글귀도/g, '').trim();
-  // 숫자+개 패턴 제거 (10개의, 5장 등)
-  cleaned = cleaned.replace(/\d+\s*개의?\s*/g, '').trim();
-  // 너무 길면 자르기
-  if (cleaned.length > 40) cleaned = cleaned.slice(0, 40);
-  // 한국어면 영어 기본값 사용
-  if (/[가-힣]/.test(cleaned) && cleaned.length > 5) {
-    // 키워드에서 주제 추출
-    if (/원료|성분/.test(cleaned)) return 'M-01\'s 5 research-backed ingredients';
-    if (/캐러셀|carousel/.test(cleaned)) return 'M-01 carousel content';
-    if (/SNS|소셜/.test(cleaned)) return 'M-01 social media content';
-    return 'M-01, the pre-meal ritual that changes everything';
-  }
-  return cleaned || 'M-01, the pre-meal ritual that changes everything';
-}
+const BRIEF_DATA = {
+  tonePillars: {
+    1: { label:'Safe Bold', voice:'절제된 자신감. 짧고 단정한 선언. 설명 최소화.', rhythm:'1-2줄 단문 위주. 여백으로 호흡.' },
+    2: { label:'Provocative', voice:'관습에 질문. "왜?"라는 화두를 던지는 방식. 도발적이되 공격적이지 않게.', rhythm:'질문형 오프닝 + 반전 한 줄. 긴장감 있는 호흡.' },
+    3: { label:'Maximum Edge', voice:'철학적 무게감. 서사적 흐름. 브랜드 매니페스토 톤.', rhythm:'3-4줄 내러티브. 시적 호흡. 마지막에 제품 등장.' }
+  },
+  funnelGoals: {
+    tof: { goal:'인지 & 호기심', audience:'ODD.를 처음 접하는 사람', hook:'스크롤을 멈추게 하는 1줄', structure:'훅 → 공감/호기심 → 부드러운 유입' },
+    mof: { goal:'이해 & 신뢰 구축', audience:'관심은 있지만 확신이 없는 사람', hook:'구체적 성분/원리/차별점 기반', structure:'교육적 훅 → 근거 → 저장/공유 유도' },
+    bof: { goal:'전환 & 망설임 제거', audience:'구매 직전 단계', hook:'오퍼/보장/긴급성 기반', structure:'직접적 혜택 → 신뢰 장치 → 명확한 CTA' }
+  },
+  channelTone: {
+    meta: { platform:'Instagram / Facebook', style:'세련되고 여유로운 브랜드 미디어 톤. 여백과 호흡 중시.', length:'5-12줄', note:'해시태그 5개 이내. 첫 줄이 핵심.' },
+    tiktok: { platform:'TikTok', style:'짧고 직관적. 설명보다 감각. 1-3초 안에 잡아야 함.', length:'2-4줄', note:'텍스트 오버레이 고려. 영상 맥락과 연동.' },
+    google: { platform:'Google Ads', style:'RSA 포맷. 헤드라인 30자 제한, 설명 90자 제한. 검색 의도 매칭.', length:'헤드라인 3개 + 설명 2개', note:'키워드 포함 필수. 감성보다 명확성 우선.' }
+  },
+  brandVoiceRef: [
+    'Not Salad, But Salad. — 캠페인 핵심 메타포',
+    'Original Design Decoded — 브랜드 철학 축',
+    '"Don\'t blame sugar. We changed its form." — 관점 전환의 대표 표현',
+    'ritual, intention, rhythm — 반복되는 감성 키워드',
+    '설명하지 않고 선언한다. 가르치지 않고 보여준다.',
+    '공포 마케팅 절대 금지 — fear → intention 전환'
+  ]
+};
 
 function oddAdCaption(prompt, ch, fn, tension) {
   const t = parseInt(tension);
-  const hookPool = HOOKS[fn][t] || HOOKS[fn][1];
-  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
-  const userContext = cleanPromptForCaption(prompt);
+  const tone = BRIEF_DATA.tonePillars[t] || BRIEF_DATA.tonePillars[1];
+  const funnel = BRIEF_DATA.funnelGoals[fn] || BRIEF_DATA.funnelGoals.tof;
+  const channel = BRIEF_DATA.channelTone[ch] || BRIEF_DATA.channelTone.meta;
 
-  const templates = {
-    meta: {
-      tof: {
-        text: hook + '\n\n' + userContext + '\n\nA simpler way to keep your rhythm.\nNo prep. No waste. Just twist and drink.\n\nLearn more. Link in bio.',
-        tags: ['TOF 인지', 'Meta Feed', '스크롤 스토퍼']
-      },
-      mof: {
-        text: hook + '\n\n' + userContext + '\n\nM-01 is built with 5 research-backed ingredients — each designed to support what salad does, and go further.\n\nSwipe through.',
-        tags: ['MOF 고려', '교육형', '저장 유도']
-      },
-      bof: {
-        text: (t >= 2 ? '🔴 ' : '') + 'Your body\'s best defense.\n\n' + userContext + '\n\nMeet M-01 — a smarter pre-meal ritual.\n✓ 5 research-backed ingredients\n✓ 60-day satisfaction guarantee\n✓ Ships worldwide\n\n' + (fn === 'bof' ? 'Limited Offer — Get up to 40% OFF.' : 'Discover more.'),
-        tags: ['BOF 전환', '오퍼', '망설임 제거']
-      }
-    },
-    tiktok: {
-      tof: {
-        text: hook + '\n' + userContext + '\n\nNot Salad, But Salad. ✨',
-        tags: ['TOF', 'TikTok', '짧은 훅']
-      },
-      mof: {
-        text: hook + '\n\n' + userContext + '\n\nTwist and drink. That\'s the whole routine. 🍋',
-        tags: ['MOF', 'TikTok', '이해 유도']
-      },
-      bof: {
-        text: 'Cut down on prep. 🧺\n' + userContext + '\n\n' + hook + '\n\nProfile link for details.',
-        tags: ['BOF', 'TikTok', '전환']
-      }
-    },
-    google: {
-      tof: {
-        text: '[헤드라인 1] Not Salad, But Salad | ODD.\n[헤드라인 2] Pre-Meal Ritual for Metabolic Wellness\n[헤드라인 3] A Simpler Way to Do What Salad Does\n[설명 1] ' + userContext + ' — Twist and drink. No prep, no waste.\n[설명 2] 5 research-backed ingredients. 60-day guarantee. Try M-01 today.',
-        tags: ['TOF', 'Google Ads', 'RSA']
-      },
-      mof: {
-        text: '[헤드라인 1] Why M-01? 5 Ingredients, One Bottle\n[헤드라인 2] Metabolic Health Supplement\n[헤드라인 3] What Salad Does, Without the Bowl\n[설명 1] ' + userContext + '\n[설명 2] 42% less carb impact (Reducose® studies). Free shipping available.',
-        tags: ['MOF', 'Google Ads', '수치 증거']
-      },
-      bof: {
-        text: '[헤드라인 1] Up to 40% OFF M-01 — Limited Time\n[헤드라인 2] 60-Day Money-Back Guarantee\n[헤드라인 3] Start Your Pre-Meal Ritual\n[설명 1] ' + userContext + ' — Try risk-free.\n[설명 2] Loved by thousands. 4.8★ avg review. Order now with free shipping.',
-        tags: ['BOF', 'Google Ads', '전환 최적화']
-      }
-    }
+  const brief = '📌 크리에이티브 브리프\n' +
+    '━━━━━━━━━━━━━━━━━\n\n' +
+    '방향: ' + (prompt || '(러프 입력 없음)') + '\n\n' +
+    '🎯 목표: ' + funnel.goal + '\n' +
+    '👤 타겟: ' + funnel.audience + '\n' +
+    '📐 구조: ' + funnel.structure + '\n\n' +
+    '🔊 톤: ' + tone.label + '\n' +
+    '   보이스 — ' + tone.voice + '\n' +
+    '   리듬 — ' + tone.rhythm + '\n\n' +
+    '📱 채널: ' + channel.platform + '\n' +
+    '   스타일 — ' + channel.style + '\n' +
+    '   분량 — ' + channel.length + '\n' +
+    '   참고 — ' + channel.note + '\n\n' +
+    '🧬 ODD. 보이스 레퍼런스:\n' +
+    BRIEF_DATA.brandVoiceRef.map(r => '   · ' + r).join('\n') + '\n\n' +
+    '━━━━━━━━━━━━━━━━━\n' +
+    '💡 이 브리프를 Claude에 전달하면\nODD. 톤앤매너로 새로운 캡션을 생성합니다.';
+
+  return {
+    text: brief,
+    tags: [fn.toUpperCase(), channel.platform, tone.label, '광고']
   };
-  return templates[ch][fn];
 }
 
 function oddOrganicCaption(prompt, ch, tension) {
   const t = parseInt(tension);
-  const userContext = cleanPromptForCaption(prompt);
-  const patterns = ['A','B','C'];
-  const pat = patterns[Math.floor(Math.random() * patterns.length)];
-  const hookPool = [...(HOOKS.tof[t] || []), ...(HOOKS.mof[t] || [])];
-  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
+  const tone = BRIEF_DATA.tonePillars[t] || BRIEF_DATA.tonePillars[1];
+  const channel = BRIEF_DATA.channelTone[ch] || BRIEF_DATA.channelTone.meta;
 
-  const templates = {
-    meta: {
-      A: { text: hook + '\n\n' + userContext + '\n\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'lifestyle'), tags: ['오가닉', 'IG Feed', '선언형 A'] },
-      B: { text: userContext + '\n\nEat what you love. M-01\'s got your back.\n\nStart your smarter routine.\nA pre-meal salad, ready anytime.\n\n' + oddHashtags('meta', false, 'campaign'), tags: ['오가닉', 'IG Feed', '공감형 B'] },
-      C: { text: hook + '\n\n' + 'Our goal isn\'t to replace the fresh meals you love,\nbut to bridge the gap between your health goals and your busy reality.\n\nM-01 carries the ritual of salad into your everyday routine.\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'wellness'), tags: ['오가닉', 'IG Feed', '서사형 C'] }
-    },
-    tiktok: {
-      A: { text: hook + '\n' + userContext + '\n\n' + oddHashtags('tiktok', false, 'campaign'), tags: ['오가닉', 'TikTok', '짧고 펀치'] },
-      B: { text: userContext + ' 🍋\nTwist and drink. Done.\n\n' + oddHashtags('tiktok', false, 'lifestyle'), tags: ['오가닉', 'TikTok', '캐주얼'] },
-      C: { text: hook + '\n\n' + userContext + '\n\n' + oddHashtags('tiktok', false, 'wellness'), tags: ['오가닉', 'TikTok', '인사이트'] }
-    },
-    google: {
-      A: { text: userContext + '\n\n자세한 내용은 odd.us에서 확인하세요.', tags: ['오가닉', 'Google', '정보성'] },
-      B: { text: userContext, tags: ['오가닉', 'Google'] },
-      C: { text: userContext, tags: ['오가닉', 'Google'] }
-    }
+  const brief = '📌 오가닉 콘텐츠 브리프\n' +
+    '━━━━━━━━━━━━━━━━━\n\n' +
+    '방향: ' + (prompt || '(러프 입력 없음)') + '\n\n' +
+    '🎨 콘텐츠 성격: 브랜드 미디어 (비광고)\n' +
+    '   커뮤니티와의 대화. 세일즈 톤 배제.\n' +
+    '   팔로워가 저장하고 싶은 가치 있는 콘텐츠.\n\n' +
+    '🔊 톤: ' + tone.label + '\n' +
+    '   보이스 — ' + tone.voice + '\n' +
+    '   리듬 — ' + tone.rhythm + '\n\n' +
+    '📱 채널: ' + channel.platform + '\n' +
+    '   스타일 — ' + channel.style + '\n' +
+    '   분량 — ' + channel.length + '\n\n' +
+    '🧬 ODD. 보이스 레퍼런스:\n' +
+    BRIEF_DATA.brandVoiceRef.map(r => '   · ' + r).join('\n') + '\n\n' +
+    '🏷️ 해시태그 방향: ' + oddHashtags(ch, false, 'lifestyle') + '\n\n' +
+    '━━━━━━━━━━━━━━━━━\n' +
+    '💡 이 브리프를 Claude에 전달하면\nODD. 톤앤매너로 새로운 캡션을 생성합니다.';
+
+  return {
+    text: brief,
+    tags: ['오가닉', channel.platform, tone.label]
   };
-  return templates[ch][pat];
 }
 
 function oddCTA(ch, fn) {
@@ -672,44 +505,41 @@ function oddCTA(ch, fn) {
   return ctas[ch][fn];
 }
 
-// ── Content Mode: Carousel Slides ──
+// ── Content Mode: Carousel Slide Brief ──
 function generateCarouselSlides(prompt, fn, tension) {
   const t = parseInt(tension);
-  const slides = [];
+  const tone = BRIEF_DATA.tonePillars[t] || BRIEF_DATA.tonePillars[1];
+  const funnel = BRIEF_DATA.funnelGoals[fn] || BRIEF_DATA.funnelGoals.tof;
 
-  const slideConfigs = {
+  // 슬라이드별 "역할"만 정의 — 실제 카피는 AI가 생성
+  const roleConfigs = {
     tof: [
-      { num:1, headline:'Not Salad, But Salad.', body:'The ritual before the meal.', visual:'다크 톤 라이프스타일 모드, 신선한 음식 소재, 자연 배경' },
-      { num:2, headline:'The Food Changed.', body:'Your body didn\'t.', visual:'어두운 배경, 미니멀 푸드포토, 식재료 클로즈업' },
-      { num:3, headline:'Prep time: Zero.', body:'Just twist and drink.', visual:'제품 중심, 어두운 톤, 세련된 음식 스타일링' },
-      { num:4, headline:'Built for Before-Meal.', body:'A smarter way to support your rhythm.', visual:'라이프스타일, 모닝루틴 컨셉, 따뜻한 조명' }
+      { num:1, role:'훅 슬라이드', direction:'첫 1초 안에 스크롤 멈추게. 선언적 한 줄.', visual:'다크 톤, 강렬한 타이포, 미니멀 배경' },
+      { num:2, role:'문제 제기', direction:'공감 유발. "왜?"라는 질문을 심는 슬라이드.', visual:'감성적 푸드포토 또는 일상 장면' },
+      { num:3, role:'해결책 암시', direction:'M-01의 존재를 자연스럽게 드러냄.', visual:'제품 중심, 어두운 톤, 세련된 스타일링' },
+      { num:4, role:'행동 유도', direction:'다음 단계로 넘어가게. 부드러운 CTA.', visual:'라이프스타일 컨셉, 따뜻한 조명' }
     ],
     mof: [
-      { num:1, headline:'5 Research-Backed Ingredients.', body:'Built for what salad does.', visual:'성분 배치, 다크 백그라운드, 과학적 톤' },
-      { num:2, headline:'42% Less Carb Impact.', body:'Reducose® eases post-meal glucose load.', visual:'데이터 시각화 느낌, 모던 푸드포토' },
-      { num:3, headline:'No Prep. No Waste.', body:'Just your rhythm.', visual:'시간 절약 컨셉, 효율성 강조, 클린 배경' },
-      { num:4, headline:'Why M-01 Works.', body:'Decoded from nature. Refined by science.', visual:'제품 쇼케이스, 병 중심, 어두운 톤' }
+      { num:1, role:'교육 훅', direction:'궁금증 유발하는 팩트 또는 질문.', visual:'성분 배치, 다크 백그라운드, 과학적 톤' },
+      { num:2, role:'핵심 근거', direction:'구체적 데이터나 성분 설명. 신뢰 구축.', visual:'데이터 시각화, 모던 클린 디자인' },
+      { num:3, role:'차별화', direction:'기존 대안 대비 M-01만의 강점.', visual:'비교 레이아웃 또는 효율성 강조' },
+      { num:4, role:'마무리', direction:'핵심 메시지 요약 + 저장/공유 유도.', visual:'제품 쇼케이스, 브랜드 시그니처 톤' }
     ],
     bof: [
-      { num:1, headline:'Meet Your New Ritual.', body:'M-01 — the smarter choice.', visual:'라이프스타일 완성도, 세련된 모닝 루틴' },
-      { num:2, headline:'60-Day Money-Back Guarantee.', body:'Risk-free. You\'re protected.', tags:'신뢰 구축, 보장 강조, 따뜻한 톤' },
-      { num:3, headline:'Up to 40% OFF.', body:'Limited time — order now.', visual:'긴급성, 오퍼 강조, 따뜻한 배경' },
-      { num:4, headline:'Join Thousands.', body:'4.8★ average rating. Ships worldwide.', visual:'사회적 증거, 리뷰 강조, 커뮤니티 톤' }
+      { num:1, role:'핵심 제안', direction:'M-01을 만나야 하는 이유. 직접적.', visual:'라이프스타일 완성도, 세련된 루틴' },
+      { num:2, role:'신뢰 장치', direction:'보장, 리뷰, 사회적 증거.', visual:'신뢰 구축 요소, 따뜻한 톤' },
+      { num:3, role:'오퍼', direction:'구체적 혜택. 긴급성 부여.', visual:'오퍼 강조, 콘트라스트 높은 배경' },
+      { num:4, role:'최종 CTA', direction:'명확한 행동 지시. 망설임 제거.', visual:'강한 CTA 타이포, 브랜드 컬러' }
     ]
   };
 
-  const configs = slideConfigs[fn] || slideConfigs.tof;
-  configs.forEach(cfg => {
-    slides.push({
-      num: cfg.num,
-      headline: cfg.headline,
-      body: cfg.body,
-      visual: cfg.visual,
-      stockKeywords: generateStockKeywords(cfg.headline)
-    });
-  });
-
-  return slides;
+  const configs = roleConfigs[fn] || roleConfigs.tof;
+  return configs.map(cfg => ({
+    num: cfg.num,
+    headline: cfg.role,
+    body: cfg.direction,
+    visual: cfg.visual
+  }));
 }
 
 function generateStockKeywords(text) {
@@ -883,10 +713,9 @@ function renderFiles() {
   c.classList.add('show');
   c.innerHTML = files.map((f, i) => {
     const isImg = f.type.startsWith('image/');
-    let thumb;
-    if (f.isDrive && f.thumbnail) thumb = '<img class="thumb" src="' + f.thumbnail + '">';
-    else if (isImg && !f.isDrive) thumb = '<img class="thumb" src="' + URL.createObjectURL(f) + '">';
-    else thumb = '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    const thumb = isImg
+      ? '<img class="thumb" src="' + URL.createObjectURL(f) + '">'
+      : '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
     const name = f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name;
     return '<span class="file-chip">' + thumb + '<span>' + name + '</span><button class="remove" onclick="removeFile(' + i + ')">✕</button></span>';
   }).join('');
@@ -898,43 +727,14 @@ function removeFile(i) {
   sendBtn.disabled = !promptInput.value.trim() && files.length === 0;
 }
 
-// ── Routing Logic ──
-
-// Route 1: Drive file search (explicit file/asset search request)
-function isDriveSearchQuery(text) {
-  const actionKw = ['찾아','검색해','보여줘','보여줄래','드라이브','파일좀','이미지좀','영상좀'];
-  const hasAction = actionKw.some(k => text.includes(k));
-  if (!hasAction) return false;
-  const assetKw = ['사진','이미지','영상','에셋','파일','콘텐츠','소스','원본','드라이브'];
-  const questionKw = ['뭐야','뭔가','무엇','어떤','알려줘','설명해','왜','어떻게','뭐지'];
-  const isQuestion = questionKw.some(k => text.includes(k));
-  if (isQuestion && !assetKw.some(k => text.includes(k))) return false;
-  return true;
-}
-
-// Route 2: Asset/content recommendation (Drive + Unsplash stock)
-function isAssetRecommendQuery(text) {
-  const recKw = ['추천','제안','골라','뽑아','어울리는','적합한','맞는','괜찮은'];
-  const assetKw = ['에셋','이미지','영상','사진','콘텐츠','소스','비주얼','크리에이티브','썸네일','배경'];
-  return recKw.some(k => text.includes(k)) && assetKw.some(k => text.includes(k));
-}
-
-// Route 3: Basic info answerable from built-in data
-function isBuiltInQuery(text) {
-  const lower = text.toLowerCase();
-  const infoKw = ['원료','성분','ingredient','가격','price','m-01','m01','제품','product',
-    '배송','shipping','보증','guarantee','사용법','복용','효과','효능','benefit'];
-  const simpleKw = ['뭐야','뭔가','무엇','알려줘','알려 줘','뭐지','몇가지','어떤'];
-  return infoKw.some(k => lower.includes(k)) && simpleKw.some(k => text.includes(k));
-}
-
+// ── Built-in Answers (AI 불필요) ──
 const BUILTIN_ANSWERS = {
   ingredient: {
     keywords: ['원료','성분','ingredient','들어가','뭐가 들'],
     answer: '**M-01 핵심 원료 5가지:**\n\n1. **Delphinol®** (마키베리 폴리페놀) — 식후 혈당 급상승 완화, 균형잡힌 인슐린 수치 지원\n2. **Reducose®** (뽕잎 추출물) — DNJ 함량 ~5배, 식후 포도당 부하 완화\n3. **GOFOS™** (프리바이오틱 섬유) — 유익균 먹이, 소화·배변·장 밸런스 지원\n4. **Orafti® GR** (치커리근 이눌린) — 식후 포도당·콜레스테롤·배변을 하나의 시스템으로 관리\n5. **Lalmin® C2000** (유기 크롬) — 포도당 효율적 활용, 식후 안정적 에너지 지원\n\n모두 미국 cGMP 시설에서 제조됩니다.'
   },
   product: {
-    keywords: ['m-01','m01','제품','product','뭐야','무엇'],
+    keywords: ['m-01','m01','제품','product'],
     answer: '**M-01 — Pre-Meal Liquid Supplement**\n\n- 포맷: 1회분 리퀴드 보틀 (twist-and-drink)\n- 사용법: 식사 전 음용 ("pre-meal ritual")\n- 슬로건: "Not Salad, But Salad."\n- 보증: 60일 만족 보증\n- 가격: 단품 / 15팩 / 30팩 / 정기구독\n- 배송: 전세계 배송, 미국 제조'
   },
   price: {
@@ -955,7 +755,13 @@ function getBuiltInAnswer(text) {
   return null;
 }
 
-// Unsplash stock search
+function renderBuiltInMd(text) {
+  let h = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/\n/g, '<br>');
+  return '<p>' + h + '</p>';
+}
+
+// ── Unsplash Stock Search ──
 const UNSPLASH_KEY = 'bvU_FTPNy-LUIY02fU8RQrtHqbGHFIJivJFrhXBBpaI';
 async function searchUnsplash(query, count) {
   try {
@@ -964,133 +770,193 @@ async function searchUnsplash(query, count) {
     if (!r.ok) return [];
     const data = await r.json();
     return (data.results || []).map(p => ({
-      id: p.id,
-      url: p.urls.small,
-      thumb: p.urls.thumb,
-      alt: p.alt_description || '',
-      credit: p.user.name,
+      id: p.id, url: p.urls.small, thumb: p.urls.thumb,
+      alt: p.alt_description || '', credit: p.user.name,
       link: p.links.html
     }));
   } catch { return []; }
 }
 
-let pendingDriveSearch = '';
-function handleDriveSearch(query) {
-  let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|있는 파일|드라이브에서?|에셋 중에?|좀|우리/g, '').trim();
-  pendingDriveSearch = term;
-  openDrive();
-  if (driveAccessToken && term) {
-    const si = document.getElementById('driveSearchInput');
-    if (si) { si.value = term; searchDriveFiles(term); }
-  }
+// ── Google Drive Integration ──
+const _fk = ['AIzaSyC-','q4mncVKMU','_XSaAXJk0i','BuMbkmxwvQ5s'];
+firebase.initializeApp({
+  apiKey: _fk.join(''),
+  authDomain: "odd-performance-dashboard.firebaseapp.com",
+  projectId: "odd-performance-dashboard",
+  storageBucket: "odd-performance-dashboard.firebasestorage.app",
+  messagingSenderId: "845033758092",
+  appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
+});
+const fireAuth = firebase.auth();
+const DRIVE_FOLDER_IDS = ['0AL6p4jOgoTNqUk9PVA', '0AHEsTFpszXSNUk9PVA'];
+let driveAccessToken = null;
+
+async function loginGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+  const result = await fireAuth.signInWithPopup(provider);
+  driveAccessToken = result.credential.accessToken;
+  return driveAccessToken;
 }
 
-async function handleAssetRecommend(prompt) {
+async function searchDriveAPI(query) {
+  if (!driveAccessToken) return [];
+  const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
+  const nameFilter = "name contains '" + query.replace(/'/g, "\\'") + "'";
+  const q = encodeURIComponent(mimeFilter + " and " + nameFilter);
+  const allFiles = [];
+  for (const folderId of DRIVE_FOLDER_IDS) {
+    try {
+      const url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
+        '&fields=files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=20' +
+        '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
+      const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+      if (r.ok) { const d = await r.json(); allFiles.push(...(d.files || [])); }
+    } catch {}
+  }
+  return allFiles;
+}
+
+// ── Dashboard Data (매출/주문 from data.js) ──
+function getDashboardSummary(prompt) {
+  if (typeof EMBEDDED_DATA === 'undefined') return null;
+  const d = EMBEDDED_DATA;
+  const lower = prompt.toLowerCase();
+
+  // 월 감지
+  const monthMatch = prompt.match(/(\d{1,2})월/);
+  const targetMonth = monthMatch ? parseInt(monthMatch[1]) : new Date().getMonth() + 1;
+  const targetYear = 2026; // data.js 기준
+
+  const orders = (d.orders || []).filter(o => {
+    const od = new Date(o.d);
+    return od.getMonth() + 1 === targetMonth && od.getFullYear() === targetYear && o.s === 'sale';
+  });
+
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.t || 0), 0);
+  const totalOrders = orders.length;
+  const byChannel = {};
+  orders.forEach(o => {
+    const ch = o.ch || 'unknown';
+    if (!byChannel[ch]) byChannel[ch] = { count: 0, revenue: 0 };
+    byChannel[ch].count++;
+    byChannel[ch].revenue += (o.t || 0);
+  });
+
+  let md = '**' + targetMonth + '월 매출 현황**\n\n';
+  md += '| 항목 | 값 |\n|---|---|\n';
+  md += '| 총 주문 수 | ' + totalOrders + '건 |\n';
+  md += '| 총 매출 | $' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits:0}) + ' |\n';
+  md += '| 평균 주문가 | $' + (totalOrders ? (totalRevenue / totalOrders).toFixed(0) : 0) + ' |\n\n';
+
+  md += '**채널별 매출:**\n\n| 채널 | 주문 | 매출 |\n|---|---|---|\n';
+  for (const [ch, v] of Object.entries(byChannel)) {
+    md += '| ' + ch + ' | ' + v.count + '건 | $' + v.revenue.toLocaleString('en-US', {minimumFractionDigits:0}) + ' |\n';
+  }
+
+  // 구독 현황
+  if (d.recharge_active) {
+    md += '\n**활성 구독:** ' + d.recharge_active.length + '명';
+  }
+  // 재고
+  if (d.inventory) {
+    md += '\n\n**재고:**\n';
+    d.inventory.forEach(item => {
+      md += '- ' + item.name + ': ' + item.on_hand + '개\n';
+    });
+  }
+
+  return md;
+}
+
+// ── AI Engine (Claude API) ──
+const AI_PROXY = 'https://odd-ai-proxy.it-751.workers.dev';
+const aiConfig = {
+  key: localStorage.getItem('odd_ai_key') || '',
+  model: localStorage.getItem('odd_ai_model') || 'claude-sonnet-4-20250514',
+};
+
+const AI_SYSTEM = 'You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.\n\nPRODUCT M-01: Pre-meal liquid supplement. Twist-and-drink before meals.\n5 Key Ingredients: Delphinol® (Maqui Berry polyphenol, reduces post-meal glucose spikes), Reducose® (Mulberry Leaf extract, ~5x higher DNJ, eases post-meal glucose load), GOFOS™ (prebiotic fiber, feeds beneficial gut bacteria), Orafti® GR (chicory root inulin, manages glucose/cholesterol/elimination), Lalmin® C2000 (organic chromium, supports efficient glucose use).\nBrand: odd.us / m-01.odd.us | Tagline: "Not Salad, But Salad." | 60-Day Money-Back Guarantee | Ships worldwide, made in USA.\n\nRULES: Respond in user\'s language (Korean or English). Be concise & actionable. Use markdown tables for data. Use ## headings. Highlight key metrics with **bold**.';
+
+async function generateWithAI(prompt) {
+  if (!aiConfig.key) { showToast('설정에서 AI API 키를 입력하세요'); return; }
   document.getElementById('landing').classList.add('pushed');
   const ra = document.getElementById('resultsArea');
   ra.style.display = 'block';
   ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
-  // Extract search terms
-  let term = prompt.replace(/추천해?줘?|제안해?줘?|골라줘?|뽑아줘?|어울리는|적합한|맞는|괜찮은|에셋|이미지|영상|사진|콘텐츠|소스|비주얼|크리에이티브|좀|우리/g, '').trim();
-  if (!term) term = 'health supplement wellness';
-  // Map Korean terms to English for Unsplash
-  const termMap = {'원료':'natural ingredients supplement','샐러드':'fresh salad greens','건강':'health wellness','대사':'metabolism fitness','식전':'meal preparation food','마키베리':'maqui berry polyphenol','이눌린':'chicory root inulin','크롬':'organic chromium supplement','프리바이오틱':'prebiotic fiber gut health','라이프스타일':'wellness lifestyle minimal','루틴':'daily routine morning'};
-  let enTerm = term;
-  for (const [ko, en] of Object.entries(termMap)) { if (term.includes(ko)) { enTerm = en; break; } }
-  if (enTerm === term) enTerm = term + ' health wellness';
-
-  // Search Drive + Unsplash in parallel
-  const [driveResults, unsplashResults] = await Promise.all([
-    driveAccessToken ? searchDriveAPI(term) : Promise.resolve([]),
-    searchUnsplash(enTerm, 12)
-  ]);
-
-  let html = '';
-
-  if (driveResults.length) {
-    html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>Google Drive 에셋</div>';
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px">';
-    driveResults.slice(0, 12).forEach(f => {
-      const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
-      html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')">' +
-        (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:11px">미리보기 없음</div>') +
-        '<div style="padding:4px 6px;font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
-    });
-    html += '</div></div>';
-  }
-
-  if (unsplashResults.length) {
-    html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--blue)"></span>Unsplash 스톡 추천</div>';
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px">';
-    unsplashResults.forEach(p => {
-      html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised);position:relative" onclick="window.open(\'' + p.link + '?utm_source=odd_ai\',\'_blank\')">' +
-        '<img src="' + p.url + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' +
-        '<div style="padding:4px 6px;font-size:9px;color:var(--t5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">by ' + esc(p.credit) + '</div></div>';
-    });
-    html += '</div><div style="margin-top:8px;font-size:10px;color:var(--t5)">Photos from Unsplash — free to use</div></div>';
-  }
-
-  if (!driveResults.length && !unsplashResults.length) {
-    html = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--t5)"></span>결과 없음</div><div class="result-content">검색 결과가 없습니다. 다른 키워드로 시도해보세요.</div></div>';
-  }
-
-  ra.innerHTML = html;
-  saveHistory(prompt, [{ label: '에셋 추천', content: 'Drive: ' + driveResults.length + '개, Unsplash: ' + unsplashResults.length + '개' }]);
-}
-
-async function searchDriveAPI(query) {
-  if (!driveAccessToken) return [];
   try {
-    const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
-    const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
-    const nameFilter = "name contains '" + query.replace(/'/g, "\\'") + "'";
-    const qStr = encodeURIComponent(mimeFilter + " and " + nameFilter + " and trashed=false");
-    const fields = encodeURIComponent('files(id,name,mimeType,thumbnailLink,createdTime)');
-    const url = 'https://www.googleapis.com/drive/v3/files?q=' + qStr + '&fields=' + fields + '&pageSize=20&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
-    const r = await fetch(url, { headers });
+    const r = await fetch(AI_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key },
+      body: JSON.stringify({ model: aiConfig.model, max_tokens: 2048, system: AI_SYSTEM, messages: [{ role: 'user', content: prompt }] })
+    });
     const data = await r.json();
-    return r.ok ? (data.files || []) : [];
-  } catch { return []; }
+    const text = (data.content && data.content[0] && data.content[0].text) || '응답을 생성하지 못했습니다.';
+    ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--purple)"></span>AI 응답</div><div class="result-content" style="white-space:normal">' + renderBuiltInMd(text) + '</div><div class="result-meta"><span class="tag">Claude AI</span></div></div>';
+    saveHistory(prompt, [{ label: 'AI 응답', content: text }]);
+  } catch (e) {
+    ra.innerHTML = '<div class="result-card"><div class="result-content">AI 오류: ' + esc(e.message) + '</div></div>';
+  }
 }
 
-function handleBuiltInAnswer(prompt, answer) {
-  document.getElementById('landing').classList.add('pushed');
-  const ra = document.getElementById('resultsArea');
-  ra.style.display = 'block';
-  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>ODD 제품 정보</div><div class="result-content">' + renderBuiltInMd(answer) + '</div><div class="result-meta"><span class="tag">내장 데이터</span><span class="tag">API 미사용</span></div></div>';
-  saveHistory(prompt, [{ label: '제품 정보', content: answer }]);
+// ── Smart Routing ──
+function isDriveSearchQuery(text) {
+  const actionKw = ['찾아','검색해','보여줘','보여줄래','드라이브','파일좀','이미지좀','영상좀'];
+  const hasAction = actionKw.some(k => text.includes(k));
+  if (!hasAction) return false;
+  const assetKw = ['사진','이미지','영상','에셋','파일','콘텐츠','소스','원본','드라이브'];
+  const questionKw = ['뭐야','뭔가','무엇','어떤','알려줘','설명해','왜','어떻게','뭐지'];
+  const isQuestion = questionKw.some(k => text.includes(k));
+  if (isQuestion && !assetKw.some(k => text.includes(k))) return false;
+  return true;
 }
 
-function renderBuiltInMd(text) {
-  let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  h = h.replace(/\n\n/g, '</p><p>');
-  h = h.replace(/\n/g, '<br>');
-  return '<p>' + h + '</p>';
+function isAssetRecommendQuery(text) {
+  const lower = text.toLowerCase();
+  const recKw = ['추천','제안','골라','suggest','recommend'];
+  const assetKw = ['이미지','사진','영상','비주얼','에셋','asset','visual','photo','image','video'];
+  return recKw.some(k => lower.includes(k)) && assetKw.some(k => lower.includes(k));
 }
 
-// ── Multi-Intent Engine ──
+function isBuiltInQuery(text) {
+  const lower = text.toLowerCase();
+  const infoKw = ['원료','성분','ingredient','가격','price','제품','product','사용법','복용','먹는법'];
+  const questionKw = ['뭐야','뭔가','무엇','알려줘','설명해','어떤','어떻게','뭐지'];
+  return infoKw.some(k => lower.includes(k)) && questionKw.some(k => lower.includes(k));
+}
+
+function isDataQuery(text) {
+  const dataKw = ['매출','주문','수익','revenue','sales','order','구독','subscriber','재고','inventory','현황','실적','통계','데이터','dashboard','대시보드'];
+  return dataKw.some(k => text.toLowerCase().includes(k));
+}
+
+function shouldUseAI(text) {
+  const lower = text.toLowerCase();
+  const aiTriggers = ['분석','전략','비교','개선','최적화','리뷰','피드백','평가','왜','어떻게 하면','방법','plan','strategy','analyze','improve'];
+  return aiTriggers.some(k => lower.includes(k));
+}
+
 function detectIntents(prompt) {
   const intents = [];
   const lower = prompt.toLowerCase();
 
+  // Data/dashboard intent (매출, 주문, 재고 등)
+  if (isDataQuery(prompt)) intents.push('data');
+
   // Info intent (원료, 성분, 제품 설명 등)
-  const infoKw = ['원료','성분','ingredient','설명','제품','m-01','m01','효과','효능','사용법'];
-  if (infoKw.some(k => lower.includes(k))) intents.push('info');
+  const infoKw = ['원료','성분','ingredient','설명해','제품','효과','효능','사용법'];
+  if (infoKw.some(k => lower.includes(k)) && !isDataQuery(prompt)) intents.push('info');
 
   // Caption intent (캡션, 카피, 문구, 글귀 등)
   const captionKw = ['캡션','카피','문구','글귀','텍스트','copy','caption','헤드라인','슬로건'];
   if (captionKw.some(k => lower.includes(k))) intents.push('caption');
 
-  // Asset recommend intent (이미지 추천, 에셋 추천 등)
+  // Asset recommend intent
   if (isAssetRecommendQuery(prompt)) intents.push('asset');
 
-  // Drive search intent (파일 찾기)
+  // Drive search intent
   if (isDriveSearchQuery(prompt)) intents.push('drive');
-
-  // If nothing detected but looks like caption work
-  if (!intents.length) intents.push('caption');
 
   return [...new Set(intents)];
 }
@@ -1102,7 +968,14 @@ async function handleMultiIntent(prompt, intents) {
   ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
   let html = '';
-  const tasks = [];
+
+  // Data section (매출/대시보드)
+  if (intents.includes('data')) {
+    const summary = getDashboardSummary(prompt);
+    if (summary) {
+      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--orange)"></span>매출 데이터</div><div class="result-content" style="white-space:normal">' + renderBuiltInMd(summary) + '</div><div class="result-meta"><span class="tag">내장 데이터 (data.js)</span></div></div>';
+    }
+  }
 
   // Info section
   if (intents.includes('info')) {
@@ -1114,7 +987,6 @@ async function handleMultiIntent(prompt, intents) {
 
   // Caption section
   if (intents.includes('caption')) {
-    // 통합(all)이면 meta 1개로 통합 캡션, 아니면 선택된 채널
     const channels = state.channel === 'all' ? ['meta'] : [state.channel];
     const detectedMode = detectMode(prompt);
     const allCaptions = [];
@@ -1135,18 +1007,17 @@ async function handleMultiIntent(prompt, intents) {
         html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:' + (r.color || 'var(--t4)') + '"></span>' + esc(r.label) + '</div><div class="result-content">' + esc(r.content) + '</div>';
         html += '<div class="result-meta">';
         if (r.tags) html += r.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('');
-        html += '<button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>';
-        html += '</div>';
+        html += '<button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button></div>';
       }
       html += '</div>';
     });
   }
 
-  // Asset recommend section (Drive + Unsplash in parallel)
+  // Asset recommend section (Drive + Unsplash)
   if (intents.includes('asset')) {
     let term = prompt.replace(/추천해?줘?|제안해?줘?|골라줘?|해주고|하고|그리고|좀|우리/g,'').trim();
     if (!term) term = 'health supplement';
-    const termMap = {'원료':'natural ingredients supplement','샐러드':'fresh salad greens','건강':'health wellness','캐러셀':'social media carousel','SNS':'social media content','라이프스타일':'wellness lifestyle'};
+    const termMap = {'원료':'natural ingredients supplement','건강':'health wellness','캐러셀':'social media carousel','SNS':'social media content','라이프스타일':'wellness lifestyle'};
     let enTerm = term;
     for (const [ko,en] of Object.entries(termMap)) { if (term.includes(ko)) { enTerm = en; break; } }
     if (enTerm === term) enTerm += ' health wellness';
@@ -1176,25 +1047,15 @@ async function handleMultiIntent(prompt, intents) {
     }
   }
 
-  // Drive search intent
-  if (intents.includes('drive') && !intents.includes('asset')) {
-    handleDriveSearch(prompt);
-  }
-
   if (!html) html = '<div class="result-card"><div class="result-content">결과를 생성하지 못했습니다.</div></div>';
   ra.innerHTML = html;
-  saveHistory(prompt, [{ label: '복합 처리 (' + intents.join('+') + ')', content: prompt }]);
+  saveHistory(prompt, [{ label: '처리 (' + intents.join('+') + ')', content: prompt }]);
 }
 
-function generate() {
+// ── Generate (Smart Router) ──
+const _origGenerate = function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
-
-  // Drive asset search detection
-  if (isDriveSearchQuery(prompt)) {
-    handleDriveSearch(prompt);
-    return;
-  }
 
   document.getElementById('landing').classList.add('pushed');
   const ra = document.getElementById('resultsArea');
@@ -1204,7 +1065,7 @@ function generate() {
   const detectedMode = detectMode(prompt);
   state.detectedMode = detectedMode;
 
-  const channels = state.channel === 'all' ? ['meta', 'tiktok', 'google'] : [state.channel];
+  const channels = state.channel === 'all' ? ['meta'] : [state.channel];
 
   setTimeout(() => {
     const allResults = [];
@@ -1224,6 +1085,28 @@ function generate() {
     renderResults(allResults, detectedMode);
     saveHistory(prompt, allResults);
   }, 800);
+};
+
+function generate() {
+  const prompt = promptInput.value.trim();
+  if (!prompt && files.length === 0) return;
+
+  const intents = detectIntents(prompt);
+
+  // 데이터/정보/에셋/드라이브 질의 → 멀티인텐트 엔진
+  if (intents.length > 0 && !(intents.length === 1 && intents[0] === 'caption')) {
+    handleMultiIntent(prompt, intents);
+    return;
+  }
+
+  // 복잡한 분석 질의 → AI
+  if (shouldUseAI(prompt) && !intents.length) {
+    generateWithAI(prompt);
+    return;
+  }
+
+  // 기본 캡션 생성
+  _origGenerate();
 }
 
 function buildContentResults(prompt) {
@@ -1332,7 +1215,7 @@ function buildCaptions(prompt, ch) {
   const tensionLabel = { '1': 'Safe Bold', '2': 'Provocative', '3': 'Max Edge' }[tension];
 
   const caption = isAd ? oddAdCaption(prompt, ch, fn, tension) : oddOrganicCaption(prompt, ch, tension);
-  const prefix = state.channel === 'all' ? '통합 ' : '';
+  const prefix = state.channel === 'all' ? chLabel + ' ' : '';
 
   const warnings = guidelineCheck(caption.text);
   const captionContent = warnings.length
@@ -1495,683 +1378,8 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// ── Google Drive ──
-const _fk = ['AIzaSyC-','q4mncVKMU','_XSaAXJk0i','BuMbkmxwvQ5s'];
-firebase.initializeApp({
-  apiKey: _fk.join(''),
-  authDomain: "odd-performance-dashboard.firebaseapp.com",
-  projectId: "odd-performance-dashboard",
-  storageBucket: "odd-performance-dashboard.firebasestorage.app",
-  messagingSenderId: "845033758092",
-  appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
-});
-const fireAuth = firebase.auth();
-const DRIVE_FOLDER_IDS = ['0AL6p4jOgoTNqUk9PVA', '0AHEsTFpszXSNUk9PVA'];
-let driveAccessToken = null, driveFilesList = [], selectedDriveIds = new Set();
-
-function openDrive() {
-  document.getElementById('driveOverlay').classList.add('open');
-  document.getElementById('drivePanel').classList.add('open');
-  if (driveAccessToken) {
-    // Show search-ready state
-    document.getElementById('driveSearchBar').style.display = 'flex';
-    const c = document.getElementById('driveContent');
-    if (!driveFilesList.length) c.innerHTML = '<div class="drive-login"><p>검색어를 입력하여 에셋을 찾으세요</p></div>';
-    // Auto-search if pending
-    if (pendingDriveSearch) {
-      const si = document.getElementById('driveSearchInput');
-      si.value = pendingDriveSearch;
-      pendingDriveSearch = '';
-      searchDriveFiles(si.value);
-    }
-  }
-}
-function closeDrive() {
-  document.getElementById('driveOverlay').classList.remove('open');
-  document.getElementById('drivePanel').classList.remove('open');
-}
-function driveSignIn() {
-  const p = new firebase.auth.GoogleAuthProvider();
-  p.addScope('https://www.googleapis.com/auth/drive.readonly');
-  fireAuth.signInWithPopup(p).then(r => {
-    driveAccessToken = r.credential.accessToken;
-    document.getElementById('driveSearchBar').style.display = 'flex';
-    const c = document.getElementById('driveContent');
-    c.innerHTML = '<div class="drive-login"><p>검색어를 입력하여 에셋을 찾으세요</p></div>';
-    if (pendingDriveSearch) {
-      const si = document.getElementById('driveSearchInput');
-      si.value = pendingDriveSearch;
-      pendingDriveSearch = '';
-      searchDriveFiles(si.value);
-    }
-  }).catch(e => showToast('로그인 실패: ' + e.message));
-}
-
-let driveSearchTimer = null;
-function filterDriveFiles() {
-  clearTimeout(driveSearchTimer);
-  const q = document.getElementById('driveSearchInput').value.trim();
-  if (!q) {
-    document.getElementById('driveSearchCount').textContent = '';
-    document.getElementById('driveContent').innerHTML = '<div class="drive-login"><p>검색어를 입력하여 에셋을 찾으세요</p></div>';
-    driveFilesList = [];
-    return;
-  }
-  // Debounce 500ms
-  driveSearchTimer = setTimeout(() => searchDriveFiles(q), 500);
-}
-
-async function searchDriveFiles(query) {
-  if (!driveAccessToken || !query.trim()) return;
-  const c = document.getElementById('driveContent');
-  const countEl = document.getElementById('driveSearchCount');
-  c.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div><p style="margin-top:12px;font-size:12px;color:var(--t4)">검색 중...</p></div>';
-  countEl.textContent = '';
-
-  try {
-    const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
-    let allFiles = [], pageToken = '';
-    // Search across all shared drives for images/videos matching query
-    const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
-    const nameFilter = "name contains '" + query.replace(/'/g, "\\'") + "'";
-    const qStr = encodeURIComponent(mimeFilter + " and " + nameFilter + " and trashed=false");
-    const fields = encodeURIComponent('nextPageToken,files(id,name,mimeType,thumbnailLink,webContentLink,createdTime)');
-
-    do {
-      const url = 'https://www.googleapis.com/drive/v3/files?q=' + qStr + '&fields=' + fields + '&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives' + (pageToken ? '&pageToken=' + pageToken : '');
-      const r = await fetch(url, { headers });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error ? data.error.message : 'API error ' + r.status);
-      allFiles = allFiles.concat(data.files || []);
-      pageToken = data.nextPageToken || '';
-      // Cap at 300 results
-      if (allFiles.length >= 300) { pageToken = ''; }
-    } while (pageToken);
-
-    // Deduplicate
-    const seen = new Set();
-    driveFilesList = allFiles.filter(f => { if (seen.has(f.id)) return false; seen.add(f.id); return true; });
-    driveFilesList.sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''));
-    countEl.textContent = driveFilesList.length + '개';
-    if (!driveFilesList.length) {
-      c.innerHTML = '<div class="drive-login"><p>검색 결과가 없습니다.</p></div>';
-    } else {
-      renderDriveGrid(driveFilesList);
-    }
-    document.getElementById('driveFooter').style.display = driveFilesList.length ? '' : 'none';
-    if (driveFilesList.length) updateDriveFooter();
-  } catch (e) {
-    c.innerHTML = '<div class="drive-login"><p style="color:#ff453a;font-size:12px">' + esc(e.message) + '</p></div>';
-  }
-}
-
-function renderDriveGrid(fileList) {
-  if (!fileList) fileList = driveFilesList;
-  const content = document.getElementById('driveContent');
-  if (!fileList.length) {
-    content.innerHTML = '<div class="drive-login"><p>검색 결과가 없습니다.</p></div>';
-    return;
-  }
-  let html = '<div class="drive-grid">';
-  fileList.forEach(f => {
-    const isVideo = f.mimeType.startsWith('video/');
-    const selected = selectedDriveIds.has(f.id);
-    const thumb = f.thumbnailLink
-      ? '<img src="' + f.thumbnailLink.replace('=s220', '=s300') + '" loading="lazy">'
-      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">' + (isVideo ? '영상' : '이미지') + '</div>';
-    html += '<div class="drive-item' + (selected ? ' selected' : '') + '" onclick="toggleDriveItem(\'' + f.id + '\')">' +
-      thumb +
-      '<span class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" fill="none" stroke="#fff" stroke-width="3"/></svg></span>' +
-      (isVideo ? '<span class="vid-badge"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></span>' : '') +
-      '<span class="drive-item-name">' + esc(f.name) + '</span></div>';
-  });
-  html += '</div>';
-  content.innerHTML = html;
-  document.getElementById('driveFooter').style.display = '';
-  updateDriveFooter();
-}
-
-function toggleDriveItem(id) {
-  if (selectedDriveIds.has(id)) selectedDriveIds.delete(id);
-  else if (selectedDriveIds.size < 5) selectedDriveIds.add(id);
-  renderDriveGrid();
-}
-function updateDriveFooter() {
-  const n = selectedDriveIds.size;
-  document.getElementById('driveCount').textContent = n + '개 선택';
-  document.getElementById('driveAttachBtn').disabled = n === 0;
-}
-function attachDriveFiles() {
-  selectedDriveIds.forEach(id => {
-    const f = driveFilesList.find(x => x.id === id);
-    if (!f || files.length >= 5) return;
-    files.push({ name: f.name, type: f.mimeType, isDrive: true, driveId: f.id, thumbnail: f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s300') : null });
-  });
-  renderFiles();
-  sendBtn.disabled = !promptInput.value.trim() && files.length === 0;
-  selectedDriveIds.clear();
-  closeDrive();
-  showToast(files.length + '개 파일 첨부됨');
-}
-
-// ══════════════════════════════════════════════════════════
-// ODD AI ENGINE — Claude API Integration
-// ══════════════════════════════════════════════════════════
-const AI_PROXY = 'https://odd-ai-proxy.it-751.workers.dev';
-const aiConfig = {
-  key: localStorage.getItem('odd_ai_key') || '',
-  model: localStorage.getItem('odd_ai_model') || 'claude-sonnet-4-20250514',
-};
-
-const AI_SYSTEM = `You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.
-
-PRODUCT M-01: Pre-meal liquid supplement. Twist-and-drink before meals.
-5 Key Ingredients: Delphinol® (Maqui Berry polyphenol, reduces post-meal glucose spikes), Reducose® (Mulberry Leaf extract, ~5x higher DNJ, eases post-meal glucose load), GOFOS™ (prebiotic fiber, feeds beneficial gut bacteria), Orafti® GR (chicory root inulin, manages glucose/cholesterol/elimination), Lalmin® C2000 (organic chromium, supports efficient glucose use).
-Brand: odd.us / m-01.odd.us | Tagline: "Not Salad, But Salad." | 60-Day Money-Back Guarantee | Ships worldwide, made in USA.
-
-FDA (DSHEA): Structure/function claims ONLY. Never: diagnose, treat, cure, prevent disease. Required disclaimer: "These statements have not been evaluated by the FDA..."
-FTC: All claims truthful & substantiated. Influencer #ad/#sponsored disclosure required. No deceptive pricing/urgency.
-Meta: No personal health attributes, no before/after, positive framing. TikTok: No health guarantees, disclosure required. Google: Healthcare ad restrictions. Amazon: No disease claims in listings.
-
-BRAND VOICE: Sophisticated yet warm. Science-informed, not heavy. Confident, not aggressive. Premium, intentional. ALWAYS positive framing — never shame/fear.
-BANNED: "one bottle salad", "2 second salad", disease claims (cure/treat/heal/prevent), guaranteed results, negative self-image, absolute health claims (eliminates/burns/detox).
-
-Hooks — TOF: "Not Salad, But Salad." / "Prep time: zero." / "Before the first bite." MOF: "42% less impact from carbs." / "Why Salad? Not the bowl — the benefits." BOF: "Love It in 60 Days or Get Your Money Back." / "Start your smarter routine."
-Hashtags: Always #oddtobewell. Campaign: #notsaladbutsalad. IG up to 5, TikTok 3-5, Google none.
-
-CAPABILITIES: Caption generation (all platforms/funnels), brand tone review, FDA/FTC compliance check, influencer strategy, marketing plans, content strategy, email copy, landing page copy, competitor analysis, product Q&A, A/B test ideas, audience targeting, Amazon listing optimization, crisis comms.
-
-RULES: Respond in user's language (Korean or English). Be concise & actionable. Auto-check compliance with flags. Provide multiple creative options. Use headers/bullets for structure. Maintain ODD voice always.
-
-DATA FORMATTING: When presenting sales/performance/dashboard data, ALWAYS use markdown tables for numerical data (e.g. | 날짜 | 매출 | 주문 |). Use ## headings to separate sections. Highlight key metrics with **bold**. Summarize key takeaways at the top before showing detailed data. Keep responses clean and well-structured.`;
-
-function openAISettings() {
-  document.getElementById('aiKeyInput').value = aiConfig.key;
-  document.getElementById('aiModelSelect').value = aiConfig.model;
-  document.getElementById('aiModalBg').classList.add('open');
-}
-function closeAISettings() { document.getElementById('aiModalBg').classList.remove('open'); }
-function saveAISettings() {
-  aiConfig.key = document.getElementById('aiKeyInput').value.trim();
-  aiConfig.model = document.getElementById('aiModelSelect').value;
-  localStorage.setItem('odd_ai_key', aiConfig.key);
-  localStorage.setItem('odd_ai_model', aiConfig.model);
-  closeAISettings();
-  updateAIDot();
-  showToast('AI 설정 저장 완료');
-}
-function updateAIDot() {
-  document.getElementById('aiDot').style.display = aiConfig.key ? '' : 'none';
-}
-
-// ── Dashboard Data Integration ──
-const SALES_DATA_URL = 'https://odd-dev.github.io/marketing-dashboard/data.js';
-const PERF_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJQpp9WdjTcj95v9r5BWdk_arYdrYZci_l2g9VouTFh_Avjj7VzfQ1LwRghkLRdI19_qq6AmFFmPsy/pub?output=csv';
-let dashboardData = { sales: null, perf: null, lastFetch: 0 };
-
-async function fetchDashboardData() {
-  if (Date.now() - dashboardData.lastFetch < 5 * 60 * 1000 && dashboardData.sales) return dashboardData;
-  const results = await Promise.allSettled([
-    fetch(SALES_DATA_URL).then(r => r.text()),
-    fetch(PERF_CSV_URL).then(r => r.text()),
-  ]);
-  if (results[0].status === 'fulfilled') {
-    try {
-      const js = results[0].value;
-      const json = js.replace(/^[^{]*/, '').replace(/;?\s*$/, '');
-      dashboardData.sales = JSON.parse(json);
-    } catch (e) { console.warn('Sales data parse error', e); }
-  }
-  if (results[1].status === 'fulfilled') {
-    try { dashboardData.perf = parseCSV(results[1].value); } catch (e) { console.warn('Perf CSV parse error', e); }
-  }
-  dashboardData.lastFetch = Date.now();
-  return dashboardData;
-}
-
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  return lines.slice(1).map(line => {
-    const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
-    return obj;
-  });
-}
-
-function summarizeSalesData(data) {
-  if (!data) return '';
-  let s = '=== ODD 세일즈 대시보드 데이터 ===\n';
-  if (data.updated_at) s += '최종 업데이트: ' + data.updated_at + '\n';
-  s += '총 ERP 주문수: ' + (data.total_erp_orders || 'N/A') + '\n';
-
-  // 주문 데이터 요약
-  if (data.orders && data.orders.length) {
-    const sales = data.orders.filter(o => o.s === 'sale');
-    const totalRev = sales.reduce((sum, o) => sum + (o.t || 0), 0);
-    s += '총 매출(sale): $' + totalRev.toFixed(2) + '\n';
-    s += '판매 건수: ' + sales.length + '건\n';
-
-    // 채널별 집계
-    const byCh = {};
-    sales.forEach(o => { const ch = o.ch || 'unknown'; byCh[ch] = (byCh[ch] || 0) + (o.t || 0); });
-    s += '\n채널별 매출:\n';
-    Object.entries(byCh).sort((a,b) => b[1]-a[1]).forEach(([ch, amt]) => { s += '  ' + ch + ': $' + amt.toFixed(2) + '\n'; });
-
-    // 일별 집계 (최근 14일)
-    const byDate = {};
-    sales.forEach(o => { byDate[o.d] = (byDate[o.d] || 0) + (o.t || 0); });
-    const dates = Object.keys(byDate).sort().slice(-14);
-    s += '\n최근 일별 매출:\n';
-    dates.forEach(d => { s += '  ' + d + ': $' + byDate[d].toFixed(2) + '\n'; });
-
-    // 주별 상위 지역
-    const bySt = {};
-    sales.forEach(o => { if (o.st) bySt[o.st] = (bySt[o.st] || 0) + (o.t || 0); });
-    s += '\n상위 주(State) 매출 (Top 10):\n';
-    Object.entries(bySt).sort((a,b) => b[1]-a[1]).slice(0,10).forEach(([st, amt]) => { s += '  ' + st + ': $' + amt.toFixed(2) + '\n'; });
-  }
-
-  // 재고
-  if (data.inventory && data.inventory.length) {
-    s += '\n재고 현황:\n';
-    data.inventory.forEach(i => { s += '  ' + (i.title || i.name || 'N/A') + ': ' + (i.inventory_quantity || i.on_hand || 0) + '개\n'; });
-  }
-
-  // 구독
-  if (data.recharge_active) {
-    s += '\n활성 구독: ' + data.recharge_active.length + '건\n';
-  }
-  if (data.recharge_cancelled) {
-    s += '취소된 구독: ' + data.recharge_cancelled.length + '건\n';
-  }
-
-  return s;
-}
-
-function summarizePerfData(rows) {
-  if (!rows || !rows.length) return '';
-  let s = '=== ODD 퍼포먼스 대시보드 데이터 (Meta/TikTok 광고) ===\n';
-  const headers = Object.keys(rows[0]);
-  s += '컬럼: ' + headers.join(', ') + '\n';
-  s += '총 ' + rows.length + '행\n\n';
-  // 모든 행 출력 (metric별 일별 데이터)
-  rows.forEach(r => {
-    const vals = headers.map(h => r[h]).filter(v => v && v.trim());
-    if (vals.length > 0) s += vals.join(' | ') + '\n';
-  });
-  return s;
-}
-
-function needsDashboardData(prompt) {
-  const lower = prompt.toLowerCase();
-  const triggers = ['매출','세일즈','sales','주문','order','대시보드','dashboard','퍼포먼스','performance',
-    'roas','acos','cpc','ctr','impression','클릭','노출','광고비','ad spend','spend','revenue',
-    '전환','conversion','유닛','unit','데이터','data','실적','성과','지표','metric','kpi',
-    '추이','트렌드','trend','증가','감소','비교','compare','일별','주별','월별',
-    '오늘','어제','그제','이번주','지난주','이번달','지난달','현황','today','yesterday',
-    '하루','일간','weekly','monthly','daily','몇건','몇개','총','합계','inventory','재고',
-    '구독','subscription','cancel','취소','환불','refund','배송','shipping'];
-  // 날짜 패턴 (3/10, 3월 10일, 2026-03-10 등)
-  if (/\d{1,2}\/\d{1,2}|\d{1,2}월\s*\d{1,2}일|\d{4}-\d{2}-\d{2}/.test(prompt)) return true;
-  return triggers.some(k => lower.includes(k));
-}
-
-// Auto-fetch dashboard data on page load
-fetchDashboardData().then(() => console.log('Dashboard data loaded'));
-
-function shouldUseAI(prompt) {
-  if (!aiConfig.key) return false;
-  const lower = prompt.toLowerCase();
-  const aiTriggers = ['검수','리뷰','review','체크','check','분석','analysis','추천','recommend',
-    '플랜','plan','전략','strategy','법률','legal','fda','ftc','인플루언서','influencer',
-    '이메일','email','경쟁','competitor','타겟','target','최적화','optimize','수정','fix',
-    '설명','explain','왜','why','어떻게','how','비교','compare','제안','suggest',
-    '브리프','brief','가이드','guide','톤앤매너','tone','문제','problem','개선','improve',
-    '아이디어','idea','마케팅','marketing','브랜드','brand','규정','regulation','위반','violat',
-    '평가','evaluat','검토','리서치','research','트렌드','trend','오디언스','audience',
-    '아마존','amazon','리스팅','listing','소셜','social','컨설팅','consult',
-    '매출','세일즈','sales','주문','order','대시보드','dashboard','퍼포먼스','performance',
-    'roas','acos','cpc','ctr','노출','광고비','spend','revenue','실적','성과','지표','kpi',
-    '찾아','알려','해줘','해 줘','줘','원료','성분','ingredient','사진','photo','image','이미지',
-    '뭐','무엇','어디','언제','얼마','몇','알아','검색','search','질문','물어','답변',
-    'm-01','m01','제품','product',
-    '오늘','어제','그제','이번주','지난주','이번달','지난달','현황','today','yesterday',
-    '하루','일간','재고','구독','환불','배송','몇건','총','합계'];
-  if (/\d{1,2}\/\d{1,2}|\d{1,2}월\s*\d{1,2}일|\d{4}-\d{2}-\d{2}/.test(prompt)) return true;
-  return aiTriggers.some(k => lower.includes(k));
-}
-
-// ── Smart Routing: Local first → AI fallback ──
-function needsAIAnalysis(prompt) {
-  const lower = prompt.toLowerCase();
-  const analysisTriggers = ['분석','analysis','추천','recommend','플랜','plan','전략','strategy',
-    '법률','legal','fda','ftc','검수','리뷰','review','체크','check','제안','suggest',
-    '브리프','brief','가이드','guide','톤앤매너','tone','개선','improve','최적화','optimize',
-    '아이디어','idea','비교','compare','평가','evaluat','검토','설명','explain',
-    '왜','why','어떻게','how','작성','써줘','만들어','generate','캡션','caption',
-    '이메일','email','경쟁','competitor','인플루언서','influencer','컨설팅','consult',
-    '리서치','research','마케팅','marketing','규정','regulation','위반','violat'];
-  return analysisTriggers.some(k => lower.includes(k));
-}
-
-function localSearch(prompt) {
-  const lower = prompt.toLowerCase();
-  const results = { drive: [], dashboard: null, hasDashboard: false };
-
-  // 1) Drive 파일 검색
-  if (driveFilesList.length > 0) {
-    const terms = prompt.replace(/찾아줘?|검색해?줘?|보여줘?|좀|우리|이미지|영상|파일|콘텐츠|사진|알려줘?/g, '')
-      .trim().toLowerCase().split(/\s+/).filter(t => t.length > 1);
-    if (terms.length > 0) {
-      results.drive = driveFilesList.filter(f => {
-        const fn = f.name.toLowerCase();
-        return terms.some(t => fn.includes(t));
-      }).slice(0, 12);
-    }
-  }
-
-  // 2) 대시보드 데이터 검색
-  if (needsDashboardData(prompt) && dashboardData.lastFetch > 0) {
-    let info = '';
-    if (dashboardData.sales) info += summarizeSalesData(dashboardData.sales);
-    if (dashboardData.perf) info += '\n' + summarizePerfData(dashboardData.perf);
-    if (info.trim()) { results.dashboard = info; results.hasDashboard = true; }
-  }
-
-  return results;
-}
-
-function renderLocalResults(prompt, results, ra) {
-  let html = '';
-
-  // 대시보드 데이터 직접 표시
-  if (results.hasDashboard) {
-    const lower = prompt.toLowerCase();
-    // 날짜 필터링
-    let dateMatch = prompt.match(/(\d{1,2})[\/.월]\s*(\d{1,2})[일]?/);
-    let targetDate = null;
-    if (dateMatch) {
-      const m = dateMatch[1].padStart(2,'0'), d = dateMatch[2].padStart(2,'0');
-      targetDate = '2026-' + m + '-' + d;
-    }
-    if (lower.includes('오늘')) targetDate = new Date().toISOString().slice(0,10);
-    if (lower.includes('어제')) { const y = new Date(); y.setDate(y.getDate()-1); targetDate = y.toISOString().slice(0,10); }
-
-    html += '<div class="ai-response"><div class="ai-label"><span class="dot" style="background:#4ade80"></span>LOCAL DATA</div><div class="ai-text">';
-
-    if (dashboardData.sales && dashboardData.sales.orders) {
-      const orders = dashboardData.sales.orders;
-      let filtered = orders.filter(o => o.s === 'sale');
-      let dateLabel = '전체';
-
-      if (targetDate) {
-        filtered = filtered.filter(o => o.d === targetDate);
-        dateLabel = targetDate;
-      } else if (lower.includes('이번주')) {
-        const now = new Date(), dow = now.getDay();
-        const sun = new Date(now); sun.setDate(now.getDate() - dow);
-        const sunStr = sun.toISOString().slice(0,10);
-        filtered = filtered.filter(o => o.d >= sunStr);
-        dateLabel = sunStr + ' ~ 현재';
-      } else if (lower.includes('이번달') || lower.includes('이번 달')) {
-        const mStr = new Date().toISOString().slice(0,7);
-        filtered = filtered.filter(o => o.d && o.d.startsWith(mStr));
-        dateLabel = mStr;
-      }
-
-      const totalRev = filtered.reduce((s, o) => s + (o.t || 0), 0);
-      const count = filtered.length;
-
-      // 채널별
-      const byCh = {};
-      filtered.forEach(o => { byCh[o.ch || 'unknown'] = (byCh[o.ch || 'unknown'] || 0) + (o.t || 0); });
-
-      // 일별
-      const byDate = {};
-      filtered.forEach(o => { byDate[o.d] = (byDate[o.d] || 0) + (o.t || 0); });
-
-      html += '<h2>📊 매출 현황 (' + dateLabel + ')</h2>';
-      html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">';
-      html += '<div style="flex:1;min-width:130px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--t4)">총 매출</div><div style="font-size:22px;font-weight:700;color:#4ade80;margin-top:4px">$' + totalRev.toFixed(2) + '</div></div>';
-      html += '<div style="flex:1;min-width:130px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--t4)">주문 수</div><div style="font-size:22px;font-weight:700;color:var(--t1);margin-top:4px">' + count + '건</div></div>';
-      html += '</div>';
-
-      // 채널별 테이블
-      if (Object.keys(byCh).length > 1) {
-        html += '<h3>채널별</h3><table><thead><tr><th>채널</th><th>매출</th><th>비중</th></tr></thead><tbody>';
-        Object.entries(byCh).sort((a,b) => b[1]-a[1]).forEach(([ch, amt]) => {
-          html += '<tr><td>' + ch + '</td><td style="color:#4ade80;font-weight:600">$' + amt.toFixed(2) + '</td><td>' + (totalRev > 0 ? (amt/totalRev*100).toFixed(1) : 0) + '%</td></tr>';
-        });
-        html += '</tbody></table>';
-      }
-
-      // 일별 (여러 날이면)
-      const dateKeys = Object.keys(byDate).sort();
-      if (dateKeys.length > 1 && dateKeys.length <= 31) {
-        html += '<h3>일별 매출</h3><table><thead><tr><th>날짜</th><th>매출</th><th>건수</th></tr></thead><tbody>';
-        dateKeys.forEach(d => {
-          const dc = filtered.filter(o => o.d === d).length;
-          html += '<tr><td>' + d + '</td><td style="color:#4ade80;font-weight:600">$' + byDate[d].toFixed(2) + '</td><td>' + dc + '건</td></tr>';
-        });
-        html += '</tbody></table>';
-      }
-
-      // 재고
-      if (dashboardData.sales.inventory && (lower.includes('재고') || lower.includes('inventory'))) {
-        html += '<h3>재고 현황</h3><table><thead><tr><th>제품</th><th>수량</th></tr></thead><tbody>';
-        dashboardData.sales.inventory.forEach(i => {
-          html += '<tr><td>' + (i.title || i.name || 'N/A') + '</td><td>' + (i.inventory_quantity || i.on_hand || 0) + '개</td></tr>';
-        });
-        html += '</tbody></table>';
-      }
-    }
-
-    html += '</div>';
-    // AI 에스컬레이션 버튼
-    html += '<div class="ai-actions"><button class="ai-copy-btn" onclick="generateWithAI(\'' + prompt.replace(/'/g,"\\'") + '\')">🤖 AI로 더 자세히 분석</button></div>';
-    html += '</div>';
-  }
-
-  // Drive 파일 결과
-  if (results.drive.length > 0) {
-    html += '<div class="ai-response"><div class="ai-label"><span class="dot" style="background:#60a5fa"></span>DRIVE ASSETS</div>';
-    html += '<div style="font-size:13px;color:var(--t3);margin-bottom:12px">' + results.drive.length + '개 관련 파일</div>';
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">';
-    results.drive.forEach(f => {
-      const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
-      html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised);transition:all .15s" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')" onmouseover="this.style.borderColor=\'rgba(255,255,255,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
-        (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:11px">미리보기 없음</div>') +
-        '<div style="padding:5px 7px;font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
-    });
-    html += '</div></div>';
-  }
-
-  return html;
-}
-
-const _origGenerate = generate;
-generate = async function() {
-  const prompt = promptInput.value.trim();
-  if (!prompt && files.length === 0) return;
-
-  // 복합 요청 분석 — 각 의도를 감지하여 병렬 처리
-  const intents = detectIntents(prompt);
-
-  if (intents.length > 1 || (intents.length === 1 && intents[0] !== 'caption')) {
-    handleMultiIntent(prompt, intents);
-    return;
-  }
-
-  // 단일 의도 — 대시보드 질의
-  if (needsDashboardData(prompt) && shouldUseAI(prompt)) {
-    generateWithAI(prompt);
-    return;
-  }
-
-  // 단일 의도 — AI가 필요한 복잡한 질문
-  if (shouldUseAI(prompt) && !intents.length) {
-    generateWithAI(prompt);
-    return;
-  }
-
-  // 일반 캡션 템플릿 생성
-  _origGenerate();
-};
-
-let aiAbort = null;
-async function generateWithAI(prompt) {
-  document.getElementById('landing').classList.add('pushed');
-  const ra = document.getElementById('resultsArea');
-  ra.style.display = 'block';
-  ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
-
-  aiAbort = new AbortController();
-  try {
-    // Inject dashboard data if query is dashboard-related
-    let userMsg = prompt;
-    if (needsDashboardData(prompt)) {
-      await fetchDashboardData();
-      let ctx = '';
-      if (dashboardData.sales) ctx += summarizeSalesData(dashboardData.sales) + '\n\n';
-      if (dashboardData.perf) ctx += summarizePerfData(dashboardData.perf) + '\n\n';
-      if (ctx) userMsg = '아래는 ODD 대시보드의 실제 데이터입니다. 이 데이터를 기반으로 답변해주세요.\n\n' + ctx + '---\n사용자 질문: ' + prompt;
-    }
-    const resp = await fetch(AI_PROXY, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, system: AI_SYSTEM, messages: [{ role: 'user', content: userMsg }], stream: true }),
-      signal: aiAbort.signal,
-    });
-    if (!resp.ok) {
-      const e = await resp.json().catch(() => ({}));
-      throw new Error(e.error?.message || 'API Error ' + resp.status);
-    }
-    ra.innerHTML = '<div class="ai-response"><div class="ai-label"><span class="dot"></span>ODD AI</div><div class="ai-text streaming-cursor" id="aiStreamText"></div></div>';
-    const textEl = document.getElementById('aiStreamText');
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '', fullText = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim();
-        if (d === '[DONE]') continue;
-        try {
-          const p = JSON.parse(d);
-          if (p.type === 'content_block_delta' && p.delta?.text) {
-            fullText += p.delta.text;
-            textEl.innerHTML = renderAIMd(fullText);
-          }
-        } catch {}
-      }
-    }
-    textEl.classList.remove('streaming-cursor');
-    textEl.innerHTML = renderAIMd(fullText);
-    // Search Drive for related assets if query mentions files/images/assets
-    if (isDriveSearchQuery(prompt) && driveAccessToken) {
-      try {
-        if (!driveFilesList.length) await loadDriveFiles();
-        const searchTerms = prompt.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|좀|우리|이미지|영상|파일|콘텐츠|사진/g, '').trim().toLowerCase().split(/\s+/).filter(t => t.length > 1);
-        const matched = driveFilesList.filter(f => {
-          const fname = f.name.toLowerCase();
-          return searchTerms.some(t => fname.includes(t));
-        }).slice(0, 12);
-        if (matched.length > 0) {
-          const grid = document.createElement('div');
-          grid.style.cssText = 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px';
-          grid.innerHTML = '<div style="font-size:12px;color:var(--t3);margin-bottom:10px;font-weight:600">📁 Google Drive에서 찾은 관련 에셋 (' + matched.length + '개)</div>' +
-            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">' +
-            matched.map(f => {
-              const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
-              return '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')">' +
-                (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:11px">미리보기 없음</div>') +
-                '<div style="padding:4px 6px;font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
-            }).join('') + '</div>';
-          ra.querySelector('.ai-response').appendChild(grid);
-        }
-      } catch (e) { console.warn('Drive search in AI failed', e); }
-    } else if (isDriveSearchQuery(prompt) && !driveAccessToken) {
-      const loginHint = document.createElement('div');
-      loginHint.style.cssText = 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px;text-align:center';
-      loginHint.innerHTML = '<p style="font-size:12px;color:var(--t4);margin-bottom:10px">Google Drive 에셋을 검색하려면 로그인이 필요합니다</p>' +
-        '<button onclick="driveSignIn()" style="padding:8px 20px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--t2);cursor:pointer;font-size:12px;font-weight:600">Google 로그인</button>';
-      ra.querySelector('.ai-response').appendChild(loginHint);
-    }
-    const act = document.createElement('div');
-    act.className = 'ai-actions';
-    act.innerHTML = '<button class="ai-copy-btn" onclick="navigator.clipboard.writeText(decodeURIComponent(\'' + encodeURIComponent(fullText) + '\')).then(()=>showToast(\'복사됨\'))">복사</button>';
-    ra.querySelector('.ai-response').appendChild(act);
-    saveHistory(prompt, [{ label: 'ODD AI', content: fullText }]);
-  } catch (err) {
-    if (err.name === 'AbortError') return;
-    ra.innerHTML = '<div class="ai-response"><div class="ai-label"><span class="dot"></span>ODD AI</div><div class="ai-text" style="color:#ff453a">' + esc(err.message) + '</div></div>';
-  }
-}
-
-function renderAIMd(text) {
-  if (!text) return '';
-  let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // Code blocks
-  h = h.replace(/```(\w*)\n([\s\S]*?)```/g, (_, l, c) => '<pre><code>' + c.trim() + '</code></pre>');
-  h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-  // Tables (| col | col |)
-  h = h.replace(/((?:^\|.+\|$\n?)+)/gm, function(block) {
-    const rows = block.trim().split('\n').filter(r => r.trim());
-    if (rows.length < 2) return block;
-    let table = '<table>';
-    rows.forEach((row, i) => {
-      const cells = row.split('|').filter(c => c.trim() !== '');
-      if (i === 1 && /^[\s\-:]+$/.test(cells.join(''))) return; // separator row
-      const tag = i === 0 ? 'th' : 'td';
-      const tr = i === 0 ? 'thead' : (i === 2 && rows.length > 2 ? 'tbody' : '');
-      if (tr === 'thead') table += '<thead>';
-      if (tr === 'tbody') table += '<tbody>';
-      table += '<tr>' + cells.map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('') + '</tr>';
-      if (i === 0) table += '</thead>';
-    });
-    table += '</tbody></table>';
-    return table;
-  });
-  // Inline formatting
-  h = h.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  h = h.replace(/(?<!\*)\*([^\*\n]+?)\*(?!\*)/g, '<em>$1</em>');
-  // Headings
-  h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-  h = h.replace(/^---+$/gm, '<hr>');
-  // Blockquote
-  h = h.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-  // Lists
-  h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
-  h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
-  h = h.replace(/^\d+\. (.+)$/gm, '<oli>$1</oli>');
-  h = h.replace(/((?:<oli>.*<\/oli>\n?)+)/g, m => '<ol>' + m.replace(/<\/?oli>/g, t => t.replace('oli','li')) + '</ol>');
-  // Paragraphs
-  h = h.replace(/\n{2,}/g, '</p><p>');
-  h = h.replace(/\n/g, '<br>');
-  h = '<p>' + h + '</p>';
-  h = h.replace(/<p><(h[1-3]|pre|ul|ol|blockquote|hr|table)/g, '<$1');
-  h = h.replace(/<\/(h[1-3]|pre|ul|ol|blockquote|table)><\/p>/g, '</$1>');
-  h = h.replace(/<p><\/p>/g, '');
-  // Dollar amounts highlighting
-  h = h.replace(/\$[\d,]+\.?\d*/g, '<strong style="color:#4ade80">$&</strong>');
-  return h;
-}
-
 // Init
 updateBadge();
-updateAIDot();
-// AI ready
 </script>
 </body>
 </html>
