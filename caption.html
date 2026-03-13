@@ -121,7 +121,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 
 .result-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .result-label .dot{width:6px;height:6px;border-radius:50%}
-.result-content{font-size:15px;line-height:1.8;color:var(--t2);white-space:pre-wrap;word-break:break-word}
+.result-content{font-size:15px;line-height:1.8;color:var(--t2);white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;overflow-x:hidden}
 .result-meta{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
 .result-meta .tag{font-size:10px;padding:3px 8px;border-radius:100px;background:rgba(255,255,255,.05);color:var(--t4)}
 .copy-btn{margin-left:auto;padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:4px}
@@ -906,6 +906,11 @@ function renderBuiltInMd(text) {
   h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
   h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
   h = h.replace(/^---+$/gm, '<hr>');
+  // Blockquotes (> escaped to &gt;)
+  h = h.replace(/((?:^&gt;\s?.*$\n?)+)/gm, function(block) {
+    const inner = block.replace(/^&gt;\s?/gm, '').trim();
+    return '<blockquote style="margin:8px 0;padding:8px 14px;border-left:3px solid var(--t5);color:var(--t3);font-size:14px">' + inner + '</blockquote>';
+  });
   h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
   h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
   h = h.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
@@ -920,8 +925,10 @@ function renderBuiltInMd(text) {
 
   // Korean reference box
   if (koRef) {
-    let kr = koRef.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let kr = koRef.replace(/^>\s?/gm, '');
+    kr = kr.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     kr = kr.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    kr = kr.replace(/\n{2,}/g, '</p><p>');
     kr = kr.replace(/\n/g, '<br>');
     h += '<div style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;border-left:3px solid #60a5fa">' +
       '<div style="font-size:11px;font-weight:600;color:#60a5fa;margin-bottom:8px;letter-spacing:.5px">🇰🇷 한글 참고</div>' +
