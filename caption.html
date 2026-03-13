@@ -686,7 +686,7 @@ function generateCarouselSlides(prompt, fn, tension) {
     ],
     mof: [
       { num:1, headline:'5 Research-Backed Ingredients.', body:'Built for what salad does.', visual:'성분 배치, 다크 백그라운드, 과학적 톤' },
-      { num:2, headline:'42% Less Carb Impact.', body:'Delphinol® smooths the glucose spike.', visual:'데이터 시각화 느낌, 모던 푸드포토' },
+      { num:2, headline:'42% Less Carb Impact.', body:'Reducose® eases post-meal glucose load.', visual:'데이터 시각화 느낌, 모던 푸드포토' },
       { num:3, headline:'No Prep. No Waste.', body:'Just your rhythm.', visual:'시간 절약 컨셉, 효율성 강조, 클린 배경' },
       { num:4, headline:'Why M-01 Works.', body:'Decoded from nature. Refined by science.', visual:'제품 쇼케이스, 병 중심, 어두운 톤' }
     ],
@@ -931,7 +931,7 @@ function isBuiltInQuery(text) {
 const BUILTIN_ANSWERS = {
   ingredient: {
     keywords: ['원료','성분','ingredient','들어가','뭐가 들'],
-    answer: '**M-01 핵심 원료 5가지:**\n\n1. **Delphinol®** (파타고니아 마키베리 추출물) — 강력한 항산화, 안토시아닌\n2. **Reducose®** (백상엽 추출물) — 탄수화물 흡수 최대 42% 감소 (임상 입증)\n3. **차전자피 식이섬유** (Psyllium Husk) — 소화 및 장 건강\n4. **유기농 사과식초** (with "the Mother") — 대사 건강 지원\n5. **레몬즙 농축액** — 천연 풍미, 비타민 C\n\n모두 미국 cGMP 시설에서 제조됩니다.'
+    answer: '**M-01 핵심 원료 5가지:**\n\n1. **Delphinol®** (마키베리 폴리페놀) — 식후 혈당 급상승 완화, 균형잡힌 인슐린 수치 지원\n2. **Reducose®** (뽕잎 추출물) — DNJ 함량 ~5배, 식후 포도당 부하 완화\n3. **GOFOS™** (프리바이오틱 섬유) — 유익균 먹이, 소화·배변·장 밸런스 지원\n4. **Orafti® GR** (치커리근 이눌린) — 식후 포도당·콜레스테롤·배변을 하나의 시스템으로 관리\n5. **Lalmin® C2000** (유기 크롬) — 포도당 효율적 활용, 식후 안정적 에너지 지원\n\n모두 미국 cGMP 시설에서 제조됩니다.'
   },
   product: {
     keywords: ['m-01','m01','제품','product','뭐야','무엇'],
@@ -995,7 +995,7 @@ async function handleAssetRecommend(prompt) {
   let term = prompt.replace(/추천해?줘?|제안해?줘?|골라줘?|뽑아줘?|어울리는|적합한|맞는|괜찮은|에셋|이미지|영상|사진|콘텐츠|소스|비주얼|크리에이티브|좀|우리/g, '').trim();
   if (!term) term = 'health supplement wellness';
   // Map Korean terms to English for Unsplash
-  const termMap = {'원료':'natural ingredients supplement','샐러드':'fresh salad greens','건강':'health wellness','대사':'metabolism fitness','식전':'meal preparation food','마키베리':'maqui berry antioxidant','사과식초':'apple cider vinegar','레몬':'lemon citrus fresh','라이프스타일':'wellness lifestyle minimal','루틴':'daily routine morning'};
+  const termMap = {'원료':'natural ingredients supplement','샐러드':'fresh salad greens','건강':'health wellness','대사':'metabolism fitness','식전':'meal preparation food','마키베리':'maqui berry polyphenol','이눌린':'chicory root inulin','크롬':'organic chromium supplement','프리바이오틱':'prebiotic fiber gut health','라이프스타일':'wellness lifestyle minimal','루틴':'daily routine morning'};
   let enTerm = term;
   for (const [ko, en] of Object.entries(termMap)) { if (term.includes(ko)) { enTerm = en; break; } }
   if (enTerm === term) enTerm = term + ' health wellness';
@@ -1666,7 +1666,7 @@ const aiConfig = {
 const AI_SYSTEM = `You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.
 
 PRODUCT M-01: Pre-meal liquid supplement. Twist-and-drink before meals.
-5 Key Ingredients: Delphinol® (Maqui Berry, antioxidant), Reducose® (Mulberry Leaf, reduces carb absorption up to 42%), Psyllium Husk Fiber (gut health), Apple Cider Vinegar (metabolic), Lemon Juice (vitamin C).
+5 Key Ingredients: Delphinol® (Maqui Berry polyphenol, reduces post-meal glucose spikes), Reducose® (Mulberry Leaf extract, ~5x higher DNJ, eases post-meal glucose load), GOFOS™ (prebiotic fiber, feeds beneficial gut bacteria), Orafti® GR (chicory root inulin, manages glucose/cholesterol/elimination), Lalmin® C2000 (organic chromium, supports efficient glucose use).
 Brand: odd.us / m-01.odd.us | Tagline: "Not Salad, But Salad." | 60-Day Money-Back Guarantee | Ships worldwide, made in USA.
 
 FDA (DSHEA): Structure/function claims ONLY. Never: diagnose, treat, cure, prevent disease. Required disclaimer: "These statements have not been evaluated by the FDA..."
