@@ -103,6 +103,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .f-btn.active.mof{background:rgba(167,139,250,.1);color:#a78bfa}
 .f-btn.active.bof{background:rgba(249,115,22,.1);color:#f97316}
 
+/* Account status — avatar only */
+.account-status{position:fixed;top:20px;right:72px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);cursor:pointer;transition:all .2s;z-index:200;user-select:none;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.account-status:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
+.account-status.logged-in{border-color:rgba(48,209,88,.25);background:rgba(48,209,88,.06)}
+.account-status.logged-in:hover{background:rgba(48,209,88,.1)}
+.account-avatar{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.account-avatar svg{width:18px;height:18px;color:var(--t4)}
+.account-avatar img{width:100%;height:100%;object-fit:cover}
+
 /* History button */
 .history-btn{position:fixed;top:20px;right:24px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:200}
 .history-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
@@ -114,14 +123,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 
 .mode-badge{display:inline-block;font-size:11px;font-weight:600;padding:6px 12px;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;margin-bottom:16px;color:var(--t3)}
 
-.result-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:12px;position:relative;animation:fadeUp .4s ease both}
+.result-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:28px 28px 24px;margin-bottom:12px;position:relative;animation:fadeUp .5s ease both}
 .result-card:nth-child(2){animation-delay:.08s}
 .result-card:nth-child(3){animation-delay:.16s}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 .result-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .result-label .dot{width:6px;height:6px;border-radius:50%}
-.result-content{font-size:15px;line-height:1.8;color:var(--t2);white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;overflow-x:hidden}
+.result-content{font-size:15px;line-height:1.8;color:var(--t2);word-break:break-word;overflow-wrap:break-word;overflow-x:hidden}
 .result-meta{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
 .result-meta .tag{font-size:10px;padding:3px 8px;border-radius:100px;background:rgba(255,255,255,.05);color:var(--t4)}
 .copy-btn{margin-left:auto;padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:4px}
@@ -171,6 +180,45 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .loading-dots span:nth-child(2){animation-delay:.2s}
 .loading-dots span:nth-child(3){animation-delay:.4s}
 @keyframes dotPulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── AI Response Rendered Content ── */
+.result-content h1{font-size:22px;font-weight:700;margin:20px 0 12px;color:var(--t1);letter-spacing:-.3px}
+.result-content h2{font-size:18px;font-weight:600;margin:18px 0 10px;color:var(--t1);letter-spacing:-.2px}
+.result-content h3{font-size:15px;font-weight:600;margin:14px 0 8px;color:var(--t2)}
+.result-content h1:first-child,.result-content h2:first-child,.result-content h3:first-child{margin-top:0}
+.result-content p{margin:0 0 10px;line-height:1.8}
+.result-content p:last-child{margin-bottom:0}
+.result-content ul,.result-content ol{margin:8px 0 12px 0;padding-left:20px}
+.result-content li{margin-bottom:4px;line-height:1.7;color:var(--t2)}
+.result-content li::marker{color:var(--t4)}
+.result-content strong{color:var(--t1);font-weight:600}
+.result-content em{color:var(--t3);font-style:italic}
+.result-content hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.result-content blockquote{margin:10px 0;padding:10px 16px;border-left:3px solid var(--t5);color:var(--t3);font-size:14px;background:rgba(255,255,255,.02);border-radius:0 8px 8px 0}
+.result-content pre{margin:10px 0;padding:14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+.result-content code{font-family:'SF Mono',Menlo,Monaco,monospace;font-size:.9em}
+
+/* Tables */
+.result-content table{width:100%;border-collapse:separate;border-spacing:0;margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:14px}
+.result-content thead{background:rgba(255,255,255,.06)}
+.result-content th{text-align:left;padding:10px 14px;font-weight:600;color:var(--t2);font-size:13px;letter-spacing:.3px;border-bottom:1px solid var(--border)}
+.result-content td{padding:9px 14px;color:var(--t3);border-bottom:1px solid rgba(255,255,255,.03)}
+.result-content tbody tr:last-child td{border-bottom:none}
+.result-content tbody tr:hover{background:rgba(255,255,255,.02)}
+
+/* Korean reference box */
+.ko-ref-box{margin-top:20px;padding:16px 18px;background:rgba(96,165,250,.04);border:1px solid rgba(96,165,250,.12);border-radius:12px;border-left:3px solid #60a5fa}
+.ko-ref-box .ko-ref-title{font-size:12px;font-weight:600;color:#60a5fa;margin-bottom:10px;letter-spacing:.5px}
+.ko-ref-box .ko-ref-body{font-size:13px;line-height:1.8;color:var(--t3)}
+
+/* Streaming text — clean monospace-ish feel during stream */
+.result-content.streaming{white-space:pre-wrap !important;line-height:1.9;font-size:14.5px;color:var(--t2)}
+.result-content.streaming::after{content:'';display:inline-block;width:2px;height:1em;background:var(--purple);margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:cursorBlink .8s ease-in-out infinite}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:.15}}
+
+/* Final rendered content — smooth crossfade */
+.result-content.rendered{animation:renderFade .5s ease both}
+@keyframes renderFade{from{opacity:.5;filter:blur(1px)}to{opacity:1;filter:blur(0)}}
 
 /* ── History Panel ── */
 .history-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s}
@@ -225,6 +273,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
   .result-card{padding:20px 18px}
   .history-panel{width:100vw}
   .history-btn{top:16px;right:16px}
+  .account-status{top:16px;right:64px;width:32px;height:32px}
   .frame-container{gap:8px}
   .content-frame{width:120px;height:160px}
   .carousel-container{padding:8px 0}
@@ -235,11 +284,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .settings-btn{position:fixed;top:20px;right:72px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:90}
 .settings-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
 .settings-btn svg{width:18px;height:18px}
-
-/* Settings modal */
 .settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .settings-overlay.open{display:flex}
-.settings-modal{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);width:90%;max-width:440px;padding:28px 24px;position:relative}
+.settings-modal{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);width:90%;max-width:440px;padding:28px 24px;position:relative;max-height:85vh;overflow-y:auto}
 .settings-modal h3{font-size:16px;font-weight:600;color:var(--t1);margin-bottom:20px}
 .settings-modal .close-btn{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center}
 .settings-modal .close-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
@@ -251,11 +298,20 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .settings-field .hint{font-size:11px;color:var(--t5);margin-top:4px}
 .settings-save{width:100%;padding:10px;border:none;border-radius:var(--r-s);background:var(--red);color:#fff;font-size:14px;font-weight:500;font-family:var(--sans);cursor:pointer;transition:background .15s;margin-top:8px}
 .settings-save:hover{background:#d4343a}
+.settings-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--t5);margin:20px 0 10px;padding-top:16px;border-top:1px solid var(--border)}
+.settings-section:first-of-type{margin-top:0;padding-top:0;border-top:none}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
+
+<!-- Google Account Status -->
+<div class="account-status" id="accountStatus" onclick="handleAccountClick()" title="Google 로그인">
+  <div class="account-avatar" id="accountAvatar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  </div>
+</div>
 
 <!-- History Button -->
 <button class="history-btn" id="historyBtn" onclick="openHistory()">
@@ -337,7 +393,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
       <div class="opt-group" id="tensionGroup">
         <button class="opt-btn active" data-val="1" onclick="setOpt('tension','1')">Safe</button>
         <button class="opt-btn" data-val="2" onclick="setOpt('tension','2')">Bold</button>
-        <button class="opt-btn" data-val="3" onclick="setOpt('tension','3')">Edge</button>
       </div>
     </div>
   </div>
@@ -357,15 +412,22 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <h3>Settings</h3>
+    <div class="settings-section">AI / Text</div>
     <div class="settings-field">
-      <label>AI API Key (Claude)</label>
+      <label>Claude API Key</label>
       <input type="password" id="settingsAiKey" placeholder="sk-ant-api03-..." autocomplete="off">
-      <div class="hint">Anthropic API key — 캡션 생성 및 AI 응답에 사용</div>
+      <div class="hint">캡션 생성 및 AI 응답에 사용</div>
     </div>
     <div class="settings-field">
       <label>Notion API Key</label>
       <input type="password" id="settingsNotionKey" placeholder="ntn_..." autocomplete="off">
-      <div class="hint">Notion integration token — 한아원 노션 데이터 검색에 사용</div>
+      <div class="hint">한아원 노션 데이터 검색에 사용</div>
+    </div>
+    <div class="settings-section">Image / Video</div>
+    <div class="settings-field">
+      <label>Nano Banana API Key (Google AI)</label>
+      <input type="password" id="settingsNanoKey" placeholder="AIzaSy..." autocomplete="off">
+      <div class="hint">AI 이미지 생성 — Google AI Studio에서 발급</div>
     </div>
     <button class="settings-save" onclick="saveSettings()">저장</button>
   </div>
@@ -391,15 +453,69 @@ const BANNED = [
 function guidelineCheck(text) {
   const warnings = [];
   const lower = text.toLowerCase();
+
+  // 1) ODD 자체 금지 표현
   BANNED.forEach(b => { if (lower.includes(b.toLowerCase())) warnings.push('⛔ 금지 표현 포함: "' + b + '"'); });
-  const healthDirect = [/your blood sugar/i,/당신의 혈당/,/혈당이 높으/,/are you struggling/i,/your metabolism is broken/i,/당신의 소화가 문제/];
-  healthDirect.forEach(r => { if (r.test(text)) warnings.push('⚠️ 개인 건강 직접 언급 — Meta 정책 위반 가능'); });
-  const medClaims = [/clinically proven/i,/guaranteed result/i,/instant relief/i,/cures /i,/치료/,/완치/,/예방해/];
-  medClaims.forEach(r => { if (r.test(text)) warnings.push('⚠️ 의약품 수준 주장 — 플랫폼 정책 위반'); });
-  const negSelf = [/still suffering/i,/고통받/,/still struggling/i,/지쳐있/,/망가진 몸/];
-  negSelf.forEach(r => { if (r.test(text)) warnings.push('⚠️ 부정적 자기 인식 유도 — 긍정적 프레이밍으로 전환 필요'); });
-  const weight = [/lose \d+ pound/i,/kg 빠/,/fat burner/i,/체지방 감소/,/appetite suppressant/i,/detox/i];
-  weight.forEach(r => { if (r.test(text)) warnings.push('⚠️ 체중 관련 주장 — TikTok/Meta 정책 위반'); });
+
+  // 2) META — 개인 건강 속성 직접 언급 금지 (Personal Attributes Policy)
+  // "you/your" + 건강 상태 조합 = 광고 거부 사유
+  const personalHealth = [
+    /your blood sugar/i, /your metabolism/i, /your digestion/i, /your gut/i, /your body is/i,
+    /are you struggling/i, /are you tired of/i, /do you suffer/i, /is your health/i,
+    /당신의 혈당/, /당신의 소화/, /당신의 몸/, /당신의 건강/, /혈당이 높으/
+  ];
+  personalHealth.forEach(r => { if (r.test(text)) warnings.push('⚠️ [Meta] 개인 건강 속성 직접 언급 — Personal Attributes Policy 위반'); });
+
+  // 3) META + TIKTOK — 의약품 수준 주장 금지 (Disease Claims)
+  const diseaseClaims = [
+    /clinically proven/i, /scientifically proven/i, /medically proven/i,
+    /guaranteed result/i, /instant relief/i, /immediate result/i,
+    /cures? /i, /treats? /i, /prevents? disease/i, /eliminates? /i, /fixes? /i,
+    /치료/, /완치/, /예방해/, /없앤/, /고친/
+  ];
+  diseaseClaims.forEach(r => { if (r.test(text)) warnings.push('⚠️ [Meta+TikTok] 의약품 수준 질병 주장 — 광고 거부/계정 정지 위험'); });
+
+  // 4) META + TIKTOK — 부정적 자기 인식 / 수치심 유도 금지
+  const negSelf = [
+    /still suffering/i, /still struggling/i, /sick and tired/i, /broken body/i,
+    /damaged metabolism/i, /failing health/i, /your body is failing/i,
+    /고통받/, /지쳐있/, /망가진 몸/, /병든/, /고장난/
+  ];
+  negSelf.forEach(r => { if (r.test(text)) warnings.push('⚠️ [Meta+TikTok] 부정적 자기 인식 유도 — 긍정적 프레이밍으로 전환 필요'); });
+
+  // 5) TIKTOK — 체중/다이어트 관련 완전 금지 (Prohibited Category)
+  const weightBanned = [
+    /lose \d+ pound/i, /lose weight/i, /weight loss/i, /burn fat/i, /fat burner/i,
+    /appetite suppress/i, /slim down/i, /shed pound/i, /melt fat/i,
+    /kg 빠/, /체지방 감소/, /살 빠/, /다이어트/, /체중 감량/, /식욕 억제/
+  ];
+  weightBanned.forEach(r => { if (r.test(text)) warnings.push('⛔ [TikTok] 체중/다이어트 주장 — TikTok 완전 금지 카테고리'); });
+
+  // 6) TIKTOK — Before/After 변환 금지
+  const beforeAfter = [/before and after/i, /before\/after/i, /전후 비교/, /비포.*애프터/, /변화 사진/];
+  beforeAfter.forEach(r => { if (r.test(text)) warnings.push('⚠️ [TikTok] Before/After 변환 콘텐츠 — TikTok 금지'); });
+
+  // 7) META — 과장된 약속 / 비현실적 결과
+  const exaggerated = [
+    /100% guaranteed/i, /miracle/i, /magic pill/i, /overnight result/i,
+    /in just \d+ day/i, /transform your body/i,
+    /기적/, /마법/, /하룻밤/, /즉각적/
+  ];
+  exaggerated.forEach(r => { if (r.test(text)) warnings.push('⚠️ [Meta] 과장된 결과 약속 — 광고 거부 사유'); });
+
+  // 8) META+TIKTOK — 위험 키워드 자동 플래그
+  const flaggedTerms = [
+    /testosterone/i, /ephedra/i, /steroid/i, /hormone therapy/i, /insulin inject/i,
+    /테스토스테론/, /스테로이드/, /호르몬 치료/
+  ];
+  flaggedTerms.forEach(r => { if (r.test(text)) warnings.push('⚠️ [Meta+TikTok] 자동 플래그 위험 키워드 포함'); });
+
+  // 9) FDA — Structure/Function 미준수 (disclaimer 누락 체크)
+  const clinicalStats = /\d+%\s*(reduce|lower|increase|decrease|감소|증가|완화)/i;
+  if (clinicalStats.test(text) && !/individual results may vary/i.test(text) && !/개인차/i.test(text)) {
+    warnings.push('⚠️ [FDA] 임상 수치 사용 시 "Individual results may vary" disclaimer 필요');
+  }
+
   return warnings;
 }
 
@@ -443,38 +559,84 @@ function oddHashtags(ch, isAd, contentTheme) {
 // ── ODD. AI 캡션 생성 엔진 ──
 const CAPTION_SYSTEM = `You are ODD.'s dedicated copywriter. Write ACTUAL ready-to-post captions — never briefs, never templates.
 
-BRAND: ODD. — premium US dietary supplement. Product: M-01, pre-meal liquid supplement (twist-and-drink).
+BRAND: ODD. — premium US dietary supplement. Product: M-01, pre-meal liquid supplement (twist-and-drink, lemon flavor).
 TAGLINE: "Not Salad, But Salad." / "Original Design Decoded"
+PHILOSOPHY: "We return wellness to its original design." / "Don't blame sugar — we changed its form."
 WEBSITE: odd.us / m-01.odd.us
+PROOF: 4.8-star rating, 100+ customers, 60-day money-back guarantee, free shipping.
 
-5 KEY INGREDIENTS:
-- Delphinol® (maqui berry polyphenol — smooths post-meal glucose spikes)
-- Reducose® (mulberry leaf, ~5x DNJ — eases post-meal glucose load up to 42%)
-- GOFOS™ (prebiotic fiber — feeds beneficial gut bacteria)
-- Orafti® GR (chicory root inulin — manages glucose, cholesterol, elimination)
-- Lalmin® C2000 (organic chromium — stable energy after meals)
+5 KEY INGREDIENTS (use these FACTS in educational content):
+- Delphinol® (Maqui Berry, Patagonia — 56% reduced insulin response within 60min)
+- Reducose® (White Mulberry Leaf, ~5x DNJ — 42% lower blood sugar response, 44% less carb impact)
+- GOFOS™ (Short-Chain FOS prebiotic — feeds beneficial gut bacteria, supports GLP-1)
+- Orafti® GR (Chicory Root Inulin, Belgium — 25% increase in beneficial gut bacteria)
+- Lalmin® C2000 (Organic Chromium, Estonia — supports cellular glucose uptake)
 
-TONE REFERENCE (inspiration only, NEVER copy verbatim):
-- "Not Salad, But Salad." — campaign metaphor
-- "Original Design Decoded" — brand philosophy
-- "Don't blame sugar. We changed its form." — perspective shift
-- Keywords: ritual, intention, rhythm
+REAL CUSTOMER VOICES (for social proof captions):
+- "Less bloated and less tempted to snack after meals"
+- "Game changer. Great taste and easy to use"
+- "Energy feels more steady, especially after meals"
+- "Smoother digestion with fewer post-meal crashes"
+
+TONE (inspiration, NEVER copy verbatim):
 - Confident not aggressive. Sophisticated yet warm. Science-informed not heavy.
 - 설명하지 않고 선언한다. 가르치지 않고 보여준다.
+- Philosophical, not fear-based. Questions > Education > Solutions.
+- Keywords: ritual, intention, rhythm, original design, decode
 - NEVER fear/shame/negative self-image. Always positive framing.
 
-BANNED: "one bottle salad", "2 second salad", disease claims, guaranteed results
-FDA: Structure/function claims ONLY.
+PROVEN CREATIVE PATTERNS (from best-performing Meta ads — use as tone reference):
+- Metaphor hooks: "The missing piece to your wellness puzzle 🧩" / "Make your routine first-class ✈️" / "AirDrop: M-01 wants to share a healthier routine 📲"
+- Enhancement angle: "M-01 isn't about replacing real food. It's about making your routine cleaner, faster, and undeniably more efficient."
+- Soft CTA style: "Complete your day with ODD M-01" / "Accept the benefits without the bowl" / "Reclaim your time. Reclaim your energy."
+- Line breaks between thoughts (breathing room). 4-6 short lines per block.
+- Emoji: 1-2 per paragraph, contextual not decorative. (🧩✨⚡️✈️📲💼🌍)
+- Video/carousel > static image. Metaphor-driven hooks > direct product shots.
+- Hashtags: #oddtobewell #dailyroutine #wellness #notsaladbutsalad (3-5 max)
+
+FUNNEL CONTEXT:
+- TOF: Scroll-stopping hook. Brand philosophy, visual metaphor. "Who has time for salads anymore?"
+- MOF: Educational depth. Ingredients, science, clinical stats, differentiation.
+- BOF: Offer + urgency. 60-day guarantee, pricing ($3.60/day), testimonials, direct CTA.
+
+BANNED: "one bottle salad", "2 second salad", disease claims, guaranteed results, cures
+
+PLATFORM COMPLIANCE (MUST follow for ALL captions):
+META: No personal health attributes ("your blood sugar"). No disease claims. No negative self-image. No "guaranteed/instant/miracle". Use "supports", "helps maintain", "designed to promote".
+TIKTOK: Weight/diet claims COMPLETELY BANNED. No before/after. No exaggerated timeframes. Use lifestyle framing ("I feel energized") not clinical assertions.
+FDA: Structure/function claims ONLY. "Supports healthy glucose metabolism" ✓ / "Lowers blood sugar" ✗. Add "Individual results may vary" for clinical stats.
+FTC: Influencer content must disclose (#ad, #sponsored). Claims must be truthful and substantiated.
+GOLDEN RULE: When in doubt, reframe clinical → lifestyle. "Supports your body's natural rhythm" > "reduces blood sugar by 42%".
+
+TIKTOK RULES:
+- Hook in first 3 seconds: bold claim, question, or visual shock.
+- Text overlay for sound-off viewing. Keep 2-5 lines max.
+- Viral formula: Pattern interrupt → Problem → Solution → CTA.
+- Trending sounds/formats OK but maintain brand voice.
+
+CAROUSEL FRAMEWORK (6 slides):
+1. HOOK — scroll-stopping question or bold claim
+2. PROBLEM — establish the issue
+3. AGITATION — deepen the pain
+4. SOLUTION — introduce M-01
+5. FEATURE — proof (clinical stat, ingredient, testimonial)
+6. CTA — drive action
+Number each slide. Each slide self-contained but narrative-linked.
+
+INSTAGRAM RULES:
+- 1/3 Rule: Brand (33%) + Educational (33%) + Community (33%).
+- Hashtag mix: branded + niche + broad. Max 5 per post.
+- Reels: 15-60s, hook-first, text overlay.
 
 OUTPUT FORMAT:
-- ALL captions MUST be written in ENGLISH. ODD is a global brand — all published copy is English.
+- ALL captions MUST be in ENGLISH. ODD is a global brand.
 - ALL hashtags in English. Always include #oddtobewell. Campaign: #notsaladbutsalad
-- After the English caption, add a section labeled "---\n🇰🇷 한글 참고:" with a Korean translation for internal reference.
-- Write ONLY caption text — ready to copy-paste and post
+- After the English caption, add "---\\n🇰🇷 한글 참고:" with Korean translation for internal reference.
+- Write ONLY caption text — ready to copy-paste and post.
 - No meta commentary. No "여기 캡션입니다".
-- Every caption 100% ORIGINAL
+- Every caption 100% ORIGINAL, based on real product facts.
 - Length: educational → 8-15+ lines, awareness → 5-10, TikTok → 2-5, Google → RSA
-- Carousel: per-slide text, numbered`;
+- Carousel: use 6-Slide Framework above, numbered per slide`;
 
 function buildCaptionPrompt(userPrompt, ch, fn, tension, isAd) {
   const chSpec = {
@@ -517,32 +679,72 @@ async function generateCaptionWithAI(prompt, ch, fn, tension, isAd, streamTarget
       return { text, tags };
     }
 
-    // 스트리밍 처리
+    // 스트리밍 처리 — 플레인텍스트 후 마크다운 전환
     const reader = r.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '';
     let buffer = '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const jsonStr = line.slice(6).trim();
-        if (jsonStr === '[DONE]') continue;
-        try {
-          const evt = JSON.parse(jsonStr);
-          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
-            fullText += evt.delta.text;
-            if (streamTarget) streamTarget.textContent = fullText;
-          }
-        } catch {}
+    if (streamTarget) {
+      streamTarget.classList.add('streaming');
+      streamTarget.textContent = '';
+
+      let textDirty = false;
+      function flushCaption() {
+        if (!textDirty) return;
+        textDirty = false;
+        streamTarget.textContent = fullText;
+      }
+      let animId;
+      function animLoop() { flushCaption(); animId = requestAnimationFrame(animLoop); }
+      animId = requestAnimationFrame(animLoop);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') continue;
+          try {
+            const evt = JSON.parse(jsonStr);
+            if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+              fullText += evt.delta.text;
+              textDirty = true;
+            }
+          } catch {}
+        }
+      }
+
+      cancelAnimationFrame(animId);
+      flushCaption();
+      streamTarget.classList.remove('streaming');
+      streamTarget.classList.add('rendered');
+      streamTarget.innerHTML = renderBuiltInMd(fullText || '캡션을 생성하지 못했습니다.');
+    } else {
+      // streamTarget 없는 경우 — 텍스트만 수집
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') continue;
+          try {
+            const evt = JSON.parse(jsonStr);
+            if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+              fullText += evt.delta.text;
+            }
+          } catch {}
+        }
       }
     }
-
     return { text: fullText || '캡션을 생성하지 못했습니다.', tags };
   } catch (e) {
     return { text: 'AI 오류: ' + e.message, tags: ['오류'] };
@@ -909,7 +1111,7 @@ function renderBuiltInMd(text) {
   // Blockquotes (> escaped to &gt;)
   h = h.replace(/((?:^&gt;\s?.*$\n?)+)/gm, function(block) {
     const inner = block.replace(/^&gt;\s?/gm, '').trim();
-    return '<blockquote style="margin:8px 0;padding:8px 14px;border-left:3px solid var(--t5);color:var(--t3);font-size:14px">' + inner + '</blockquote>';
+    return '<blockquote>' + inner + '</blockquote>';
   });
   h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
   h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
@@ -930,17 +1132,17 @@ function renderBuiltInMd(text) {
     kr = kr.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     kr = kr.replace(/\n{2,}/g, '</p><p>');
     kr = kr.replace(/\n/g, '<br>');
-    h += '<div style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;border-left:3px solid #60a5fa">' +
-      '<div style="font-size:11px;font-weight:600;color:#60a5fa;margin-bottom:8px;letter-spacing:.5px">🇰🇷 한글 참고</div>' +
-      '<div style="font-size:13px;line-height:1.7;color:var(--t3)">' + kr + '</div></div>';
+    h += '<div class="ko-ref-box"><div class="ko-ref-title">🇰🇷 한글 참고</div><div class="ko-ref-body">' + kr + '</div></div>';
   }
 
   return h;
 }
 
-// ── Unsplash Stock Search ──
-const UNSPLASH_KEY = 'bvU_FTPNy-LUIY02fU8RQrtHqbGHFIJivJFrhXBBpaI';
+// ── Stock Image Search (Unsplash + iStock) ──
+const UNSPLASH_KEY = localStorage.getItem('odd_unsplash_key') || '';
+
 async function searchUnsplash(query, count) {
+  if (!UNSPLASH_KEY) return [];
   try {
     const url = 'https://api.unsplash.com/search/photos?query=' + encodeURIComponent(query) + '&per_page=' + (count || 12) + '&orientation=squarish';
     const r = await fetch(url, { headers: { 'Authorization': 'Client-ID ' + UNSPLASH_KEY } });
@@ -949,9 +1151,19 @@ async function searchUnsplash(query, count) {
     return (data.results || []).map(p => ({
       id: p.id, url: p.urls.small, thumb: p.urls.thumb,
       alt: p.alt_description || '', credit: p.user.name,
-      link: p.links.html
+      link: p.links.html, source: 'unsplash'
     }));
   } catch { return []; }
+}
+
+// iStock 검색 링크 생성 (API 없이 검색 URL + 미리보기 구성)
+function buildIStockLinks(query) {
+  const terms = query.split(/\s+/).slice(0, 4).join('+');
+  return {
+    searchUrl: 'https://www.istockphoto.com/kr/search/2/image?phrase=' + encodeURIComponent(query),
+    videoUrl: 'https://www.istockphoto.com/kr/search/2/film?phrase=' + encodeURIComponent(query),
+    query: query
+  };
 }
 
 // ── Google Drive Integration ──
@@ -966,6 +1178,8 @@ firebase.initializeApp({
 });
 const fireAuth = firebase.auth();
 const DRIVE_FOLDER_IDS = ['0AL6p4jOgoTNqUk9PVA', '0AHEsTFpszXSNUk9PVA'];
+const DRIVE_AD_CREATIVE_FOLDER = '1_IKA32cUnMP12ECnLw-uW_MAosAKCkz2'; // 광고 소재 전용 폴더
+const DRIVE_PACKAGING_FOLDER = '1RAtZ4cBinf9F3lRPcIOaelOo10R9FdKz'; // M-01 패키지 칼선/인쇄 폴더
 let driveAccessToken = null;
 
 async function loginGoogle() {
@@ -976,21 +1190,209 @@ async function loginGoogle() {
   return driveAccessToken;
 }
 
+// ── Meta Ads Integration ──
+const META_AD_ACCOUNT = 'act_1197533755808441';
+let META_TOKEN = localStorage.getItem('odd_meta_token') || 'EAALgkRR07voBQ9oGO2IZCqTUCYsWRzI7VKj248tAxkQ7MHqpXZCDL3gz9L5ZCvZBzGkb7PH22XfD5LvC3bj50Kow6ZBBqFfzcyMQPwz9b33J4kpVEF5gVL7UV3rvImf8dbsLq6uZBHcqZAyJAu1pkSVLYDvJWVznSJRHW3GQ6dJtfJZCWvsqk7VG51RcdQbRuh5fJKwPIHwEwCt2cPlHMMqo89CXXRBVAxaSKBLaQEtbOCaJRVBxCacZD';
+
+async function fetchMetaAds(limit) {
+  if (!META_TOKEN) return [];
+  try {
+    const fields = 'name,status,creative{thumbnail_url,effective_object_story_id,title,body,image_url},insights{impressions,clicks,spend,ctr,cpc}';
+    const url = AI_PROXY + '/meta/' + META_AD_ACCOUNT + '/ads?fields=' + encodeURIComponent(fields) + '&limit=' + (limit || 25) + '&status_filter=ALL';
+    const r = await fetch(url, { headers: { 'x-meta-token': META_TOKEN } });
+    if (!r.ok) { const e = await r.json(); console.warn('Meta API error:', e); return []; }
+    const data = await r.json();
+    return data.data || [];
+  } catch (e) { console.warn('Meta fetch error:', e); return []; }
+}
+
+async function fetchMetaCampaigns() {
+  if (!META_TOKEN) return [];
+  try {
+    const fields = 'name,status,objective,daily_budget,lifetime_budget,insights{impressions,clicks,spend,ctr,cpc,actions}';
+    const url = AI_PROXY + '/meta/' + META_AD_ACCOUNT + '/campaigns?fields=' + encodeURIComponent(fields) + '&limit=30';
+    const r = await fetch(url, { headers: { 'x-meta-token': META_TOKEN } });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return data.data || [];
+  } catch { return []; }
+}
+
+async function fetchMetaAdCreatives(limit) {
+  if (!META_TOKEN) return [];
+  try {
+    const fields = 'name,title,body,thumbnail_url,image_url,object_story_spec,status';
+    const url = AI_PROXY + '/meta/' + META_AD_ACCOUNT + '/adcreatives?fields=' + encodeURIComponent(fields) + '&limit=' + (limit || 30);
+    const r = await fetch(url, { headers: { 'x-meta-token': META_TOKEN } });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return data.data || [];
+  } catch { return []; }
+}
+
+// Meta 광고 소재를 카드로 렌더링
+function renderMetaAdsCard(ads) {
+  if (!ads.length) return '';
+  let html = '<div class="result-card" data-asset-card style="animation:fadeUp .5s ease both">';
+  html += '<div class="result-label"><span class="dot" style="background:#4f8df9"></span>Meta 광고 소재</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px">';
+  ads.forEach(ad => {
+    const creative = ad.creative || {};
+    const thumb = creative.image_url || creative.thumbnail_url || '';
+    const title = ad.name || creative.title || '(제목 없음)';
+    const status = ad.status === 'ACTIVE' ? '🟢' : ad.status === 'PAUSED' ? '🟡' : '⚪';
+    const insights = ad.insights?.data?.[0] || {};
+    const spend = insights.spend ? '$' + parseFloat(insights.spend).toFixed(2) : '';
+    const clicks = insights.clicks || '';
+    html += '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--bg-raised);cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor=\'rgba(79,141,249,.4)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'">';
+    if (thumb) {
+      html += '<img src="' + esc(thumb) + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy" onerror="this.outerHTML=\'<div style=\\\'width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px;background:var(--bg-raised)\\\'>미리보기 없음</div>\'">';
+    } else {
+      html += '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px;background:var(--bg-raised)">미리보기 없음</div>';
+    }
+    html += '<div style="padding:6px 8px">';
+    html += '<div style="font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + status + ' ' + esc(title) + '</div>';
+    if (spend || clicks) html += '<div style="font-size:8px;color:var(--t5);margin-top:2px">' + (spend ? spend : '') + (spend && clicks ? ' · ' : '') + (clicks ? clicks + ' clicks' : '') + '</div>';
+    html += '</div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// ODD 제품 지식 맵 — 키워드 → Drive 검색어 확장
+const ODD_KNOWLEDGE_MAP = {
+  ingredients: {
+    triggers: ['원료','성분','ingredient','재료','원재료'],
+    terms: ['Delphinol','Reducose','GOFOS','Orafti','Lalmin','Maqui','Mulberry','Chicory','Chromium','M-01']
+  },
+  delphinol: { triggers: ['delphinol','델피놀','마키베리','maqui'], terms: ['Delphinol','Maqui','maqui berry'] },
+  reducose: { triggers: ['reducose','리듀코스','뽕잎','백상엽','mulberry'], terms: ['Reducose','Mulberry','mulberry leaf'] },
+  gofos: { triggers: ['gofos','고포스','fos','프리바이오틱','prebiotic'], terms: ['GOFOS','FOS','prebiotic'] },
+  orafti: { triggers: ['orafti','오라프티','이눌린','inulin','치커리','chicory'], terms: ['Orafti','inulin','chicory'] },
+  lalmin: { triggers: ['lalmin','랄민','크롬','chromium'], terms: ['Lalmin','chromium'] },
+  product: { triggers: ['m-01','m01','제품','product','보틀','bottle'], terms: ['M-01','M01','ODD','bottle','product'] },
+  packaging: { triggers: ['패키지','package','박스','box','라벨','label','칼선','인쇄','최종본','다이컷','die cut'], terms: ['package','box','label','packaging','M-01','칼선','인쇄','최종본'] },
+  lifestyle: { triggers: ['라이프스타일','lifestyle','일상','daily','루틴','routine'], terms: ['lifestyle','daily','routine','wellness'] },
+  campaign: { triggers: ['캠페인','campaign','광고','ad','크리에이티브','creative','소재'], terms: ['campaign','ad','creative','ODD','M-01'] }
+};
+
+// 스마트 검색어 확장: 사용자 쿼리 → 실제 Drive 파일명에 맞는 검색어들
+function expandSearchTerms(query) {
+  const lower = query.toLowerCase();
+  const expanded = new Set();
+  for (const [, map] of Object.entries(ODD_KNOWLEDGE_MAP)) {
+    if (map.triggers.some(t => lower.includes(t))) {
+      map.terms.forEach(t => expanded.add(t));
+    }
+  }
+  // 확장 결과가 없으면 원본 쿼리 사용
+  if (expanded.size === 0) {
+    // 한글 → 영어 기본 변환
+    const koEnMap = {'사진':'photo','이미지':'image','영상':'video','원료':'ingredient','건강':'health','식전':'pre-meal'};
+    let q = query;
+    for (const [ko, en] of Object.entries(koEnMap)) { q = q.replace(new RegExp(ko, 'g'), en); }
+    expanded.add(q.trim());
+  }
+  return [...expanded];
+}
+
 async function searchDriveAPI(query) {
   if (!driveAccessToken) return [];
-  const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
-  const nameFilter = "name contains '" + query.replace(/'/g, "\\'") + "'";
-  const q = encodeURIComponent(mimeFilter + " and " + nameFilter);
   const allFiles = [];
-  for (const folderId of DRIVE_FOLDER_IDS) {
-    try {
-      const url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
-        '&fields=files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=20' +
-        '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
-      const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
-      if (r.ok) { const d = await r.json(); allFiles.push(...(d.files || [])); }
-    } catch {}
+  const seen = new Set();
+  const terms = expandSearchTerms(query);
+  const lower = query.toLowerCase();
+
+  // 쿼리 유형 감지
+  const isAdQuery = ['광고','소재','creative','ad','캠페인','campaign'].some(k => lower.includes(k));
+  const isPackagingQuery = ['패키지','칼선','인쇄','최종본','다이컷','die cut','package','label','라벨','박스'].some(k => lower.includes(k));
+  const isOddBroadQuery = ['odd','m-01','m01','제품','보여줘','에셋','전체','모두','다'].some(k => lower.includes(k));
+
+  // 폴더 전체 파일 가져오기 (페이지네이션 포함)
+  async function listFolderAll(folderId, maxPages) {
+    const files = [];
+    let pageToken = '';
+    for (let i = 0; i < (maxPages || 3); i++) {
+      try {
+        const q = encodeURIComponent("'" + folderId + "' in parents and (mimeType contains 'image/' or mimeType contains 'video/')");
+        let url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
+          '&fields=nextPageToken,files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=100' +
+          '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
+        if (pageToken) url += '&pageToken=' + pageToken;
+        const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+        if (!r.ok) break;
+        const d = await r.json();
+        files.push(...(d.files || []));
+        pageToken = d.nextPageToken || '';
+        if (!pageToken) break;
+      } catch { break; }
+    }
+    return files;
   }
+
+  const searches = [];
+
+  // 1) 검색어 기반 검색 (이름 + fullText, pageSize=100)
+  terms.slice(0, 10).forEach(term => {
+    searches.push((async () => {
+      const escaped = term.replace(/'/g, "\\'");
+      const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
+      const nameQ = encodeURIComponent(mimeFilter + " and name contains '" + escaped + "'");
+      const files = [];
+      try {
+        const url = 'https://www.googleapis.com/drive/v3/files?q=' + nameQ +
+          '&fields=files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=100' +
+          '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
+        const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+        if (r.ok) { const d = await r.json(); files.push(...(d.files || [])); }
+      } catch {}
+      return files;
+    })());
+  });
+
+  // 2) 광고 소재 폴더 전체 (광고 관련 쿼리)
+  if (isAdQuery) {
+    searches.push(listFolderAll(DRIVE_AD_CREATIVE_FOLDER, 5));
+  }
+
+  // 3) 패키지 칼선 폴더 전체
+  if (isPackagingQuery) {
+    searches.push(listFolderAll(DRIVE_PACKAGING_FOLDER, 5));
+  }
+
+  // 4) ODD/M-01 포괄 쿼리 → 주요 폴더 전체 나열 + 광고/패키지 폴더도 포함
+  if (isOddBroadQuery) {
+    for (const fid of DRIVE_FOLDER_IDS) {
+      searches.push(listFolderAll(fid, 3));
+    }
+    searches.push(listFolderAll(DRIVE_AD_CREATIVE_FOLDER, 3));
+  }
+
+  // 5) 기본 ODD / M-01 검색어 항상 추가 (놓치는 파일 방지)
+  ['ODD', 'M-01', 'M01'].forEach(baseT => {
+    if (!terms.includes(baseT)) {
+      searches.push((async () => {
+        const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
+        const q = encodeURIComponent(mimeFilter + " and name contains '" + baseT + "'");
+        try {
+          const url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
+            '&fields=files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=100' +
+            '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
+          const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+          if (r.ok) { const d = await r.json(); return d.files || []; }
+        } catch {}
+        return [];
+      })());
+    }
+  });
+
+  const results = await Promise.all(searches);
+  results.forEach(files => {
+    files.forEach(f => {
+      if (!seen.has(f.id)) { seen.add(f.id); allFiles.push(f); }
+    });
+  });
+
   return allFiles;
 }
 
@@ -1049,12 +1451,19 @@ async function fetchNotionPageContent(pageId) {
 async function searchNotion(query) {
   await fetchNotionPages();
   const lower = query.toLowerCase();
-  const terms = lower.split(/\s+/).filter(t => t.length > 1);
+  // 불용어 제거 — 검색에 의미 없는 단어
+  const stopWords = ['찾아줘','찾아','검색','알려줘','알려','설명해줘','설명해','보여줘','보여','해줘','해','줘','좀','우리','뭐야','사진','이미지','영상','파일','자료','정보','관련','에셋','의','을','를','이','가','은','는','에','도','로','와','과','한','인','된','하는','대한'];
+  const terms = lower.split(/\s+/).filter(t => t.length > 1 && !stopWords.includes(t));
 
-  // 제목 매칭
+  // 제목 매칭 — ODD 관련 우선
   const matched = notionCache.pages.filter(p => {
     const t = p.title.toLowerCase();
     return terms.some(term => t.includes(term));
+  }).sort((a, b) => {
+    // ODD/M-01 관련 페이지 우선
+    const aOdd = /odd|m-01|m01/i.test(a.title) ? 1 : 0;
+    const bOdd = /odd|m-01|m01/i.test(b.title) ? 1 : 0;
+    return bOdd - aOdd;
   }).slice(0, 5);
 
   // 매칭된 페이지의 본문도 가져오기 (최대 3개, 병렬)
@@ -1138,7 +1547,252 @@ const aiConfig = {
   model: localStorage.getItem('odd_ai_model') || 'claude-opus-4-6',
 };
 
-const AI_SYSTEM = 'You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.\n\nPRODUCT M-01: Pre-meal liquid supplement. Twist-and-drink before meals.\n5 Key Ingredients: Delphinol® (Maqui Berry polyphenol, reduces post-meal glucose spikes), Reducose® (Mulberry Leaf extract, ~5x higher DNJ, eases post-meal glucose load), GOFOS™ (prebiotic fiber, feeds beneficial gut bacteria), Orafti® GR (chicory root inulin, manages glucose/cholesterol/elimination), Lalmin® C2000 (organic chromium, supports efficient glucose use).\nBrand: odd.us / m-01.odd.us | Tagline: "Not Salad, But Salad." | 60-Day Money-Back Guarantee | Ships worldwide, made in USA.\n\nRULES: Respond in user\'s language (Korean or English). Be concise & actionable. Use markdown tables for data. Use ## headings. Highlight key metrics with **bold**.\n\nCAPTION RULES: ALL captions, taglines, ad copy, and hashtags MUST be written in ENGLISH — ODD is a global brand. After the English version, always include a Korean translation section labeled "---\\n🇰🇷 한글 참고:" for internal team reference.';
+const AI_SYSTEM = `You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.
+
+=== BRAND IDENTITY ===
+Brand: ODD. | Website: odd.us | Product page: m-01.odd.us
+Mission: "We return wellness to its original design."
+Philosophy: "Don't blame sugar — we changed its form. Nature's rare reward became a constant additive. Now, we pay the metabolic cost."
+Primary Tagline: "Not Salad, But Salad." (campaign metaphor)
+Secondary: "Original Design Decoded" / "Original design to process sugar"
+Key CTAs: "Start the ritual" / "Decode with us" / "Try M-01"
+Rating: 4.8 stars | Trusted by 100+ Amazon & TikTok customers
+Guarantee: 60-Day Money-Back | Free Shipping | Made in USA
+
+=== PRODUCT: ODD M-01 ===
+Pre-meal liquid supplement. Twist-and-drink before meals. Lemon flavor, fresh & light.
+Positioning: "One Bottle Salad, in 2 seconds" — convenient drinkable alternative that does what salad does.
+Daily cost: ~$3.60/day
+Pricing: 5-pack $29 | 30-pack $129 | Monthly subscription $109
+No added sugars, no sweeteners, no artificial flavoring, no artificial colors.
+
+5 KEY INGREDIENTS:
+- Delphinol® (Maqui Berry polyphenol, Patagonia) — smooths post-meal glucose spikes, 56% reduced insulin response within 60min
+- Reducose® (White Mulberry Leaf, ~5x higher DNJ) — eases post-meal glucose load up to 42%, 44% less carb impact, supports GLP-1 activation
+- GOFOS™ (Short-Chain FOS, non-GMO beet sugar, Israel) — prebiotic fiber, produces SCFAs, supports microbiota balance
+- Orafti® GR (Chicory Root Inulin, Belgium) — manages glucose, cholesterol, elimination, 25% increase in beneficial gut bacteria
+- Lalmin® C2000 (Organic Chromium Yeast, Estonia) — supports cellular glucose uptake and insulin signaling
+
+MARKET CONTEXT: 97% of US adults fall short of fiber intake. 40% live with obesity. 115M live with prediabetes/diabetes.
+
+=== BRAND VOICE & TONE ===
+- Philosophical, not fear-based. Questions > Education > Solutions.
+- Confident not aggressive. Sophisticated yet warm. Science-informed not heavy.
+- 설명하지 않고 선언한다. 가르치지 않고 보여준다.
+- Keywords: ritual, intention, rhythm, original design, decode, metabolic
+- NEVER fear/shame/negative self-image. Always positive framing.
+- Direct, conversational ("Who has time for salads anymore?")
+- Trust through clinical citations and ingredient sourcing transparency.
+
+=== PROVEN AD CREATIVE PATTERNS (from live Meta campaigns) ===
+When creating new captions or content, use these PROVEN tone patterns that performed best:
+
+[PATTERN 1: PUZZLE METAPHOR] CTR ~2%, strong BOF
+"The missing piece to your wellness puzzle. 🧩✨
+Routine incomplete? Not anymore. ⚡️
+ODD M-01 is the final piece for your healthy routine.
+No more gaps, just pure balance.
+Complete your day with ODD M-01.
+Because your health deserves the full picture."
+→ Use for: BOF conversion, routine-completion messaging, retargeting
+
+[PATTERN 2: FIRST-CLASS LIFESTYLE] Best CPC ($0.54), CTR 2.7%
+"Make your routine first-class, no matter where you are. ✈️✨
+Among all the options, ODD M-01 stands out.
+It's more than just a product; it's a lifestyle you choose to carry with you. 💼🌍
+ODD M-01 is designed to fit perfectly with you in your journey—
+whether you're at 30,000 feet or grounded in your daily routine."
+→ Use for: lifestyle content, premium positioning, travel/mobility angle
+
+[PATTERN 3: NOT REPLACING — ENHANCING] Best CTR (4.0%)
+"ODD M-01 isn't about replacing real food. 🥗🚫
+It's about making your health-conscious routine cleaner,
+faster, and undeniably more efficient.
+Consistency shouldn't feel like a chore.
+Reclaim your time. Reclaim your energy."
+→ Use for: MOF education, objection handling, carousel/slide content
+
+[PATTERN 4: TECH/AIRDROP] CTR 2.1%, relatable to younger audience
+"AirDrop: ODD M-01 wants to share a healthier routine. 📲
+Accept the benefits without the bowl.
+Stop fighting your schedule to stay healthy.
+ODD M-01 delivers your essentials in seconds,
+seamlessly fitting into the life you already live."
+→ Use for: TOF viral, tech-savvy audience, TikTok/Reels
+
+[PATTERN 5: DIRECT PROMO] BOF conversion
+"40% OFF. Your body's best defense. 🔴💸
+It's time to realign your glucose and reclaim your energy.
+Meet M-01, The One Bottle Salad.
+The best 2-second change of your life. ✨
+Last chance to grab up to 40% OFF."
+→ Use for: BOF sales, limited-time offers, retargeting
+
+CREATIVE RULES from actual data:
+- Video/carousel outperforms static images 3-5x in CPC
+- Metaphor-driven hooks (puzzle, airplane, airdrop) > direct product shots
+- Emoji placement: 1-2 per paragraph, never excessive
+- Hashtags: #oddtobewell #dailyroutine #wellness (3-5 max)
+- CTA style: soft invitation ("Complete your day", "Accept the benefits") > hard sell
+- Copy length: 4-6 short lines, breathing room between thoughts
+
+=== MARKETING FUNNEL STRATEGY ===
+ODD M-01 is a "검증형으로 시작하는 헌신형 제품" (validation-first commitment product).
+Budget split: TOF 40% / MOF 30% / BOF 30%
+
+TOF (Awareness): Scroll-stopping hooks. Target passive attention → curious resonance.
+  Channel focus: Instagram Reels, TikTok, Facebook broad.
+  Message: Brand philosophy, "Not Salad But Salad" metaphor, visual storytelling.
+
+MOF (Consideration): Educational depth. Target confused interest → active curiosity.
+  Channel focus: Instagram Feed/Carousel, YouTube, retargeting.
+  Message: Ingredients/science, differentiation, clinical stats, social proof.
+
+BOF (Conversion): Offers, guarantees, urgency. Target validation-ready buyers.
+  Channel focus: Google Search, Meta retargeting, email/SMS.
+  Message: 60-day guarantee, pricing, customer testimonials, direct CTA.
+
+CHANNEL ROLES:
+- Instagram: Brand storytelling + community (refined tone, breathing room, max 5 hashtags)
+- TikTok: Short-form virality (punchy, 2-5 lines, text overlay)
+- Facebook: Broad awareness + retargeting
+- Google Ads: High-intent capture (RSA: 3 headlines 30chars + 2 descriptions 90chars)
+- Amazon: Product discovery + conversion
+- D2C (odd.us): Full brand experience
+
+=== CUSTOMER TESTIMONIALS (real) ===
+- "I felt less bloated and less tempted to snack after meals"
+- "This is a game changer. Great taste and easy to use"
+- "Energy feels more steady, especially after meals"
+- "Less bloating and less sugar crashes in general"
+- "Smoother digestion with fewer post-meal crashes"
+
+=== PLATFORM COMPLIANCE (CRITICAL — all content MUST pass) ===
+
+[META/FACEBOOK ADS POLICY]
+- Personal Attributes: NEVER directly reference user's health ("your blood sugar", "your metabolism", "are you struggling"). Use general framing ("the body's natural design", "a simple pre-meal ritual").
+- Disease Claims: NEVER claim to cure, treat, prevent, or eliminate any condition. Structure/function claims ONLY ("supports", "helps maintain", "designed to promote").
+- Before/After: Avoid dramatic transformation claims. No "results in X days" promises.
+- Exaggeration: No "guaranteed results", "miracle", "100% effective", "instant relief". Use "may help support", "designed to promote".
+- Negative Self-Image: NEVER shame, fear, or guilt-trip. No "broken body", "still suffering", "sick and tired". Always positive framing.
+- Optimization: Meta restricts "Purchase"/"Add to Cart" events for health brands — design copy for engagement/awareness, not hard conversion.
+- Safe language: "supports a smoother post-meal response" ✓ / "fixes your blood sugar" ✗
+
+[TIKTOK ADS POLICY]
+- Weight/Diet: COMPLETELY BANNED. No "weight loss", "burn fat", "appetite suppressant", "slim down", "shed pounds". Zero tolerance.
+- Before/After: Prohibited. No transformation imagery or claims.
+- Exaggerated Performance: No unrealistic timeframes ("results in 2 weeks"), no overstated claims even with disclaimers.
+- Flagged Keywords: "testosterone", "ephedra", "steroid" = auto-flag. Avoid.
+- Allowed: General wellness ("supports calm focus"), lifestyle benefits ("I feel energized"), educational content about ingredients.
+- Creator Content: Must use #ad or #sponsored for paid partnerships.
+- Safe language: "I feel more steady after meals" ✓ / "cures bloating instantly" ✗
+
+[FDA — DIETARY SUPPLEMENTS]
+- Structure/Function claims ONLY. Must describe effect on body structure/function, NOT disease.
+- ✓ "Supports healthy glucose metabolism" / ✗ "Lowers blood sugar" / ✗ "Prevents diabetes"
+- Clinical stats (42%, 56%, etc.) require: "Individual results may vary" or "*These statements have not been evaluated by the FDA."
+- No drug claims: "clinically proven", "guaranteed", "cures", "treats" = violation.
+
+[FTC — ADVERTISING]
+- All claims must be truthful and substantiated.
+- Testimonials must reflect typical results, or disclose atypical nature.
+- Influencer partnerships require clear disclosure (#ad, #sponsored, "Paid partnership").
+
+GOLDEN RULE: When in doubt, reframe from clinical → lifestyle. "Supports your body's natural rhythm" always beats "reduces blood sugar by 42%".
+
+=== HASHTAGS ===
+Always: #oddtobewell | Campaign: #notsaladbutsalad
+Pool: #MetabolicHealth #BloodSugar #GlucoseControl #WellnessRitual #IntentionalLiving #dailyroutine #everydaywellness #premeal
+
+=== SKILL: CONTENT CREATOR ===
+Multi-platform content strategist. Capabilities:
+- Editorial Calendar: Plan 30-day content calendars with format distribution per channel.
+- Content Repurposing: Transform 1 piece into 5+ formats (Reel→Carousel→Story→Tweet→Blog).
+- Brand Storytelling: Narrative arcs that build brand equity over time.
+- Content Mix: Balance educational (40%), entertainment (30%), inspirational (20%), promotional (10%).
+- UGC Campaigns: Design user-generated content initiatives that scale.
+- Always produce READY-TO-USE content, not briefs or suggestions.
+
+=== SKILL: INSTAGRAM CURATOR ===
+Visual storytelling & community building for Instagram.
+- Grid Aesthetic: Maintain cohesive visual identity across all posts.
+- 1/3 Rule: Brand content (33%) + Educational (33%) + Community/UGC (33%).
+- Format Mastery: Feed Posts (static + carousel), Stories (polls/quizzes), Reels (15-60s hooks).
+- Hashtag Strategy: Mix branded (#oddtobewell) + niche (#metabolichealth) + broad (#wellness). Max 5 per post.
+- Shopping Integration: Product tags, shoppable posts, link-in-bio optimization.
+- Golden Hour: Maximize first-hour engagement for algorithm boost.
+- Engagement Target: 3.5%+ engagement rate, 80%+ Story completion.
+
+=== SKILL: TIKTOK STRATEGIST ===
+Viral content architect for TikTok.
+- 3-Second Rule: Hook viewers in first 3 seconds or lose them. Lead with bold claim, question, or visual shock.
+- Content Mix: Educational (40%) + Entertainment (30%) + Inspirational (20%) + Promotional (10%).
+- Viral Formula: Pattern interrupt → Problem → Agitation → Solution → CTA.
+- Trending Integration: Balance trending sounds/formats with brand authenticity.
+- View Completion: Target 70%+ by front-loading value and using pacing tricks.
+- Cross-Platform: Adapt TikToks for Reels and YouTube Shorts.
+- Creator Partnerships: Design briefs for UGC creators, target 4:1 ROI.
+- Text Overlay: Key messages as on-screen text (sound-off viewing).
+
+=== SKILL: CAROUSEL GROWTH ENGINE ===
+6-Slide Carousel Framework (Instagram + TikTok):
+1. HOOK — Scroll-stopping question, bold claim, or pain point
+2. PROBLEM — Establish the core issue ("97% of Americans don't get enough fiber")
+3. AGITATION — Deepen the pain ("Your body pays the metabolic cost every meal")
+4. SOLUTION — Introduce the answer ("M-01: what salad does, in 2 seconds")
+5. FEATURE — Showcase specific proof (ingredient, clinical stat, testimonial)
+6. CTA — Drive action ("Start the ritual → link in bio")
+Specs: Vertical 9:16 (1080x1920). No text in bottom 20%. Each slide self-contained but narrative-linked.
+
+=== SKILL: GROWTH HACKER ===
+Data-driven growth strategist. Capabilities:
+- Funnel Analysis: Identify drop-off points in awareness→consideration→purchase journey.
+- A/B Testing: Design experiments for headlines, CTAs, visuals, offers. Report with statistical confidence.
+- Viral Loops: Design referral mechanics, share incentives, social proof cascades.
+- CAC/LTV: Calculate Customer Acquisition Cost vs Lifetime Value. Target LTV:CAC > 3:1.
+- Channel Optimization: Identify highest-ROI channels, reallocate budget recommendations.
+- Retention: Subscription churn analysis, re-engagement campaigns, email/SMS sequences.
+- Experimentation Velocity: Propose rapid test-and-learn cycles, minimum viable tests.
+
+=== SKILL: SEO SPECIALIST ===
+Organic search & content SEO for D2C.
+- Keyword Strategy: Topic clusters around metabolic health, pre-meal supplements, fiber supplements.
+- E-E-A-T: Experience, Expertise, Authoritativeness, Trustworthiness in all content.
+- Content Optimization: Title tags, meta descriptions, header hierarchy, internal linking.
+- Search Intent: Match content format to intent (informational→blog, transactional→PDP).
+- Amazon SEO: Product title optimization, bullet points, backend keywords, A+ content.
+- Rich Results: Schema markup for Product, FAQ, Review snippets.
+
+=== SKILL: CAMPAIGN MANAGER ===
+Cross-platform campaign orchestration.
+- Campaign Brief: Objectives, target audience, channels, budget, timeline, KPIs.
+- Content Cascade: Hero content → channel-specific adaptations → retargeting variations.
+- A/B Creative: Test hook variations, visual styles, CTA wording across platforms.
+- Budget Allocation: TOF 40% / MOF 30% / BOF 30% as baseline, adjust by performance.
+- Reporting: Weekly performance tables with spend, impressions, clicks, CTR, CPA, ROAS.
+- Competitive Analysis: Benchmark against AG1, Athletic Greens, Seed, other wellness DTC brands.
+
+=== RULES ===
+- Respond in user's language (Korean or English). Be concise & actionable.
+- Use markdown tables for data. Use ## headings. Highlight key metrics with **bold**.
+- ALL captions, taglines, ad copy, and hashtags MUST be in ENGLISH — ODD is a global brand.
+- After English captions, always add "---\\n🇰🇷 한글 참고:" with Korean translation for internal reference.
+- Base all content on FACTS from this knowledge base. Never fabricate claims or statistics.
+- When asked about funnel/campaign strategy, reference the TOF/MOF/BOF framework above.
+- Auto-detect which SKILL to activate based on user request. Use multiple skills when relevant.
+- For carousel requests, ALWAYS use the 6-Slide Framework.
+- For TikTok content, ALWAYS apply the 3-Second Rule.
+- For growth/optimization questions, provide data-backed recommendations with specific metrics.
+
+=== IMAGE & VISUAL REQUESTS ===
+- NEVER say "I cannot display images", "I don't have image search capability", "접근할 수 없어서", "불러올 수 없습니다" or apologize about ANY limitations regarding images, ad creatives, campaign data, or file access.
+- The system AUTOMATICALLY searches Google Drive (including ODD's ad creative archive) and Unsplash for relevant images and displays them below your response. You DO have access to ODD's assets.
+- When user asks for ad creatives ("광고 소재 보여줘", "2월 소재"), the system fetches real data from Meta Ads Manager API AND Google Drive. Respond with a brief analysis/summary, then state creatives are displayed below. Example: "아래에서 ODD의 실제 집행 중인 광고 소재를 확인하실 수 있습니다."
+- You have LIVE access to Meta Ads Manager (campaigns, ads, creatives, performance metrics). When asked about ad performance, campaigns, or creatives, provide analysis based on the actual data shown.
+- When user asks for ingredient/product images, provide a concise informational summary then mention images are shown below.
+- When user asks about packaging die-cut lines ("칼선", "인쇄", "패키지 데이터", "패키지 최종본"), the system searches the dedicated packaging folder in Google Drive. Respond that packaging files are displayed below.
+- NEVER suggest the user manually search Google Images, visit external websites, or go to Meta Ads Manager to find images. The system handles it.
+- NEVER start with apologies or disclaimers. Start directly with useful, actionable content.`;
 
 async function generateWithAI(prompt) {
   if (!aiConfig.key) { showToast('설정에서 AI API 키를 입력하세요'); return; }
@@ -1147,21 +1801,33 @@ async function generateWithAI(prompt) {
   ra.style.display = 'block';
 
   // 즉시 카드 렌더 + 스트리밍 타겟
-  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--purple)"></span>AI 응답</div><div class="result-content" id="aiStreamTarget" style="white-space:pre-wrap;min-height:60px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span></div><div class="result-meta" id="aiStreamMeta"><span class="tag">Claude AI</span></div></div>';
+  ra.innerHTML = '<div class="result-card" style="animation:fadeUp .5s ease both"><div class="result-label"><span class="dot" style="background:var(--purple)"></span>AI 응답</div><div class="result-content streaming" id="aiStreamTarget" style="min-height:60px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span></div><div class="result-meta" id="aiStreamMeta"><span class="tag">Claude AI</span></div></div>';
 
   try {
-    // 컨텍스트 수집 (노션 + 대시보드 병렬)
-    const [notionCtx, dataCtx] = await Promise.all([
+    // 컨텍스트 수집 (노션 + 대시보드 + Meta 병렬)
+    const lower = prompt.toLowerCase();
+    const isAdQuery = ['광고','소재','creative','ad','캠페인','campaign','meta','페이스북','인스타'].some(k => lower.includes(k));
+
+    const [notionCtx, dataCtx, metaCtx] = await Promise.all([
       isNotionQuery(prompt) ? searchNotion(prompt).then(nr => {
         if (!nr.withContent.length) return '';
         let c = '=== 노션 문서 ===\n';
         nr.withContent.forEach(p => { c += '\n## ' + p.title + '\n' + (p.content || '(빈 페이지)').slice(0, 1500) + '\n'; });
         return c + '\n';
       }).catch(() => '') : Promise.resolve(''),
-      Promise.resolve(isDataQuery(prompt) && typeof EMBEDDED_DATA !== 'undefined' ? '=== 매출 데이터 ===\n' + getDashboardSummary(prompt) + '\n' : '')
+      Promise.resolve(isDataQuery(prompt) && typeof EMBEDDED_DATA !== 'undefined' ? '=== 매출 데이터 ===\n' + getDashboardSummary(prompt) + '\n' : ''),
+      isAdQuery && META_TOKEN ? fetchMetaAds(15).then(ads => {
+        if (!ads.length) return '';
+        let c = '=== Meta 광고 소재 (실시간) ===\n';
+        ads.forEach(ad => {
+          const cr = ad.creative || {};
+          c += '- [' + (ad.status || '') + '] ' + (ad.name || '') + ': ' + (cr.body || '').slice(0, 150) + '\n';
+        });
+        return c + '\n';
+      }).catch(() => '') : Promise.resolve('')
     ]);
 
-    const context = notionCtx + dataCtx;
+    const context = notionCtx + dataCtx + metaCtx;
     let userMsg = prompt;
     if (context) {
       userMsg = '아래는 내부 시스템에서 가져온 참고 데이터입니다. 이 데이터를 기반으로 답변해주세요.\n\n' + context + '---\n사용자 질문: ' + prompt;
@@ -1175,21 +1841,56 @@ async function generateWithAI(prompt) {
 
     const target = document.getElementById('aiStreamTarget');
 
+    // HTTP 에러 처리 (4xx/5xx)
+    if (!r.ok) {
+      let errMsg = '응답을 생성하지 못했습니다.';
+      try { const errData = await r.json(); errMsg = errData.error?.message || errMsg; } catch {}
+      target.classList.remove('streaming');
+      target.classList.add('rendered');
+      target.innerHTML = renderBuiltInMd('⚠️ API 오류 (' + r.status + '): ' + errMsg);
+      return;
+    }
+
     if (!r.body) {
       const data = await r.json();
       const text = (data.content && data.content[0] && data.content[0].text) || '응답을 생성하지 못했습니다.';
+      target.classList.remove('streaming');
+      target.classList.add('rendered');
       target.innerHTML = renderBuiltInMd(text);
-      target.style.whiteSpace = 'normal';
       saveHistory(prompt, [{ label: 'AI 응답', content: text }]);
       return;
     }
 
-    // SSE 스트리밍
+    // SSE 스트리밍 — 플레인텍스트 스트림 후 마크다운 전환
     const reader = r.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '';
     let buffer = '';
+
+    // 스트리밍 시작: CSS ::after가 커서 역할
     target.textContent = '';
+    target.classList.add('streaming');
+
+    // 텍스트 업데이트를 rAF로 배치 (부드러운 흐름)
+    let textDirty = false;
+    function flushText() {
+      if (!textDirty) return;
+      textDirty = false;
+      target.textContent = fullText;
+      // 자동 스크롤
+      const card = target.closest('.result-card');
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight) {
+          window.scrollBy({ top: rect.bottom - window.innerHeight + 40, behavior: 'smooth' });
+        }
+      }
+    }
+
+    // 60fps 루프로 텍스트 플러시
+    let animId;
+    function animLoop() { flushText(); animId = requestAnimationFrame(animLoop); }
+    animId = requestAnimationFrame(animLoop);
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1205,16 +1906,24 @@ async function generateWithAI(prompt) {
           const evt = JSON.parse(jsonStr);
           if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
             fullText += evt.delta.text;
-            target.textContent = fullText;
+            textDirty = true;
+          }
+          // API 에러 감지
+          if (evt.type === 'error' && evt.error) {
+            fullText += '\n⚠️ API 오류: ' + (evt.error.message || JSON.stringify(evt.error));
           }
         } catch {}
       }
     }
 
-    // 스트리밍 완료 → 마크다운 렌더링
+    cancelAnimationFrame(animId);
+    flushText();
+
+    // 스트리밍 완료 → 마크다운으로 부드러운 크로스페이드
     const finalText = fullText || '응답을 생성하지 못했습니다.';
+    target.classList.remove('streaming');
+    target.classList.add('rendered');
     target.innerHTML = renderBuiltInMd(finalText);
-    target.style.whiteSpace = 'normal';
 
     // 복사 버튼 추가
     const meta = document.getElementById('aiStreamMeta');
@@ -1223,8 +1932,130 @@ async function generateWithAI(prompt) {
       meta.innerHTML = '<span class="tag">Claude AI</span><button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>';
     }
     saveHistory(prompt, [{ label: 'AI 응답', content: finalText }]);
+
+    // 콘텐츠/에셋 관련 요청이면 Drive + Unsplash 이미지 자동 추천
+    const visualKw = ['캡션','caption','콘텐츠','content','소재','creative','카피','copy','기획','plan',
+      '캐러셀','carousel','릴스','reels','피드','feed','광고','ad','이미지','사진','비주얼','visual',
+      '보여','찾아','에셋','asset','원료','성분','ingredient','제품','product'];
+    const needsVisual = visualKw.some(k => prompt.toLowerCase().includes(k));
+    if (needsVisual) {
+      appendAssetRecommendations(prompt, ra);
+    }
   } catch (e) {
     ra.innerHTML = '<div class="result-card"><div class="result-content">AI 오류: ' + esc(e.message) + '</div></div>';
+  }
+}
+
+// AI 응답 아래에 Drive + Unsplash 에셋 추천 자동 추가 (중복 방지)
+let _assetRecPending = false;
+async function appendAssetRecommendations(prompt, container) {
+  // 동시 호출 방지
+  if (_assetRecPending || container.querySelector('[data-asset-card]')) return;
+  _assetRecPending = true;
+
+  // Unsplash 검색용 영어 키워드
+  const lower = prompt.toLowerCase();
+  const unsplashMap = {
+    '델피놀':'maqui berry antioxidant','delphinol':'maqui berry antioxidant',
+    '마키베리':'maqui berry purple fruit','maqui':'maqui berry purple fruit',
+    '리듀코스':'mulberry leaf extract','reducose':'mulberry leaf extract',
+    '백상엽':'white mulberry leaf','뽕잎':'mulberry leaf',
+    '고포스':'prebiotic fiber supplement','gofos':'prebiotic fiber supplement','fos':'prebiotic fiber',
+    '오라프티':'chicory root inulin fiber','orafti':'chicory root inulin fiber',
+    '치커리':'chicory root fiber','chicory':'chicory root fiber',
+    '랄민':'organic chromium supplement','lalmin':'organic chromium supplement',
+    '크롬':'chromium mineral supplement',
+    '원료':'natural ingredient supplement','성분':'ingredient extract',
+    '건강':'health wellness','캐러셀':'social media carousel',
+    '라이프스타일':'wellness lifestyle','샐러드':'salad healthy food',
+    '식전':'pre-meal ritual','제품':'product bottle supplement',
+    'm-01':'liquid supplement bottle','패키지':'product packaging design',
+    '인슐린':'insulin blood sugar health','혈당':'blood sugar glucose health',
+    '장건강':'gut health microbiome','프리바이오틱':'prebiotic gut health fiber',
+    '대사':'metabolism wellness health',
+    '칼선':'die cut line packaging','인쇄':'print packaging box',
+    '최종본':'final packaging design'
+  };
+  let enTerm = 'health wellness supplement';
+  for (const [ko, en] of Object.entries(unsplashMap)) { if (lower.includes(ko)) { enTerm = en; break; } }
+
+  const isAdQuery = ['광고','소재','creative','ad','캠페인','campaign'].some(k => lower.includes(k));
+
+  try {
+    // Google 로그인 안 되어있으면 자동 시도
+    if (!driveAccessToken && fireAuth.currentUser) {
+      try {
+        const cred = await fireAuth.currentUser.getIdToken(true);
+        // re-auth to get Drive token
+      } catch {}
+    }
+    if (!driveAccessToken && !fireAuth.currentUser) {
+      try { await loginGoogle(); } catch {}
+    }
+
+    // Drive + Unsplash + Meta(광고 쿼리일 때) 병렬 검색
+    const [driveRes, unsplashRes, metaAds] = await Promise.all([
+      driveAccessToken ? searchDriveAPI(prompt) : Promise.resolve([]),
+      searchUnsplash(enTerm, 8).catch(() => []),
+      isAdQuery && META_TOKEN ? fetchMetaAdCreatives(20) : Promise.resolve([])
+    ]);
+
+    // Meta 소재가 있으면 먼저 표시
+    if (metaAds.length) {
+      container.insertAdjacentHTML('beforeend', renderMetaAdsCard(metaAds));
+    }
+
+    // iStock 검색 링크 항상 생성
+    const istock = buildIStockLinks(enTerm);
+
+    // 하나라도 결과가 있거나 iStock 링크 생성 가능하면 카드 표시
+    let html = '<div class="result-card" data-asset-card style="animation:fadeUp .5s ease both;animation-delay:.15s">';
+    html += '<div class="result-label"><span class="dot" style="background:var(--orange)"></span>관련 에셋</div>';
+
+    if (driveRes.length) {
+      html += '<div style="font-size:12px;color:var(--t3);margin-bottom:10px;font-weight:600">📁 Google Drive <span style="font-weight:400;color:var(--t4);font-size:11px">(' + driveRes.length + '개 발견)</span></div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px">';
+      driveRes.forEach(f => {
+        let thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
+        if (thumb && driveAccessToken) thumb += (thumb.includes('?') ? '&' : '?') + 'access_token=' + driveAccessToken;
+        const isVideo = f.mimeType && f.mimeType.includes('video');
+        html += '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised);transition:all .15s;position:relative" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')" onmouseover="this.style.borderColor=\'rgba(255,159,10,.3)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'">' +
+          (isVideo ? '<div style="position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21"/></svg></div>' : '') +
+          (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy" onerror="this.outerHTML=\'<div style=\\\'width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px;background:var(--bg-raised)\\\'>미리보기 없음</div>\'">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">미리보기 없음</div>') +
+          '<div style="padding:5px 8px;font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    if (unsplashRes.length) {
+      html += '<div style="font-size:12px;color:var(--t3);margin-bottom:10px;font-weight:600">🖼 Unsplash <span style="font-weight:400;color:var(--t4);font-size:11px">(' + unsplashRes.length + '개)</span></div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px">';
+      unsplashRes.slice(0, 8).forEach(p => {
+        html += '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="window.open(\'' + (p.link || '#') + '\',\'_blank\')" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'">' +
+          '<img src="' + p.thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' +
+          (p.credit ? '<div style="padding:3px 6px;font-size:8px;color:var(--t5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(p.credit) + '</div>' : '') + '</div>';
+      });
+      html += '</div>';
+    }
+
+    // iStock 검색 바로가기 (항상 표시)
+    html += '<div style="font-size:12px;color:var(--t3);margin-bottom:10px;font-weight:600">🔍 스톡 이미지 검색</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<a href="' + istock.searchUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-raised);color:var(--t2);font-size:12px;text-decoration:none;transition:all .15s" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'"><img src="https://www.istockphoto.com/favicon.ico" width="14" height="14" style="border-radius:2px"> iStock 이미지 검색</a>';
+    html += '<a href="' + istock.videoUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-raised);color:var(--t2);font-size:12px;text-decoration:none;transition:all .15s" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'"><img src="https://www.istockphoto.com/favicon.ico" width="14" height="14" style="border-radius:2px"> iStock 영상 검색</a>';
+    if (UNSPLASH_KEY) {
+      html += '<a href="https://unsplash.com/s/photos/' + encodeURIComponent(enTerm) + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-raised);color:var(--t2);font-size:12px;text-decoration:none;transition:all .15s" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'"><img src="https://unsplash.com/favicon.ico" width="14" height="14" style="border-radius:2px"> Unsplash 검색</a>';
+    } else {
+      html += '<a href="https://unsplash.com/s/photos/' + encodeURIComponent(enTerm) + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-raised);color:var(--t2);font-size:12px;text-decoration:none;transition:all .15s" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'"><img src="https://unsplash.com/favicon.ico" width="14" height="14" style="border-radius:2px"> Unsplash 검색</a>';
+    }
+    html += '</div>';
+
+    html += '</div>';
+    container.insertAdjacentHTML('beforeend', html);
+  } catch (e) {
+    // 에셋 추천 실패는 무시 — AI 응답은 이미 표시됨
+  } finally {
+    _assetRecPending = false;
   }
 }
 
@@ -1233,7 +2064,7 @@ function isDriveSearchQuery(text) {
   const actionKw = ['찾아','검색해','보여줘','보여줄래','드라이브','파일좀','이미지좀','영상좀'];
   const hasAction = actionKw.some(k => text.includes(k));
   if (!hasAction) return false;
-  const assetKw = ['사진','이미지','영상','에셋','파일','콘텐츠','소스','원본','드라이브'];
+  const assetKw = ['사진','이미지','영상','에셋','파일','콘텐츠','소스','원본','드라이브','칼선','인쇄','패키지','최종본'];
   const questionKw = ['뭐야','뭔가','무엇','어떤','알려줘','설명해','왜','어떻게','뭐지'];
   const isQuestion = questionKw.some(k => text.includes(k));
   if (isQuestion && !assetKw.some(k => text.includes(k))) return false;
@@ -1288,6 +2119,11 @@ function detectIntents(prompt) {
 
   // Notion intent (제품, 브랜드, 문서 등)
   if (isNotionQuery(prompt)) intents.push('notion');
+
+  // Image generation intent (이미지 만들어줘, 생성해줘 등)
+  const imgGenKw = ['만들어','생성해','그려','디자인해','제작해','generate','create','make'];
+  const imgSubjectKw = ['이미지','사진','비주얼','배너','썸네일','포스터','광고 소재','크리에이티브','image','visual','banner','thumbnail'];
+  if (imgGenKw.some(k => lower.includes(k)) && imgSubjectKw.some(k => lower.includes(k))) intents.push('imagegen');
 
   return [...new Set(intents)];
 }
@@ -1375,16 +2211,17 @@ async function handleMultiIntent(prompt, intents) {
     if (enTerm === term) enTerm += ' health wellness';
 
     const [driveRes, unsplashRes] = await Promise.all([
-      driveAccessToken ? searchDriveAPI(term) : Promise.resolve([]),
+      driveAccessToken ? searchDriveAPI(term) : loginGoogle().then(() => searchDriveAPI(term)).catch(() => []),
       searchUnsplash(enTerm, 12)
     ]);
 
     if (driveRes.length) {
       html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>Drive 에셋 추천</div>';
       html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:12px">';
-      driveRes.slice(0,12).forEach(f => {
-        const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220','=s400') : '';
-        html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\'https://drive.google.com/file/d/'+f.id+'/view\',\'_blank\')">'+(thumb?'<img src="'+thumb+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">':'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">미리보기 없음</div>')+'<div style="padding:4px 6px;font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(f.name)+'</div></div>';
+      driveRes.forEach(f => {
+        let thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220','=s400') : '';
+        if (thumb && driveAccessToken) thumb += (thumb.includes('?') ? '&' : '?') + 'access_token=' + driveAccessToken;
+        html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\'https://drive.google.com/file/d/'+f.id+'/view\',\'_blank\')">'+(thumb?'<img src="'+thumb+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy" onerror="this.outerHTML=\'<div style=\\\'width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px;background:var(--bg-raised)\\\'>미리보기 없음</div>\'">':'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">미리보기 없음</div>')+'<div style="padding:4px 6px;font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(f.name)+'</div></div>';
       });
       html += '</div></div>';
     }
@@ -1479,13 +2316,90 @@ const _origGenerate = async function() {
   }
 };
 
+// ── Nano Banana (AI Image Generation) ──
+async function generateImageWithNano(prompt) {
+  const nanoKey = localStorage.getItem('odd_nano_key') || '';
+  if (!nanoKey) { showToast('설정(⚙️)에서 Nano Banana API 키를 입력하세요'); return; }
+
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>AI 이미지 생성 중...</div><div class="result-content" id="nanoTarget" style="white-space:normal;min-height:120px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><span style="color:var(--t4);font-size:13px;margin-left:12px">Nano Banana로 이미지를 생성하고 있습니다...</span></div></div>';
+
+  // ODD 브랜드 컨텍스트를 프롬프트에 추가
+  const brandContext = 'ODD brand style: premium, dark tones, minimalist, sophisticated. Product M-01 is a pre-meal supplement in a sleek bottle. Brand color: deep red (#bf2026) on black. Clean typography, modern.';
+  const fullPrompt = prompt + '. ' + brandContext;
+
+  try {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' + nanoKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'Generate an image: ' + fullPrompt }] }],
+        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+      })
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error.message || 'API 오류');
+
+    const target = document.getElementById('nanoTarget');
+    let html = '';
+    let hasImage = false;
+
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      const parts = data.candidates[0].content.parts || [];
+      for (const part of parts) {
+        if (part.inlineData) {
+          hasImage = true;
+          html += '<div style="margin:8px 0"><img src="data:' + part.inlineData.mimeType + ';base64,' + part.inlineData.data + '" style="max-width:100%;border-radius:12px;border:1px solid var(--border)" /></div>';
+          // 다운로드 버튼
+          html += '<div style="margin-top:8px"><a download="odd_ai_image.png" href="data:' + part.inlineData.mimeType + ';base64,' + part.inlineData.data + '" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--t2);font-size:12px;text-decoration:none;cursor:pointer">⬇ 이미지 다운로드</a></div>';
+        } else if (part.text) {
+          html += '<div style="margin-top:12px;font-size:13px;line-height:1.7;color:var(--t3)">' + part.text.replace(/\n/g, '<br>') + '</div>';
+        }
+      }
+    }
+
+    if (!hasImage) html = '<div style="color:var(--t3)">이미지를 생성하지 못했습니다. 프롬프트를 더 구체적으로 작성해보세요.</div>';
+
+    target.innerHTML = html;
+    ra.querySelector('.result-label').innerHTML = '<span class="dot" style="background:var(--green)"></span>AI 생성 이미지';
+    const meta = document.createElement('div');
+    meta.className = 'result-meta';
+    meta.innerHTML = '<span class="tag">Nano Banana</span><span class="tag">Gemini</span>';
+    target.parentElement.appendChild(meta);
+
+    saveHistory(prompt, [{ label: 'AI 이미지 생성', content: prompt }]);
+  } catch (e) {
+    document.getElementById('nanoTarget').innerHTML = '<div style="color:var(--red)">이미지 생성 오류: ' + e.message + '</div>';
+  }
+}
+
 function generate() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
 
   const intents = detectIntents(prompt);
+  const lower = prompt.toLowerCase();
 
-  // 에셋 검색 (사진/이미지 찾아줘) → Drive+Unsplash 직행
+  // 이미지 생성 요청 → Nano Banana
+  if (intents.includes('imagegen')) {
+    generateImageWithNano(prompt);
+    return;
+  }
+
+  // ODD 내부 자료 요청 ("원료 사진 보여줘", "M-01 이미지 찾아줘") →
+  // AI가 내용 설명 + Drive에서 실제 이미지 검색
+  const isOddAssetQuery = ODD_KNOWLEDGE_MAP && Object.values(ODD_KNOWLEDGE_MAP).some(
+    map => map.triggers.some(t => lower.includes(t))
+  ) && ['사진','이미지','영상','보여','찾아','에셋','asset','photo','image','video'].some(k => lower.includes(k));
+
+  if (isOddAssetQuery && aiConfig.key) {
+    generateWithAI(prompt);  // AI가 설명 + appendAssetRecommendations에서 Drive 검색
+    return;
+  }
+
+  // 일반 에셋 검색 (ODD 지식맵에 없는 외부 검색) → Drive+Unsplash 직행
   if (intents.includes('drive') || (intents.length === 1 && intents[0] === 'asset')) {
     handleMultiIntent(prompt, intents);
     return;
@@ -1769,10 +2683,53 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+// ── Google Account Status ──
+function updateAccountUI(user) {
+  const status = document.getElementById('accountStatus');
+  const avatar = document.getElementById('accountAvatar');
+  if (user) {
+    status.classList.add('logged-in');
+    status.title = user.displayName || user.email || 'Google 로그인됨';
+    if (user.photoURL) {
+      avatar.innerHTML = '<img src="' + user.photoURL + '" alt="">';
+    }
+  } else {
+    status.classList.remove('logged-in');
+    status.title = 'Google 로그인';
+    avatar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  }
+}
+
+function handleAccountClick() {
+  if (fireAuth.currentUser) {
+    // 로그인 상태면 로그아웃 확인
+    if (confirm('로그아웃 하시겠습니까?')) {
+      fireAuth.signOut();
+      driveAccessToken = null;
+    }
+  } else {
+    loginGoogle().then(() => {
+      showToast('Google 로그인 완료 — Drive 검색 활성화');
+    }).catch(() => {});
+  }
+}
+
+// Firebase Auth 상태 감지
+fireAuth.onAuthStateChanged(user => {
+  updateAccountUI(user);
+  if (user) {
+    // 로그인 시 Drive 토큰 확보 (이미 있으면 스킵)
+    if (!driveAccessToken) {
+      loginGoogle().catch(() => {});
+    }
+  }
+});
+
 // ── Settings Modal ──
 function openSettings() {
   document.getElementById('settingsAiKey').value = localStorage.getItem('odd_ai_key') || '';
   document.getElementById('settingsNotionKey').value = localStorage.getItem('odd_notion_key') || '';
+  document.getElementById('settingsNanoKey').value = localStorage.getItem('odd_nano_key') || '';
   document.getElementById('settingsOverlay').classList.add('open');
 }
 function closeSettings() {
@@ -1781,10 +2738,13 @@ function closeSettings() {
 function saveSettings() {
   const aiKey = document.getElementById('settingsAiKey').value.trim();
   const notionKey = document.getElementById('settingsNotionKey').value.trim();
+  const nanoKey = document.getElementById('settingsNanoKey').value.trim();
   if (aiKey) { localStorage.setItem('odd_ai_key', aiKey); aiConfig.key = aiKey; }
   else { localStorage.removeItem('odd_ai_key'); aiConfig.key = ''; }
   if (notionKey) { localStorage.setItem('odd_notion_key', notionKey); NOTION_KEY = notionKey; }
   else { localStorage.removeItem('odd_notion_key'); NOTION_KEY = ''; }
+  if (nanoKey) { localStorage.setItem('odd_nano_key', nanoKey); }
+  else { localStorage.removeItem('odd_nano_key'); }
   closeSettings();
   showToast('설정이 저장되었습니다');
 }
