@@ -2483,16 +2483,16 @@ async function autoGenerateImages(matches, _unused, targetEl) {
 }
 
 // ── Nano Banana via Higgsfield (AI Image Generation) ──
-const HIGGS_BASE = 'https://platform.higgsfield.ai';
+const HIGGS_PROXY = AI_PROXY + '/higgs';
 
 async function higgsGenerate(endpoint, input) {
   const key = localStorage.getItem('odd_higgs_key') || '';
   if (!key) throw new Error('Higgsfield API 키가 없습니다. 설정(⚙️)에서 입력하세요.');
 
-  // 1) 생성 요청
-  const r = await fetch(HIGGS_BASE + '/' + endpoint, {
+  // 1) 생성 요청 (프록시 경로)
+  const r = await fetch(HIGGS_PROXY + '/' + endpoint, {
     method: 'POST',
-    headers: { 'Authorization': 'Key ' + key, 'Content-Type': 'application/json' },
+    headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
     body: JSON.stringify({ input })
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || e.message || 'API 오류 (' + r.status + ')'); }
@@ -2501,11 +2501,12 @@ async function higgsGenerate(endpoint, input) {
   // 동기 응답 (즉시 결과)
   if (gen.output || gen.images || gen.image_url) return gen;
 
-  // 2) 비동기 → 폴링
-  const pollUrl = gen.url || gen.poll_url || (HIGGS_BASE + '/' + endpoint + '/' + (gen.id || gen.request_id));
+  // 2) 비동기 → 폴링 (프록시 경로)
+  const pollId = gen.id || gen.request_id;
+  const pollUrl = HIGGS_PROXY + '/' + endpoint + '/' + pollId;
   for (let i = 0; i < 60; i++) {
     await new Promise(ok => setTimeout(ok, 3000));
-    const sr = await fetch(pollUrl, { headers: { 'Authorization': 'Key ' + key } });
+    const sr = await fetch(pollUrl, { headers: { 'x-higgs-key': key } });
     if (!sr.ok) continue;
     const status = await sr.json();
     if (status.status === 'completed' || status.status === 'succeeded' || status.output) return status;
@@ -2575,10 +2576,10 @@ async function generateVideoWithHiggs(prompt) {
   const brandContext = 'ODD brand: premium dark aesthetic, minimalist, sleek M-01 supplement bottle, deep red #bf2026 accent on black, cinematic mood, sophisticated.';
 
   try {
-    // 1) 생성 요청
-    const r = await fetch('https://api.higgsfield.ai/v1/generations', {
+    // 1) 생성 요청 (프록시 경로)
+    const r = await fetch(HIGGS_PROXY + '/v1/generations', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + higgsKey, 'Content-Type': 'application/json' },
+      headers: { 'x-higgs-key': higgsKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: prompt + '. ' + brandContext,
         duration: 5,
@@ -2590,13 +2591,13 @@ async function generateVideoWithHiggs(prompt) {
     const genId = gen.id || gen.generation_id;
     if (!genId) throw new Error('생성 ID를 받지 못했습니다');
 
-    // 2) 상태 폴링 (최대 3분)
+    // 2) 상태 폴링 (최대 3분, 프록시 경로)
     const target = document.getElementById('higgsTarget');
     let videoUrl = null;
     for (let i = 0; i < 36; i++) {
       await new Promise(ok => setTimeout(ok, 5000));
-      const sr = await fetch('https://api.higgsfield.ai/v1/generations/' + genId, {
-        headers: { 'Authorization': 'Bearer ' + higgsKey }
+      const sr = await fetch(HIGGS_PROXY + '/v1/generations/' + genId, {
+        headers: { 'x-higgs-key': higgsKey }
       });
       if (!sr.ok) continue;
       const status = await sr.json();
