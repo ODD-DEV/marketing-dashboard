@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ODD. Caption Generator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<style>
+:root {
+  --bg:#000;--bg-raised:#1c1c1e;--bg-input:#0d0d0f;--border:rgba(255,255,255,.06);
+  --t1:#f5f5f7;--t2:#d1d1d6;--t3:#a1a1a6;--t4:#6e6e73;--t5:#48484a;
+  --red:#bf2026;--red-dim:rgba(191,32,38,.1);--red-border:rgba(191,32,38,.25);
+  --green:#30d158;--blue:#0a84ff;--orange:#ff9f0a;--purple:#bf5af2;
+  --sans:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+  --r:16px;--r-s:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:var(--red);color:#fff}
+
+/* ── Landing ── */
+.landing{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:0 24px;transition:all .5s cubic-bezier(.4,0,.2,1)}
+.landing.pushed{justify-content:flex-start;min-height:auto;padding-top:40px}
+
+/* Logo */
+.logo-area{margin-bottom:72px;text-align:center;transition:all .4s ease}
+.logo-area img{height:80px;opacity:.9;transition:all .4s ease}
+.logo-area .subtitle{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--t4);margin-top:18px;letter-spacing:.3px;transition:all .3s ease}
+.landing.pushed .logo-area{margin-bottom:28px}
+.landing.pushed .logo-area img{height:32px}
+.landing.pushed .logo-area .subtitle{opacity:0;height:0;margin:0;overflow:hidden}
+
+/* ── Input Area ── */
+.input-area{width:100%;max-width:720px}
+
+.input-box{background:rgba(191,32,38,.08);border:1.5px solid rgba(191,32,38,.22);border-radius:28px;padding:0;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.input-box:focus-within{border-color:rgba(191,32,38,.4);background:rgba(191,32,38,.11)}
+.input-box.dragover{border-color:rgba(191,32,38,.5);background:rgba(191,32,38,.14)}
+
+.input-main{display:flex;align-items:center;gap:0;min-height:60px;padding:0 12px 0 28px}
+.input-field{flex:1;position:relative;display:flex;align-items:center;min-height:60px}
+.input-field textarea{width:100%;background:none;border:none;color:var(--t1);font-size:16px;line-height:1.5;font-family:var(--sans);resize:none;outline:none;padding:18px 0;min-height:24px;max-height:200px;overflow-y:auto}
+
+/* Typing placeholder */
+.input-field .typed-placeholder{position:absolute;left:0;top:50%;transform:translateY(-50%);color:var(--t5);font-size:16px;pointer-events:none;white-space:nowrap;transition:opacity .2s}
+.input-field textarea:focus ~ .typed-placeholder,
+.input-field textarea.has-text ~ .typed-placeholder{opacity:0}
+
+.input-actions{display:flex;align-items:center;gap:2px;flex-shrink:0;padding:8px 0}
+.input-icon-btn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.input-icon-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
+.input-icon-btn svg{width:20px;height:20px}
+.input-icon-btn.send{background:var(--red);color:#fff}
+.input-icon-btn.send:hover{background:#d4343a}
+.input-icon-btn.send:disabled{background:rgba(255,255,255,.06);color:var(--t5);cursor:not-allowed}
+
+/* File preview */
+.file-preview{display:none;gap:8px;flex-wrap:wrap;padding:8px 16px 14px;border-top:1px solid var(--border)}
+.file-preview.show{display:flex}
+.file-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;font-size:11px;color:var(--t3)}
+.file-chip .thumb{width:28px;height:28px;border-radius:6px;object-fit:cover}
+.file-chip .vid-icon{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center}
+.file-chip .vid-icon svg{width:14px;height:14px;fill:var(--t4)}
+.file-chip .remove{width:18px;height:18px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;transition:all .15s}
+.file-chip .remove:hover{background:rgba(255,255,255,.15);color:var(--t2)}
+
+/* Drop zone overlay */
+.drop-overlay{position:absolute;inset:0;background:rgba(191,32,38,.06);display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none;opacity:0;transition:opacity .2s}
+.input-box.dragover .drop-overlay{opacity:1}
+.drop-overlay span{font-size:13px;color:var(--red);font-weight:600}
+
+/* ── Options ── */
+.options-bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:28px}
+
+.opt-group{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.03);border-radius:100px;padding:3px;border:1px solid rgba(255,255,255,.04)}
+.opt-btn{padding:6px 14px;border-radius:100px;border:none;background:transparent;color:var(--t5);cursor:pointer;font-size:12px;font-weight:500;transition:all .15s;font-family:var(--sans);white-space:nowrap}
+.opt-btn:hover{color:var(--t3);background:rgba(255,255,255,.04)}
+.opt-btn.active{background:rgba(255,255,255,.1);color:var(--t2);font-weight:600}
+.opt-btn.active[data-val="ad"]{background:var(--red-dim);color:var(--red)}
+.opt-btn.active[data-val="organic"]{background:rgba(48,209,88,.1);color:var(--green)}
+.opt-btn.active[data-val="meta"]{background:rgba(79,141,249,.1);color:#4f8df9}
+.opt-btn.active[data-val="tiktok"]{background:rgba(255,59,92,.1);color:#ff3b5c}
+.opt-btn.active[data-val="google"]{background:rgba(52,168,83,.1);color:#34a853}
+.opt-btn.active[data-val="image"]{background:rgba(255,159,10,.1);color:#ff9f0a}
+.opt-btn.active[data-val="video"]{background:rgba(191,90,242,.1);color:#bf5af2}
+.opt-btn.active[data-val="1"]{background:rgba(48,209,88,.1);color:#30d158}
+.opt-btn.active[data-val="2"]{background:rgba(255,159,10,.1);color:#ff9f0a}
+.opt-btn.active[data-val="3"]{background:rgba(191,32,38,.15);color:var(--red)}
+
+.opt-sep{width:1px;height:18px;background:rgba(255,255,255,.05);margin:0 2px}
+
+.funnel-group{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.03);border-radius:100px;padding:3px;border:1px solid rgba(255,255,255,.04);transition:all .2s}
+.funnel-group.hidden{display:none}
+.f-btn{padding:5px 11px;border-radius:100px;border:none;background:transparent;color:var(--t5);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s;font-family:var(--sans)}
+.f-btn:hover{color:var(--t3);background:rgba(255,255,255,.04)}
+.f-btn.active.tof{background:rgba(56,189,248,.1);color:#38bdf8}
+.f-btn.active.mof{background:rgba(167,139,250,.1);color:#a78bfa}
+.f-btn.active.bof{background:rgba(249,115,22,.1);color:#f97316}
+
+/* History button */
+.history-btn{position:fixed;top:20px;right:24px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:200}
+.history-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
+.history-btn svg{width:18px;height:18px}
+.history-btn .badge{position:absolute;top:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* ── Results ── */
+.results-area{width:100%;max-width:720px;margin-top:48px;padding-bottom:80px;display:none}
+
+.result-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:12px;position:relative;animation:fadeUp .4s ease both}
+.result-card:nth-child(2){animation-delay:.08s}
+.result-card:nth-child(3){animation-delay:.16s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.result-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.result-label .dot{width:6px;height:6px;border-radius:50%}
+.result-content{font-size:15px;line-height:1.8;color:var(--t2);white-space:pre-wrap;word-break:break-word}
+.result-meta{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.result-meta .tag{font-size:10px;padding:3px 8px;border-radius:100px;background:rgba(255,255,255,.05);color:var(--t4)}
+.copy-btn{margin-left:auto;padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:4px}
+.copy-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
+.copy-btn svg{width:12px;height:12px;fill:currentColor}
+
+/* Loading */
+.loading-dots{display:flex;gap:6px;align-items:center;justify-content:center;padding:40px 0}
+.loading-dots span{width:8px;height:8px;border-radius:50%;background:var(--t5);animation:dotPulse 1.2s ease-in-out infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotPulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── History Panel ── */
+.history-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s}
+.history-overlay.open{opacity:1;pointer-events:auto}
+
+.history-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:100vw;background:var(--bg);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.history-panel.open{transform:translateX(0)}
+
+.history-header{position:sticky;top:0;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1}
+.history-title{font-size:14px;font-weight:600;color:var(--t2)}
+.history-close{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.history-close:hover{background:rgba(255,255,255,.1);color:var(--t1)}
+
+.history-list{flex:1;padding:16px}
+.history-empty{text-align:center;padding:60px 20px;color:var(--t5);font-size:13px}
+
+.history-item{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r-s);padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s}
+.history-item:hover{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+.history-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.history-item-time{font-size:11px;color:var(--t5)}
+.history-item-tags{display:flex;gap:4px}
+.history-item-tags span{font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,.05);color:var(--t4)}
+.history-item-prompt{font-size:13px;color:var(--t3);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.history-item-files{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.history-item-files span{font-size:10px;color:var(--t5);background:rgba(255,255,255,.03);padding:2px 6px;border-radius:4px}
+
+/* History detail modal */
+.history-detail{padding:20px 24px}
+.history-detail-back{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t4);cursor:pointer;margin-bottom:16px;background:none;border:none;font-family:var(--sans);transition:color .15s}
+.history-detail-back:hover{color:var(--t2)}
+.history-detail-prompt{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:16px;padding:16px;background:rgba(255,255,255,.03);border-radius:var(--r-s);border:1px solid var(--border)}
+.history-detail-result{margin-bottom:12px}
+.history-detail-result .label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--t4);margin-bottom:6px}
+.history-detail-result .content{font-size:13px;line-height:1.7;color:var(--t3);white-space:pre-wrap;word-break:break-word;padding:12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border)}
+
+/* ── Drive Panel ── */
+.drive-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s}
+.drive-overlay.open{opacity:1;pointer-events:auto}
+.drive-panel{position:fixed;top:0;right:0;bottom:0;width:480px;max-width:100vw;background:var(--bg);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.drive-panel.open{transform:translateX(0)}
+.drive-header{position:sticky;top:0;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1}
+.drive-title{font-size:14px;font-weight:600;color:var(--t2)}
+.drive-close{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.drive-close:hover{background:rgba(255,255,255,.1);color:var(--t1)}
+.drive-login{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:16px}
+.drive-login p{font-size:13px;color:var(--t4);text-align:center}
+.drive-login-btn{padding:10px 24px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--t2);cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:all .2s;display:flex;align-items:center;gap:8px}
+.drive-login-btn:hover{background:rgba(255,255,255,.1)}
+.drive-login-btn svg{width:18px;height:18px}
+.drive-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px}
+.drive-item{position:relative;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .15s;aspect-ratio:1;background:var(--bg-raised)}
+.drive-item:hover{border-color:rgba(255,255,255,.2)}
+.drive-item.selected{border-color:var(--red)}
+.drive-item img{width:100%;height:100%;object-fit:cover}
+.drive-item .vid-badge{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center}
+.drive-item .vid-badge svg{width:10px;height:10px;fill:#fff}
+.drive-item .check{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;background:var(--red);display:none;align-items:center;justify-content:center}
+.drive-item.selected .check{display:flex}
+.drive-item .check svg{width:10px;height:10px;fill:#fff}
+.drive-item-name{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drive-footer{position:sticky;bottom:0;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.drive-footer .count{font-size:12px;color:var(--t4)}
+.drive-attach-btn{padding:8px 20px;border-radius:100px;border:none;background:var(--red);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--sans);transition:all .15s}
+.drive-attach-btn:hover{background:#d4343a}
+.drive-attach-btn:disabled{background:var(--t5);cursor:not-allowed}
+
+/* Toast */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-raised);border:1px solid var(--border);border-radius:100px;padding:10px 24px;color:var(--t2);font-size:13px;font-weight:500;opacity:0;transition:all .3s ease;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Mobile */
+@media(max-width:600px){
+  .landing{padding:0 16px}
+  .landing.pushed{padding-top:28px}
+  .logo-area{margin-bottom:40px}
+  .logo-area img{height:52px}
+  .logo-area .subtitle{font-size:13px}
+  .input-main{padding:0 6px 0 16px}
+  .input-field textarea{font-size:14px}
+  .typed-placeholder{font-size:14px !important}
+  .options-bar{gap:4px}
+  .opt-btn{padding:5px 10px;font-size:11px}
+  .f-btn{padding:4px 9px;font-size:10px}
+  .result-card{padding:20px 18px}
+  .history-panel{width:100vw}
+  .history-btn{top:16px;right:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- History Button -->
+<button class="history-btn" id="historyBtn" onclick="openHistory()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  <span class="badge" id="historyBadge" style="display:none">0</span>
+</button>
+
+<!-- History Panel -->
+<div class="history-overlay" id="historyOverlay" onclick="closeHistory()"></div>
+<div class="history-panel" id="historyPanel">
+  <div class="history-header">
+    <span class="history-title">생성 기록</span>
+    <button class="history-close" onclick="closeHistory()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div id="historyContent"></div>
+</div>
+
+<div class="landing" id="landing">
+  <div class="logo-area">
+    <img src="odd_logo_white.png" alt="ODD.">
+    <div class="subtitle">Describe your content, get the perfect caption.</div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-box" id="inputBox">
+      <div class="drop-overlay"><span>파일을 여기에 놓으세요</span></div>
+      <div class="input-main">
+        <div class="input-field">
+          <textarea id="promptInput" rows="1"></textarea>
+          <span class="typed-placeholder" id="typedPlaceholder"></span>
+        </div>
+        <div class="input-actions">
+          <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+          <button class="input-icon-btn" onclick="openDrive()" title="Drive 에셋">
+            <svg viewBox="0 0 87.3 78" fill="none" style="width:18px;height:18px"><path d="M6.6 66.85L3.3 61.35 29.05 17.15h25.8L6.6 66.85z" fill="#0066DA"/><path d="M58.55 78h-32.4l13.2-22.85h32.4L58.55 78z" fill="#00AC47"/><path d="M71.75 55.15L58.55 78 84 61.35 87.3 55.15 71.75 17.15H58.55l13.2 38z" fill="#EA4335"/><path d="M29.05 17.15L6.6 66.85 20.3 55.15 33.05 17.15h-4z" fill="#00832D"/><path d="M58.55 17.15h-4L41.35 55.15h32.4L58.55 17.15z" fill="#2684FC"/><path d="M26.25 55.15L13.2 78h32.4l13.2-22.85H26.25z" fill="#FFBA00"/></svg>
+          </button>
+          <button class="input-icon-btn" onclick="document.getElementById('fileInput').click()" title="파일 첨부">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="input-icon-btn send" id="sendBtn" onclick="generate()" disabled title="생성">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="file-preview" id="filePreview"></div>
+    </div>
+
+    <!-- Options -->
+    <div class="options-bar">
+      <div class="opt-group" id="typeGroup">
+        <button class="opt-btn active" data-val="ad" onclick="setOpt('type','ad')">광고</button>
+        <button class="opt-btn" data-val="organic" onclick="setOpt('type','organic')">일반</button>
+      </div>
+      <div class="opt-sep"></div>
+      <div class="opt-group" id="channelGroup">
+        <button class="opt-btn active" data-val="all" onclick="setOpt('channel','all')">통합</button>
+        <button class="opt-btn" data-val="meta" onclick="setOpt('channel','meta')">Meta</button>
+        <button class="opt-btn" data-val="tiktok" onclick="setOpt('channel','tiktok')">TikTok</button>
+        <button class="opt-btn" data-val="google" onclick="setOpt('channel','google')">Google</button>
+      </div>
+      <div class="opt-sep"></div>
+      <div class="opt-group" id="formatGroup">
+        <button class="opt-btn active" data-val="image" onclick="setOpt('format','image')">이미지</button>
+        <button class="opt-btn" data-val="video" onclick="setOpt('format','video')">영상</button>
+      </div>
+      <div class="opt-sep" id="funnelSep"></div>
+      <div class="funnel-group" id="funnelGroup">
+        <button class="f-btn tof active" data-val="tof" onclick="setOpt('funnel','tof')">TOF</button>
+        <button class="f-btn mof" data-val="mof" onclick="setOpt('funnel','mof')">MOF</button>
+        <button class="f-btn bof" data-val="bof" onclick="setOpt('funnel','bof')">BOF</button>
+      </div>
+      <div class="opt-sep"></div>
+      <div class="opt-group" id="tensionGroup">
+        <button class="opt-btn active" data-val="1" onclick="setOpt('tension','1')">Safe</button>
+        <button class="opt-btn" data-val="2" onclick="setOpt('tension','2')">Bold</button>
+        <button class="opt-btn" data-val="3" onclick="setOpt('tension','3')">Edge</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-area" id="resultsArea"></div>
+</div>
+
+<!-- Drive Panel -->
+<div class="drive-overlay" id="driveOverlay" onclick="closeDrive()"></div>
+<div class="drive-panel" id="drivePanel">
+  <div class="drive-header">
+    <span class="drive-title">콘텐츠 에셋</span>
+    <button class="drive-close" onclick="closeDrive()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div id="driveContent">
+    <div class="drive-login" id="driveLogin">
+      <p>Google Drive에 연결하여<br>콘텐츠 에셋을 불러옵니다</p>
+      <button class="drive-login-btn" onclick="driveSignIn()">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Google 계정으로 연결
+      </button>
+    </div>
+  </div>
+  <div class="drive-footer" id="driveFooter" style="display:none">
+    <span class="count" id="driveCount">0개 선택</span>
+    <button class="drive-attach-btn" id="driveAttachBtn" onclick="attachDriveFiles()" disabled>첨부하기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──
+const state = { type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1' };
+const files = [];
+
+// ══════════════════════════════════════════════════════════
+// ODD. BRAND SKILL ENGINE — SKILL.md 기반 캡션 생성 로직
+// ══════════════════════════════════════════════════════════
+
+// ⛔ 금지 표현 목록
+const BANNED = [
+  'one bottle salad','the one bottle salad','2 second salad','2-second salad',
+  'just 2 seconds','the best 2-second change','in 2 seconds','ready in 2 seconds'
+];
+
+// 가이드라인 체크 — 생성된 카피가 Meta/TikTok 정책을 위반하지 않는지 검증
+function guidelineCheck(text) {
+  const warnings = [];
+  const lower = text.toLowerCase();
+  // 금지 표현 체크
+  BANNED.forEach(b => { if (lower.includes(b.toLowerCase())) warnings.push('⛔ 금지 표현 포함: "' + b + '"'); });
+  // 개인 건강 직접 언급
+  const healthDirect = [/your blood sugar/i,/당신의 혈당/,/혈당이 높으/,/are you struggling/i,/your metabolism is broken/i,/당신의 소화가 문제/];
+  healthDirect.forEach(r => { if (r.test(text)) warnings.push('⚠️ 개인 건강 직접 언급 — Meta 정책 위반 가능'); });
+  // 의약품 수준 주장
+  const medClaims = [/clinically proven/i,/guaranteed result/i,/instant relief/i,/cures /i,/치료/,/완치/,/예방해/];
+  medClaims.forEach(r => { if (r.test(text)) warnings.push('⚠️ 의약품 수준 주장 — 플랫폼 정책 위반'); });
+  // 부정적 자기인식
+  const negSelf = [/still suffering/i,/고통받/,/still struggling/i,/지쳐있/,/망가진 몸/];
+  negSelf.forEach(r => { if (r.test(text)) warnings.push('⚠️ 부정적 자기 인식 유도 — 긍정적 프레이밍으로 전환 필요'); });
+  // 체중 관련
+  const weight = [/lose \d+ pound/i,/kg 빠/,/fat burner/i,/체지방 감소/,/appetite suppressant/i,/detox/i];
+  weight.forEach(r => { if (r.test(text)) warnings.push('⚠️ 체중 관련 주장 — TikTok/Meta 정책 위반'); });
+  return warnings;
+}
+
+// ── ODD. 해시태그 ──
+const ODD_HASHTAGS = {
+  fixed: ['#oddtobewell'],
+  campaign: ['#notsaladbutsalad'],
+  salad: ['#saladbowl','#saladrecipe','#saladlife','#saladlover'],
+  lifestyle: ['#dailyroutine','#everydaywellness','#premeal'],
+  metabolic: ['#MetabolicHealth','#BloodSugar','#GlucoseControl'],
+  wellness: ['#WellnessRitual','#IntentionalLiving']
+};
+
+function oddHashtags(ch, isAd, contentTheme) {
+  if (ch === 'google') return '';
+  const tags = [...ODD_HASHTAGS.fixed];
+  if (isAd || contentTheme === 'campaign') tags.push(...ODD_HASHTAGS.campaign);
+  // 플랫폼별 수량: IG 4-5개, TikTok 3-5개
+  const pool = contentTheme === 'education'
+    ? [...ODD_HASHTAGS.metabolic, ...ODD_HASHTAGS.wellness]
+    : [...ODD_HASHTAGS.salad.slice(0,2), ...ODD_HASHTAGS.lifestyle.slice(0,1)];
+  tags.push(...pool);
+  const max = ch === 'tiktok' ? 5 : 5;
+  return [...new Set(tags)].slice(0, max).join(' ');
+}
+
+// ── ODD. 캡션 훅 풀 (텐션 레벨별) ──
+const HOOKS = {
+  tof: {
+    1: [ // Safe Bold
+      'Not Salad, But Salad.',
+      'Your salad doesn\'t need a bowl.',
+      'Prep time: zero.',
+      'Before the first bite — that\'s where it starts.',
+      'A simpler way to do what salad does.'
+    ],
+    2: [ // Provocative
+      'Who has time for salads anymore?',
+      'The food changed. Your body didn\'t.',
+      'We drifted from how we were designed to eat.',
+      'What if the best routine takes no prep at all?',
+      'Skip the bowl. Keep the benefits.'
+    ],
+    3: [ // Maximum Edge
+      'Nature\'s rare reward became a constant additive.',
+      'Don\'t blame sugar. We changed its form.',
+      'The ritual before the meal matters more than the meal.',
+      'We didn\'t change the formula. We decoded it.',
+      'Every bite tells a story. This one starts before.'
+    ]
+  },
+  mof: {
+    1: ['Why Salad? Not the bowl — the benefits.','What\'s in M-01? Built for the before-meal moment.','Fiber-forward support for digestion and gut balance.'],
+    2: ['Salad slows digestion. Delphinol® smooths the spike.','42% less impact from carbs. One ingredient. One bottle.','What if your body met carbs differently?'],
+    3: ['We decoded what salad does — then distilled it.','Decoded from Nature. Refined by Science.','The human body comes equipped with an original design.']
+  },
+  bof: {
+    1: ['Your salad is ready. No prep. No waste.','Start your smarter routine.','M-01 carries the ritual of salad into your everyday routine.'],
+    2: ['Love It in 60 Days or Get Your Money Back.','The simplest way to replace what salad does.','No prep. No waste. Just your rhythm.'],
+    3: ['Meeting sugar with intention, not fear.','We return wellness to its original design.','Before you eat — that\'s M-01\'s moment.']
+  }
+};
+
+// ── ODD. 캡션 본문 템플릿 ──
+function oddAdCaption(prompt, ch, fn, tension) {
+  const t = parseInt(tension);
+  const hookPool = HOOKS[fn][t] || HOOKS[fn][1];
+  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
+  const userContext = prompt || 'M-01, the pre-meal ritual that changes everything';
+
+  const templates = {
+    meta: {
+      tof: {
+        text: hook + '\n\n' + userContext + '\n\nA simpler way to keep your rhythm.\nNo prep. No waste. Just twist and drink.\n\nLearn more. Link in bio.',
+        tags: ['TOF 인지', 'Meta Feed', '스크롤 스토퍼']
+      },
+      mof: {
+        text: hook + '\n\n' + userContext + '\n\nM-01 is built with 5 research-backed ingredients — each designed to support what salad does, and go further.\n\nSwipe through.',
+        tags: ['MOF 고려', '교육형', '저장 유도']
+      },
+      bof: {
+        text: (t >= 2 ? '🔴 ' : '') + 'Your body\'s best defense.\n\n' + userContext + '\n\nMeet M-01 — a smarter pre-meal ritual.\n✓ 5 research-backed ingredients\n✓ 60-day satisfaction guarantee\n✓ Ships worldwide\n\n' + (fn === 'bof' ? 'Limited Offer — Get up to 40% OFF.' : 'Discover more.'),
+        tags: ['BOF 전환', '오퍼', '망설임 제거']
+      }
+    },
+    tiktok: {
+      tof: {
+        text: hook + '\n' + userContext + '\n\nNot Salad, But Salad. ✨',
+        tags: ['TOF', 'TikTok', '짧은 훅']
+      },
+      mof: {
+        text: hook + '\n\n' + userContext + '\n\nTwist and drink. That\'s the whole routine. 🍋',
+        tags: ['MOF', 'TikTok', '이해 유도']
+      },
+      bof: {
+        text: 'Cut down on prep. 🧺\n' + userContext + '\n\n' + hook + '\n\nProfile link for details.',
+        tags: ['BOF', 'TikTok', '전환']
+      }
+    },
+    google: {
+      tof: {
+        text: '[헤드라인 1] ' + (prompt ? prompt.slice(0,28) : 'Not Salad, But Salad') + ' | ODD.\n[헤드라인 2] Pre-Meal Ritual for Metabolic Wellness\n[헤드라인 3] A Simpler Way to Do What Salad Does\n[설명 1] ' + userContext + ' — Twist and drink. No prep, no waste.\n[설명 2] 5 research-backed ingredients. 60-day guarantee. Try M-01 today.',
+        tags: ['TOF', 'Google Ads', 'RSA']
+      },
+      mof: {
+        text: '[헤드라인 1] Why M-01? 5 Ingredients, One Bottle\n[헤드라인 2] ' + (prompt ? prompt.slice(0,28) : 'Metabolic Health Supplement') + '\n[헤드라인 3] What Salad Does, Without the Bowl\n[설명 1] ' + userContext + '\n[설명 2] 42% less carb impact (Reducose® studies). Free shipping available.',
+        tags: ['MOF', 'Google Ads', '수치 증거']
+      },
+      bof: {
+        text: '[헤드라인 1] Up to 40% OFF M-01 — Limited Time\n[헤드라인 2] 60-Day Money-Back Guarantee\n[헤드라인 3] ' + (prompt ? prompt.slice(0,28) : 'Start Your Pre-Meal Ritual') + '\n[설명 1] ' + userContext + ' — Try risk-free.\n[설명 2] Loved by thousands. 4.8★ avg review. Order now with free shipping.',
+        tags: ['BOF', 'Google Ads', '전환 최적화']
+      }
+    }
+  };
+  return templates[ch][fn];
+}
+
+function oddOrganicCaption(prompt, ch, tension) {
+  const t = parseInt(tension);
+  const userContext = prompt || '';
+
+  // 3가지 패턴: 선언형(A), 공감형(B), 서사형(C) — 랜덤
+  const patterns = ['A','B','C'];
+  const pat = patterns[Math.floor(Math.random() * patterns.length)];
+
+  const hookPool = [...(HOOKS.tof[t] || []), ...(HOOKS.mof[t] || [])];
+  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
+
+  const templates = {
+    meta: {
+      A: { // 선언형
+        text: hook + '\n\n' + userContext + '\n\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'lifestyle'),
+        tags: ['오가닉', 'IG Feed', '선언형 A']
+      },
+      B: { // 공감형
+        text: userContext + '\n\nEat what you love. M-01\'s got your back.\n\nStart your smarter routine.\nA pre-meal salad, ready anytime.\n\n' + oddHashtags('meta', false, 'campaign'),
+        tags: ['오가닉', 'IG Feed', '공감형 B']
+      },
+      C: { // 서사형
+        text: hook + '\n\n' + 'Our goal isn\'t to replace the fresh meals you love,\nbut to bridge the gap between your health goals and your busy reality.\n\nM-01 carries the ritual of salad into your everyday routine.\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'wellness'),
+        tags: ['오가닉', 'IG Feed', '서사형 C']
+      }
+    },
+    tiktok: {
+      A: { text: hook + '\n' + userContext + '\n\n' + oddHashtags('tiktok', false, 'campaign'), tags: ['오가닉', 'TikTok', '짧고 펀치'] },
+      B: { text: userContext + ' 🍋\nTwist and drink. Done.\n\n' + oddHashtags('tiktok', false, 'lifestyle'), tags: ['오가닉', 'TikTok', '캐주얼'] },
+      C: { text: hook + '\n\n' + userContext + '\n\n' + oddHashtags('tiktok', false, 'wellness'), tags: ['오가닉', 'TikTok', '인사이트'] }
+    },
+    google: {
+      A: { text: userContext + '\n\n자세한 내용은 odd.us에서 확인하세요.', tags: ['오가닉', 'Google', '정보성'] },
+      B: { text: userContext, tags: ['오가닉', 'Google'] },
+      C: { text: userContext, tags: ['오가닉', 'Google'] }
+    }
+  };
+  return templates[ch][pat];
+}
+
+function oddCTA(ch, fn) {
+  const ctas = {
+    meta: {
+      tof: { text: 'Learn more. Link in bio.', tags: ['가벼운 유도'] },
+      mof: { text: 'Swipe through. ↗', tags: ['탐색 유도'] },
+      bof: { text: '⚡ Get up to 40% OFF — Limited time only.\nm-01.odd.us', tags: ['전환 + 긴급성'] }
+    },
+    tiktok: {
+      tof: { text: 'Check the link in bio 👆', tags: ['프로필 유도'] },
+      mof: { text: 'More in profile → link 🔗', tags: ['랜딩 유도'] },
+      bof: { text: '🔥 Link in bio — 40% OFF ends soon', tags: ['전환'] }
+    },
+    google: {
+      tof: { text: 'Learn More →', tags: ['CTA Extension'] },
+      mof: { text: 'See How It Works →', tags: ['CTA Extension'] },
+      bof: { text: 'Order Now — 60-Day Guarantee →', tags: ['CTA Extension'] }
+    }
+  };
+  return ctas[ch][fn];
+}
+
+// ── Typing placeholder animation ──
+const phrases = [
+  '콘텐츠 주제를 설명해주세요...',
+  '어떤 메시지를 전달하고 싶나요?',
+  '이미지나 영상을 드래그하세요',
+  '예: 식사 전 리추얼 소개 콘텐츠',
+  '예: M-01 성분 교육 캐러셀'
+];
+let phraseIdx = 0, charIdx = 0, isDeleting = false, typingTimer = null;
+const phEl = document.getElementById('typedPlaceholder');
+
+function typeLoop() {
+  const phrase = phrases[phraseIdx];
+  if (!isDeleting) {
+    phEl.textContent = phrase.slice(0, charIdx + 1);
+    charIdx++;
+    if (charIdx >= phrase.length) {
+      isDeleting = true;
+      typingTimer = setTimeout(typeLoop, 2200);
+      return;
+    }
+    typingTimer = setTimeout(typeLoop, 60);
+  } else {
+    phEl.textContent = phrase.slice(0, charIdx);
+    charIdx--;
+    if (charIdx < 0) {
+      isDeleting = false;
+      charIdx = 0;
+      phraseIdx = (phraseIdx + 1) % phrases.length;
+      typingTimer = setTimeout(typeLoop, 400);
+      return;
+    }
+    typingTimer = setTimeout(typeLoop, 30);
+  }
+}
+typeLoop();
+
+// ── Options ──
+function setOpt(key, val) {
+  state[key] = val;
+  const groupMap = { type:'typeGroup', channel:'channelGroup', format:'formatGroup', tension:'tensionGroup' };
+  if (groupMap[key]) {
+    document.querySelectorAll('#' + groupMap[key] + ' .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+  }
+  if (key === 'funnel') {
+    document.querySelectorAll('#funnelGroup .f-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+  }
+  const show = state.type === 'ad';
+  document.getElementById('funnelGroup').classList.toggle('hidden', !show);
+  document.getElementById('funnelSep').style.display = show ? '' : 'none';
+}
+
+// ── Textarea ──
+const promptInput = document.getElementById('promptInput');
+const sendBtn = document.getElementById('sendBtn');
+
+promptInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+  this.classList.toggle('has-text', !!this.value);
+  sendBtn.disabled = !this.value.trim() && files.length === 0;
+});
+promptInput.addEventListener('focus', function() {
+  clearTimeout(typingTimer);
+  phEl.style.opacity = '0';
+});
+promptInput.addEventListener('blur', function() {
+  if (!this.value) { phEl.style.opacity = ''; typeLoop(); }
+});
+promptInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) generate(); }
+});
+
+// ── File handling ──
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  addFiles(e.target.files);
+  e.target.value = '';
+});
+
+// Drag & drop
+const inputBox = document.getElementById('inputBox');
+let dragCounter = 0;
+document.addEventListener('dragenter', function(e) { e.preventDefault(); dragCounter++; inputBox.classList.add('dragover'); });
+document.addEventListener('dragleave', function(e) { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; inputBox.classList.remove('dragover'); } });
+document.addEventListener('dragover', function(e) { e.preventDefault(); });
+document.addEventListener('drop', function(e) {
+  e.preventDefault();
+  dragCounter = 0;
+  inputBox.classList.remove('dragover');
+  if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+});
+
+function addFiles(fileList) {
+  Array.from(fileList).forEach(f => {
+    if (files.length >= 5) return;
+    if (!f.type.startsWith('image/') && !f.type.startsWith('video/')) return;
+    files.push(f);
+  });
+  renderFiles();
+  sendBtn.disabled = !promptInput.value.trim() && files.length === 0;
+}
+
+function renderFiles() {
+  const c = document.getElementById('filePreview');
+  if (!files.length) { c.classList.remove('show'); return; }
+  c.classList.add('show');
+  c.innerHTML = files.map((f, i) => {
+    const isImg = f.type.startsWith('image/');
+    const thumb = isImg
+      ? '<img class="thumb" src="' + URL.createObjectURL(f) + '">'
+      : '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    const name = f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name;
+    return '<span class="file-chip">' + thumb + '<span>' + name + '</span><button class="remove" onclick="removeFile(' + i + ')">✕</button></span>';
+  }).join('');
+}
+
+function removeFile(i) {
+  files.splice(i, 1);
+  renderFiles();
+  sendBtn.disabled = !promptInput.value.trim() && files.length === 0;
+}
+
+// ── Generate ──
+function generate() {
+  const prompt = promptInput.value.trim();
+  if (!prompt && files.length === 0) return;
+
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  const channels = state.channel === 'all' ? ['meta', 'tiktok', 'google'] : [state.channel];
+
+  setTimeout(() => {
+    const allResults = [];
+    channels.forEach(ch => {
+      const results = buildCaptions(prompt, ch);
+      allResults.push(...results);
+    });
+    renderResults(allResults);
+    saveHistory(prompt, allResults);
+  }, 800);
+}
+
+function buildCaptions(prompt, ch) {
+  const isAd = state.type === 'ad';
+  const fn = state.funnel;
+  const tension = state.tension;
+  const results = [];
+  const chLabel = { meta: 'Meta', tiktok: 'TikTok', google: 'Google' }[ch];
+  const chColor = { meta: '#4f8df9', tiktok: '#ff3b5c', google: '#34a853' }[ch];
+  const fnColor = { tof: '#38bdf8', mof: '#a78bfa', bof: '#f97316' }[fn];
+  const tensionLabel = { '1': 'Safe Bold', '2': 'Provocative', '3': 'Max Edge' }[tension];
+
+  // Caption
+  const caption = isAd ? oddAdCaption(prompt, ch, fn, tension) : oddOrganicCaption(prompt, ch, tension);
+  const prefix = state.channel === 'all' ? chLabel + ' ' : '';
+
+  // 가이드라인 체크
+  const warnings = guidelineCheck(caption.text);
+  const captionContent = warnings.length
+    ? caption.text + '\n\n' + '─'.repeat(30) + '\n⚠️ 가이드라인 체크:\n' + warnings.join('\n')
+    : caption.text;
+
+  results.push({
+    label: prefix + '캡션' + (isAd ? ' [' + fn.toUpperCase() + ']' : ''),
+    content: captionContent,
+    color: isAd ? fnColor : chColor,
+    tags: [...caption.tags, tensionLabel],
+    channel: ch
+  });
+
+  // CTA (ad only)
+  if (isAd) {
+    const cta = oddCTA(ch, fn);
+    results.push({ label: prefix + 'CTA', content: cta.text, color: chColor, tags: cta.tags, channel: ch });
+  }
+
+  // Hashtags (not google)
+  if (ch !== 'google') {
+    const theme = isAd ? 'campaign' : 'lifestyle';
+    const ht = oddHashtags(ch, isAd, theme);
+    results.push({ label: prefix + '해시태그', content: ht, color: 'var(--t4)', channel: ch });
+  }
+
+  return results;
+}
+
+// ── Render Results ──
+function renderResults(results) {
+  const area = document.getElementById('resultsArea');
+  area.innerHTML = results.map((r, i) => {
+    const encoded = encodeURIComponent(r.content);
+    return '<div class="result-card" style="animation-delay:' + (i * .06) + 's">' +
+      '<div class="result-label" style="color:' + r.color + '"><span class="dot" style="background:' + r.color + '"></span>' + esc(r.label) + '</div>' +
+      '<div class="result-content">' + esc(r.content) + '</div>' +
+      '<div class="result-meta">' +
+        (r.tags ? r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') : '') +
+        '<button class="copy-btn" onclick="copyText(this,\'' + encoded + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function copyText(btn, encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
+    showToast('복사되었습니다');
+    btn.textContent = '✓';
+    setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사'; }, 1500);
+  });
+}
+
+// ── History (localStorage) ──
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('odd_caption_history') || '[]'); } catch { return []; }
+}
+function saveHistory(prompt, results) {
+  const history = getHistory();
+  history.unshift({
+    id: Date.now(),
+    time: new Date().toISOString(),
+    prompt: prompt,
+    files: files.map(f => ({ name: f.name, type: f.type })),
+    settings: { ...state },
+    results: results.map(r => ({ label: r.label, content: r.content }))
+  });
+  if (history.length > 100) history.length = 100;
+  localStorage.setItem('odd_caption_history', JSON.stringify(history));
+  updateBadge();
+}
+
+function updateBadge() {
+  const count = getHistory().length;
+  const badge = document.getElementById('historyBadge');
+  if (count > 0) { badge.style.display = ''; badge.textContent = count > 99 ? '99+' : count; }
+  else badge.style.display = 'none';
+}
+
+function openHistory() {
+  document.getElementById('historyOverlay').classList.add('open');
+  document.getElementById('historyPanel').classList.add('open');
+  renderHistoryList();
+}
+function closeHistory() {
+  document.getElementById('historyOverlay').classList.remove('open');
+  document.getElementById('historyPanel').classList.remove('open');
+}
+
+function renderHistoryList() {
+  const history = getHistory();
+  const container = document.getElementById('historyContent');
+  if (!history.length) {
+    container.innerHTML = '<div class="history-empty">아직 생성 기록이 없습니다.</div>';
+    return;
+  }
+  const typeLabel = { ad: '광고', organic: '일반' };
+  const chLabel = { all: '통합', meta: 'Meta', tiktok: 'TikTok', google: 'Google' };
+  const fnLabel = { tof: 'TOF', mof: 'MOF', bof: 'BOF' };
+
+  container.innerHTML = '<div class="history-list">' + history.map((h, i) => {
+    const d = new Date(h.time);
+    const timeStr = d.getMonth() + 1 + '/' + d.getDate() + ' ' + d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+    const s = h.settings;
+    let tagsHtml = '<span>' + (typeLabel[s.type] || s.type) + '</span><span>' + (chLabel[s.channel] || s.channel) + '</span>';
+    if (s.type === 'ad') tagsHtml += '<span>' + (fnLabel[s.funnel] || '') + '</span>';
+    const filesHtml = h.files.length ? '<div class="history-item-files">' + h.files.map(f => '<span>' + esc(f.name) + '</span>').join('') + '</div>' : '';
+    return '<div class="history-item" onclick="showHistoryDetail(' + i + ')">' +
+      '<div class="history-item-header"><div class="history-item-tags">' + tagsHtml + '</div><span class="history-item-time">' + timeStr + '</span></div>' +
+      '<div class="history-item-prompt">' + esc(h.prompt || '(파일만 첨부)') + '</div>' +
+      filesHtml + '</div>';
+  }).join('') + '</div>';
+}
+
+function showHistoryDetail(idx) {
+  const history = getHistory();
+  const h = history[idx];
+  if (!h) return;
+  const container = document.getElementById('historyContent');
+  const d = new Date(h.time);
+  const timeStr = d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate() + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+
+  let html = '<div class="history-detail">';
+  html += '<button class="history-detail-back" onclick="renderHistoryList()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 목록으로</button>';
+  html += '<div style="font-size:11px;color:var(--t5);margin-bottom:12px">' + timeStr + '</div>';
+  if (h.files.length) {
+    html += '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">' + h.files.map(f => '<span style="font-size:10px;color:var(--t4);background:rgba(255,255,255,.05);padding:3px 8px;border-radius:6px">' + esc(f.name) + '</span>').join('') + '</div>';
+  }
+  html += '<div class="history-detail-prompt">' + esc(h.prompt || '(파일만 첨부)') + '</div>';
+  h.results.forEach(r => {
+    html += '<div class="history-detail-result"><div class="label">' + esc(r.label) + '</div><div class="content">' + esc(r.content) + '</div></div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ══════════════════════════════════════
+// ── Google Drive Integration ──
+// ══════════════════════════════════════
+firebase.initializeApp({
+  apiKey: "AIzaSyC-q4mncVKMU_XSaAXJk0iBuMbkmxwvQ5s",
+  authDomain: "odd-performance-dashboard.firebaseapp.com",
+  projectId: "odd-performance-dashboard",
+  storageBucket: "odd-performance-dashboard.firebasestorage.app",
+  messagingSenderId: "845033758092",
+  appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
+});
+const fireAuth = firebase.auth();
+
+const DRIVE_FOLDER_ID = '1d1K0eFKsYhOjEYQOxKpqvaVVsNPBKKv2';
+let driveAccessToken = null;
+let driveFilesList = [];
+let selectedDriveIds = new Set();
+
+function openDrive() {
+  document.getElementById('driveOverlay').classList.add('open');
+  document.getElementById('drivePanel').classList.add('open');
+  if (driveAccessToken) {
+    loadDriveFiles();
+  }
+}
+function closeDrive() {
+  document.getElementById('driveOverlay').classList.remove('open');
+  document.getElementById('drivePanel').classList.remove('open');
+}
+
+function driveSignIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+  fireAuth.signInWithPopup(provider).then(result => {
+    driveAccessToken = result.credential.accessToken;
+    loadDriveFiles();
+  }).catch(err => {
+    console.error('Drive sign-in error:', err);
+    showToast('로그인 실패: ' + err.message);
+  });
+}
+
+async function loadDriveFiles() {
+  const content = document.getElementById('driveContent');
+  content.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div><p style="font-size:12px;color:var(--t4);margin-top:12px">에셋을 불러오는 중…</p></div>';
+
+  try {
+    driveFilesList = await fetchAllDriveFiles(DRIVE_FOLDER_ID);
+    driveFilesList.sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''));
+    renderDriveGrid();
+  } catch(err) {
+    console.error('Drive load error:', err);
+    if (err.message.includes('401') || err.message.includes('403')) {
+      driveAccessToken = null;
+      content.innerHTML = '<div class="drive-login" id="driveLogin"><p>세션이 만료되었습니다.<br>다시 연결해주세요.</p><button class="drive-login-btn" onclick="driveSignIn()">다시 연결</button></div>';
+    } else {
+      content.innerHTML = '<div class="drive-login"><p style="color:var(--red)">파일을 불러올 수 없습니다.<br>' + esc(err.message) + '</p><button class="drive-login-btn" onclick="loadDriveFiles()">다시 시도</button></div>';
+    }
+  }
+}
+
+async function fetchAllDriveFiles(folderId) {
+  const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
+  let allFiles = [];
+
+  // Get all items in this folder
+  let pageToken = '';
+  do {
+    const q = encodeURIComponent("'" + folderId + "' in parents and trashed=false");
+    const fields = encodeURIComponent('nextPageToken,files(id,name,mimeType,thumbnailLink,webContentLink,createdTime)');
+    const url = 'https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=' + fields + '&pageSize=200' + (pageToken ? '&pageToken=' + pageToken : '');
+    const r = await fetch(url, { headers });
+    if (!r.ok) throw new Error('API error ' + r.status);
+    const data = await r.json();
+    const items = data.files || [];
+
+    // Separate media files and subfolders
+    for (const item of items) {
+      if (item.mimeType === 'application/vnd.google-apps.folder') {
+        const subFiles = await fetchAllDriveFiles(item.id);
+        allFiles = allFiles.concat(subFiles);
+      } else if (item.mimeType.startsWith('image/') || item.mimeType.startsWith('video/')) {
+        allFiles.push(item);
+      }
+    }
+    pageToken = data.nextPageToken || '';
+  } while (pageToken);
+
+  return allFiles;
+}
+
+function renderDriveGrid() {
+  const content = document.getElementById('driveContent');
+  if (!driveFilesList.length) {
+    content.innerHTML = '<div class="drive-login"><p>폴더에 파일이 없습니다.</p></div>';
+    return;
+  }
+
+  let html = '<div class="drive-grid">';
+  driveFilesList.forEach(f => {
+    const isVideo = f.mimeType.startsWith('video/');
+    const selected = selectedDriveIds.has(f.id);
+    const thumb = f.thumbnailLink
+      ? '<img src="' + f.thumbnailLink.replace('=s220','=s300') + '" loading="lazy">'
+      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">' + (isVideo ? '영상' : '이미지') + '</div>';
+
+    html += '<div class="drive-item' + (selected ? ' selected' : '') + '" onclick="toggleDriveItem(\'' + f.id + '\')">' +
+      thumb +
+      '<span class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" fill="none" stroke="#fff" stroke-width="3"/></svg></span>' +
+      (isVideo ? '<span class="vid-badge"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></span>' : '') +
+      '<span class="drive-item-name">' + esc(f.name) + '</span>' +
+      '</div>';
+  });
+  html += '</div>';
+  content.innerHTML = html;
+
+  document.getElementById('driveFooter').style.display = '';
+  updateDriveFooter();
+}
+
+function toggleDriveItem(id) {
+  if (selectedDriveIds.has(id)) selectedDriveIds.delete(id);
+  else if (selectedDriveIds.size < 5) selectedDriveIds.add(id);
+  // Re-render selection state
+  document.querySelectorAll('.drive-item').forEach(el => {
+    const fId = driveFilesList.find(f => esc(f.name) === el.querySelector('.drive-item-name').textContent);
+  });
+  renderDriveGrid();
+}
+
+function updateDriveFooter() {
+  const n = selectedDriveIds.size;
+  document.getElementById('driveCount').textContent = n + '개 선택';
+  document.getElementById('driveAttachBtn').disabled = n === 0;
+}
+
+function attachDriveFiles() {
+  selectedDriveIds.forEach(id => {
+    const f = driveFilesList.find(x => x.id === id);
+    if (!f) return;
+    // Add as drive reference file
+    const driveFile = {
+      name: f.name,
+      type: f.mimeType,
+      isDrive: true,
+      driveId: f.id,
+      thumbnail: f.thumbnailLink ? f.thumbnailLink.replace('=s220','=s300') : null
+    };
+    if (files.length < 5) files.push(driveFile);
+  });
+  renderFiles();
+  sendBtn.disabled = !promptInput.value.trim() && files.length === 0;
+  selectedDriveIds.clear();
+  closeDrive();
+  showToast(files.length + '개 에셋 첨부됨');
+}
+
+// Override renderFiles to handle Drive files too
+const _origRenderFiles = renderFiles;
+renderFiles = function() {
+  const c = document.getElementById('filePreview');
+  if (!files.length) { c.classList.remove('show'); return; }
+  c.classList.add('show');
+  c.innerHTML = files.map((f, i) => {
+    const isImg = f.type && f.type.startsWith('image/');
+    let thumb;
+    if (f.isDrive && f.thumbnail) {
+      thumb = '<img class="thumb" src="' + f.thumbnail + '">';
+    } else if (f.isDrive) {
+      thumb = '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    } else if (isImg) {
+      thumb = '<img class="thumb" src="' + URL.createObjectURL(f) + '">';
+    } else {
+      thumb = '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    }
+    const name = f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name;
+    const driveTag = f.isDrive ? '<span style="font-size:9px;color:var(--t5);margin-left:2px">Drive</span>' : '';
+    return '<span class="file-chip">' + thumb + '<span>' + name + driveTag + '</span><button class="remove" onclick="removeFile(' + i + ')">✕</button></span>';
+  }).join('');
+};
+
+// Init
+updateBadge();
+</script>
+</body>
+</html>
