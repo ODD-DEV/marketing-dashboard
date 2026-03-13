@@ -1861,13 +1861,20 @@ generate = async function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
 
+  // 0) 복합 요청 (여러 작업 동시 요청) → AI가 처리
+  const isComplex = prompt.length > 60 && ['하고','해주고','그리고','더해서','또한','같이','함께','추가로'].some(k => prompt.includes(k));
+  if (isComplex && shouldUseAI(prompt)) {
+    generateWithAI(prompt);
+    return;
+  }
+
   // 1) Drive 파일 검색 (사진 찾아줘, 이미지 보여줘 등)
   if (isDriveSearchQuery(prompt)) {
     handleDriveSearch(prompt);
     return;
   }
 
-  // 2) 에셋/이미지/영상 추천 (Drive + Unsplash 스톡 병행)
+  // 2) 에셋/이미지/영상 추천 — 단순 추천만 (Drive + Unsplash 스톡 병행)
   if (isAssetRecommendQuery(prompt)) {
     handleAssetRecommend(prompt);
     return;
