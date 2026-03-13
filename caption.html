@@ -281,7 +281,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 }
 
 /* Settings button */
-.settings-btn{position:fixed;top:20px;right:72px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:90}
+.settings-btn{position:fixed;top:20px;right:120px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:200}
 .settings-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
 .settings-btn svg{width:18px;height:18px}
 .settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
@@ -1308,19 +1308,26 @@ async function searchDriveAPI(query) {
   const isPackagingQuery = ['패키지','칼선','인쇄','최종본','다이컷','die cut','package','label','라벨','박스'].some(k => lower.includes(k));
   const isOddBroadQuery = ['odd','m-01','m01','제품','보여줘','에셋','전체','모두','다'].some(k => lower.includes(k));
 
-  // 폴더 전체 파일 가져오기 (페이지네이션 포함)
-  async function listFolderAll(folderId, maxPages) {
+  // 단일 폴더 파일 가져오기 (allDrives → user fallback)
+  async function listFolderDirect(folderId, pageSize) {
     const files = [];
     let pageToken = '';
-    for (let i = 0; i < (maxPages || 3); i++) {
+    for (let i = 0; i < 5; i++) {
       try {
-        const q = encodeURIComponent("'" + folderId + "' in parents and (mimeType contains 'image/' or mimeType contains 'video/')");
+        const q = encodeURIComponent("'" + folderId + "' in parents and trashed = false");
         let url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
-          '&fields=nextPageToken,files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=100' +
+          '&fields=nextPageToken,files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=' + (pageSize || 100) +
           '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
         if (pageToken) url += '&pageToken=' + pageToken;
-        const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
-        if (!r.ok) break;
+        let r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+        if (!r.ok) {
+          url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
+            '&fields=nextPageToken,files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=' + (pageSize || 100) +
+            '&supportsAllDrives=true&includeItemsFromAllDrives=true';
+          if (pageToken) url += '&pageToken=' + pageToken;
+          r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+          if (!r.ok) break;
+        }
         const d = await r.json();
         files.push(...(d.files || []));
         pageToken = d.nextPageToken || '';
@@ -1330,59 +1337,76 @@ async function searchDriveAPI(query) {
     return files;
   }
 
+  // 폴더 전체 파일 가져오기 (하위 폴더 재귀 포함)
+  async function listFolderAll(folderId, maxDepth) {
+    const allF = await listFolderDirect(folderId, 100);
+    const mediaFiles = allF.filter(f => {
+      const m = (f.mimeType || '').toLowerCase();
+      return m.includes('image/') || m.includes('video/') || m === 'application/pdf';
+    });
+    // 하위 폴더도 탐색 (depth 1)
+    if ((maxDepth || 1) > 0) {
+      const subFolders = allF.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+      const subResults = await Promise.all(subFolders.map(sf => listFolderAll(sf.id, 0)));
+      subResults.forEach(sr => mediaFiles.push(...sr));
+    }
+    return mediaFiles;
+  }
+
   const searches = [];
 
-  // 1) 검색어 기반 검색 (이름 + fullText, pageSize=100)
-  terms.slice(0, 10).forEach(term => {
-    searches.push((async () => {
-      const escaped = term.replace(/'/g, "\\'");
-      const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
-      const nameQ = encodeURIComponent(mimeFilter + " and name contains '" + escaped + "'");
-      const files = [];
-      try {
-        const url = 'https://www.googleapis.com/drive/v3/files?q=' + nameQ +
+  // 헬퍼: allDrives → 일반 검색 fallback
+  async function driveSearch(qStr) {
+    const files = [];
+    try {
+      const eq = encodeURIComponent(qStr);
+      // 1차: allDrives (shared drive 포함)
+      let url = 'https://www.googleapis.com/drive/v3/files?q=' + eq +
+        '&fields=files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=100' +
+        '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
+      let r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+      if (!r.ok) {
+        // 2차: supportsAllDrives만 (corpora 없이 — 내 드라이브 + 공유됨)
+        url = 'https://www.googleapis.com/drive/v3/files?q=' + eq +
           '&fields=files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=100' +
-          '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
-        const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
-        if (r.ok) { const d = await r.json(); files.push(...(d.files || [])); }
-      } catch {}
-      return files;
-    })());
+          '&supportsAllDrives=true&includeItemsFromAllDrives=true';
+        r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+      }
+      if (r.ok) { const d = await r.json(); files.push(...(d.files || [])); }
+    } catch {}
+    return files;
+  }
+
+  // 1) 검색어 기반 검색 (이름, pageSize=100)
+  terms.slice(0, 10).forEach(term => {
+    const escaped = term.replace(/'/g, "\\'");
+    const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/pdf')";
+    searches.push(driveSearch(mimeFilter + " and name contains '" + escaped + "'"));
   });
 
   // 2) 광고 소재 폴더 전체 (광고 관련 쿼리)
   if (isAdQuery) {
-    searches.push(listFolderAll(DRIVE_AD_CREATIVE_FOLDER, 5));
+    searches.push(listFolderAll(DRIVE_AD_CREATIVE_FOLDER, 1));
   }
 
-  // 3) 패키지 칼선 폴더 전체
+  // 3) 패키지 칼선 폴더 전체 (하위 폴더 포함)
   if (isPackagingQuery) {
-    searches.push(listFolderAll(DRIVE_PACKAGING_FOLDER, 5));
+    searches.push(listFolderAll(DRIVE_PACKAGING_FOLDER, 2));
   }
 
   // 4) ODD/M-01 포괄 쿼리 → 주요 폴더 전체 나열 + 광고/패키지 폴더도 포함
   if (isOddBroadQuery) {
     for (const fid of DRIVE_FOLDER_IDS) {
-      searches.push(listFolderAll(fid, 3));
+      searches.push(listFolderAll(fid, 1));
     }
-    searches.push(listFolderAll(DRIVE_AD_CREATIVE_FOLDER, 3));
+    searches.push(listFolderAll(DRIVE_AD_CREATIVE_FOLDER, 1));
   }
 
   // 5) 기본 ODD / M-01 검색어 항상 추가 (놓치는 파일 방지)
+  const mimeAll = "(mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/pdf')";
   ['ODD', 'M-01', 'M01'].forEach(baseT => {
     if (!terms.includes(baseT)) {
-      searches.push((async () => {
-        const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
-        const q = encodeURIComponent(mimeFilter + " and name contains '" + baseT + "'");
-        try {
-          const url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
-            '&fields=files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=100' +
-            '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
-          const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
-          if (r.ok) { const d = await r.json(); return d.files || []; }
-        } catch {}
-        return [];
-      })());
+      searches.push(driveSearch(mimeAll + " and name contains '" + baseT + "'"));
     }
   });
 
@@ -1969,7 +1993,8 @@ async function generateWithAI(prompt) {
     // 콘텐츠/에셋 관련 요청이면 Drive + Unsplash 이미지 자동 추천
     const visualKw = ['캡션','caption','콘텐츠','content','소재','creative','카피','copy','기획','plan',
       '캐러셀','carousel','릴스','reels','피드','feed','광고','ad','이미지','사진','비주얼','visual',
-      '보여','찾아','에셋','asset','원료','성분','ingredient','제품','product'];
+      '보여','찾아','에셋','asset','원료','성분','ingredient','제품','product',
+      '칼선','인쇄','패키지','최종본','다이컷','package','라벨','박스'];
     const needsVisual = visualKw.some(k => prompt.toLowerCase().includes(k));
     if (needsVisual) {
       appendAssetRecommendations(prompt, ra);
@@ -2027,8 +2052,9 @@ async function appendAssetRecommendations(prompt, container) {
     }
 
     // Drive + Unsplash + Meta(광고 쿼리일 때) 병렬 검색
+    console.log('[Asset] searching Drive for:', prompt, 'token:', !!driveAccessToken);
     const [driveRes, unsplashRes, metaAds] = await Promise.all([
-      driveAccessToken ? searchDriveAPI(prompt) : Promise.resolve([]),
+      driveAccessToken ? searchDriveAPI(prompt).then(r => { console.log('[Asset] Drive results:', r.length); return r; }) : Promise.resolve([]),
       searchUnsplash(enTerm, 8).catch(() => []),
       isAdQuery && META_TOKEN ? fetchMetaAdCreatives(20) : Promise.resolve([])
     ]);
