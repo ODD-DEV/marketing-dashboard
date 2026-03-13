@@ -1792,7 +1792,31 @@ Cross-platform campaign orchestration.
 - When user asks for ingredient/product images, provide a concise informational summary then mention images are shown below.
 - When user asks about packaging die-cut lines ("칼선", "인쇄", "패키지 데이터", "패키지 최종본"), the system searches the dedicated packaging folder in Google Drive. Respond that packaging files are displayed below.
 - NEVER suggest the user manually search Google Images, visit external websites, or go to Meta Ads Manager to find images. The system handles it.
-- NEVER start with apologies or disclaimers. Start directly with useful, actionable content.`;
+- NEVER start with apologies or disclaimers. Start directly with useful, actionable content.
+
+=== AI IMAGE GENERATION (Nano Banana) ===
+You have access to an AI image generator (Nano Banana / Gemini). When the user requests content planning, creative concepts, or any visual-related work, you MUST include image generation prompts embedded in your response using this exact format:
+
+[IMG_GEN: detailed English prompt describing the image to generate]
+
+Rules for image prompts:
+- Write prompts in ENGLISH only, highly detailed and specific
+- Include style direction: lighting, mood, color palette, composition, camera angle
+- Always align with ODD brand aesthetic: premium, dark tones (#0d0d0f background), minimalist, sophisticated, deep red (#bf2026) accent
+- For product shots: sleek M-01 bottle, clean typography, editorial photography style
+- For lifestyle: cinematic, muted tones, intentional living, morning ritual vibes
+- For ingredients: macro photography, scientific yet beautiful, dark background
+- Generate 1-3 images per request depending on context (e.g. carousel = multiple, single post = 1)
+- Place [IMG_GEN: ...] at the relevant point in your response where the image would appear
+- The system will automatically replace these tags with generated images
+
+Example:
+"## Slide 1: Hook
+[IMG_GEN: Minimalist dark product photography of a sleek liquid supplement bottle on black marble surface, single dramatic side light creating long shadow, deep red accent glow, ultra premium feel, editorial style, 4K]
+
+Caption: Not Salad, But Salad."
+
+IMPORTANT: When the user asks for content planning with visuals (캐러셀 기획, 콘텐츠 기획, 비주얼 기획, 광고 소재 기획 etc.), ALWAYS include [IMG_GEN] tags. This is critical — the user expects actual generated images in the report, not just text descriptions.`;
 
 async function generateWithAI(prompt) {
   if (!aiConfig.key) { showToast('설정에서 AI API 키를 입력하세요'); return; }
@@ -1932,6 +1956,15 @@ async function generateWithAI(prompt) {
       meta.innerHTML = '<span class="tag">Claude AI</span><button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>';
     }
     saveHistory(prompt, [{ label: 'AI 응답', content: finalText }]);
+
+    // [IMG_GEN: ...] 태그 파싱 → Nano Banana로 이미지 자동 생성
+    const imgGenMatches = finalText.match(/\[IMG_GEN:\s*(.+?)\]/g);
+    if (imgGenMatches && imgGenMatches.length > 0) {
+      const nanoKey = localStorage.getItem('odd_nano_key') || '';
+      if (nanoKey) {
+        autoGenerateImages(imgGenMatches, nanoKey, target);
+      }
+    }
 
     // 콘텐츠/에셋 관련 요청이면 Drive + Unsplash 이미지 자동 추천
     const visualKw = ['캡션','caption','콘텐츠','content','소재','creative','카피','copy','기획','plan',
@@ -2316,7 +2349,67 @@ const _origGenerate = async function() {
   }
 };
 
-// ── Nano Banana (AI Image Generation) ──
+// ── Auto Image Generation (parse [IMG_GEN] from AI response) ──
+async function autoGenerateImages(matches, nanoKey, targetEl) {
+  // [IMG_GEN: prompt] 태그를 실제 이미지로 교체
+  const prompts = matches.map(m => m.replace(/^\[IMG_GEN:\s*/, '').replace(/\]$/, '').trim());
+  let html = targetEl.innerHTML;
+
+  for (let i = 0; i < prompts.length; i++) {
+    const imgPrompt = prompts[i];
+    const placeholderId = 'imggen_' + i;
+    const placeholder = '<div id="' + placeholderId + '" style="margin:12px 0;padding:20px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;text-align:center"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><div style="font-size:11px;color:var(--t5);margin-top:8px">이미지 생성 중... (' + (i+1) + '/' + prompts.length + ')</div></div>';
+
+    // HTML에서 [IMG_GEN: ...] 찾아 교체 (renderBuiltInMd가 내부 텍스트를 HTML escape 했을 수 있음)
+    const escapedPrompt = imgPrompt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const tagPattern = '\\[IMG_GEN:\\s*' + escapedPrompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\]';
+    html = html.replace(new RegExp(tagPattern), placeholder);
+    targetEl.innerHTML = html;
+  }
+
+  // 병렬로 이미지 생성
+  const results = await Promise.allSettled(prompts.map(p =>
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' + nanoKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'Generate an image: ' + p }] }],
+        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+      })
+    }).then(r => r.json())
+  ));
+
+  // 결과를 플레이스홀더에 삽입
+  for (let i = 0; i < results.length; i++) {
+    const el = document.getElementById('imggen_' + i);
+    if (!el) continue;
+
+    if (results[i].status === 'fulfilled' && results[i].value.candidates) {
+      const parts = results[i].value.candidates[0]?.content?.parts || [];
+      let imgHtml = '';
+      for (const part of parts) {
+        if (part.inlineData) {
+          imgHtml += '<img src="data:' + part.inlineData.mimeType + ';base64,' + part.inlineData.data + '" style="max-width:100%;border-radius:10px;border:1px solid var(--border)" />';
+          imgHtml += '<div style="margin-top:6px"><a download="odd_gen_' + i + '.png" href="data:' + part.inlineData.mimeType + ';base64,' + part.inlineData.data + '" style="font-size:11px;color:var(--blue);text-decoration:none">⬇ 다운로드</a></div>';
+        }
+      }
+      if (imgHtml) {
+        el.innerHTML = imgHtml;
+        el.style.textAlign = 'left';
+        el.style.padding = '0';
+        el.style.background = 'none';
+        el.style.border = 'none';
+      } else {
+        el.innerHTML = '<div style="font-size:12px;color:var(--t5)">이미지 생성 실패</div>';
+      }
+    } else {
+      const errMsg = results[i].reason?.message || results[i].value?.error?.message || '생성 실패';
+      el.innerHTML = '<div style="font-size:12px;color:var(--t5)">이미지 생성 오류: ' + errMsg + '</div>';
+    }
+  }
+}
+
+// ── Nano Banana (AI Image Generation — direct) ──
 async function generateImageWithNano(prompt) {
   const nanoKey = localStorage.getItem('odd_nano_key') || '';
   if (!nanoKey) { showToast('설정(⚙️)에서 Nano Banana API 키를 입력하세요'); return; }
