@@ -878,31 +878,176 @@ function removeFile(i) {
   sendBtn.disabled = !promptInput.value.trim() && files.length === 0;
 }
 
-// ── Generate ──
+// ── Routing Logic ──
+
+// Route 1: Drive file search (explicit file/asset search request)
 function isDriveSearchQuery(text) {
-  // Must have a file-search action word
-  const actionKw = ['찾아','검색해','보여줘','보여줄래','드라이브','에셋 추천','파일좀','이미지좀','영상좀'];
+  const actionKw = ['찾아','검색해','보여줘','보여줄래','드라이브','파일좀','이미지좀','영상좀'];
   const hasAction = actionKw.some(k => text.includes(k));
   if (!hasAction) return false;
-  // Must also reference files/assets (not just a question)
   const assetKw = ['사진','이미지','영상','에셋','파일','콘텐츠','소스','원본','드라이브'];
-  const questionKw = ['뭐야','뭔가','무엇','어떤','알려줘','설명','왜','어떻게'];
+  const questionKw = ['뭐야','뭔가','무엇','어떤','알려줘','설명해','왜','어떻게','뭐지'];
   const isQuestion = questionKw.some(k => text.includes(k));
-  // If it's a question without asset keywords, it's not a Drive search
   if (isQuestion && !assetKw.some(k => text.includes(k))) return false;
   return true;
 }
 
+// Route 2: Asset/content recommendation (Drive + Unsplash stock)
+function isAssetRecommendQuery(text) {
+  const recKw = ['추천','제안','골라','뽑아','어울리는','적합한','맞는','괜찮은'];
+  const assetKw = ['에셋','이미지','영상','사진','콘텐츠','소스','비주얼','크리에이티브','썸네일','배경'];
+  return recKw.some(k => text.includes(k)) && assetKw.some(k => text.includes(k));
+}
+
+// Route 3: Basic info answerable from built-in data
+function isBuiltInQuery(text) {
+  const lower = text.toLowerCase();
+  const infoKw = ['원료','성분','ingredient','가격','price','m-01','m01','제품','product',
+    '배송','shipping','보증','guarantee','사용법','복용','효과','효능','benefit'];
+  const simpleKw = ['뭐야','뭔가','무엇','알려줘','알려 줘','뭐지','몇가지','어떤'];
+  return infoKw.some(k => lower.includes(k)) && simpleKw.some(k => text.includes(k));
+}
+
+const BUILTIN_ANSWERS = {
+  ingredient: {
+    keywords: ['원료','성분','ingredient','들어가','뭐가 들'],
+    answer: '**M-01 핵심 원료 5가지:**\n\n1. **Delphinol®** (파타고니아 마키베리 추출물) — 강력한 항산화, 안토시아닌\n2. **Reducose®** (백상엽 추출물) — 탄수화물 흡수 최대 42% 감소 (임상 입증)\n3. **차전자피 식이섬유** (Psyllium Husk) — 소화 및 장 건강\n4. **유기농 사과식초** (with "the Mother") — 대사 건강 지원\n5. **레몬즙 농축액** — 천연 풍미, 비타민 C\n\n모두 미국 cGMP 시설에서 제조됩니다.'
+  },
+  product: {
+    keywords: ['m-01','m01','제품','product','뭐야','무엇'],
+    answer: '**M-01 — Pre-Meal Liquid Supplement**\n\n- 포맷: 1회분 리퀴드 보틀 (twist-and-drink)\n- 사용법: 식사 전 음용 ("pre-meal ritual")\n- 슬로건: "Not Salad, But Salad."\n- 보증: 60일 만족 보증\n- 가격: 단품 / 15팩 / 30팩 / 정기구독\n- 배송: 전세계 배송, 미국 제조'
+  },
+  price: {
+    keywords: ['가격','price','얼마','비용','cost'],
+    answer: '**M-01 가격 티어:**\n- 단품 (Single)\n- 15팩 (15-Pack)\n- 30팩 (30-Pack)\n- 정기구독 (Subscription) — 할인 적용\n\n정확한 가격은 odd.us 또는 m-01.odd.us에서 확인하세요.'
+  },
+  usage: {
+    keywords: ['사용법','복용','먹는법','how to','drink','마시'],
+    answer: '**M-01 복용법:**\n\n식사 전에 1병을 twist-and-drink으로 음용.\n별도 준비 불필요 — "Prep time: zero."\n하루 1~2회 식전 복용 권장.'
+  }
+};
+
+function getBuiltInAnswer(text) {
+  const lower = text.toLowerCase();
+  for (const [key, data] of Object.entries(BUILTIN_ANSWERS)) {
+    if (data.keywords.some(k => lower.includes(k))) return data.answer;
+  }
+  return null;
+}
+
+// Unsplash stock search
+const UNSPLASH_KEY = 'bvU_FTPNy-LUIY02fU8RQrtHqbGHFIJivJFrhXBBpaI';
+async function searchUnsplash(query, count) {
+  try {
+    const url = 'https://api.unsplash.com/search/photos?query=' + encodeURIComponent(query) + '&per_page=' + (count || 12) + '&orientation=squarish';
+    const r = await fetch(url, { headers: { 'Authorization': 'Client-ID ' + UNSPLASH_KEY } });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.results || []).map(p => ({
+      id: p.id,
+      url: p.urls.small,
+      thumb: p.urls.thumb,
+      alt: p.alt_description || '',
+      credit: p.user.name,
+      link: p.links.html
+    }));
+  } catch { return []; }
+}
+
 let pendingDriveSearch = '';
 function handleDriveSearch(query) {
-  let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|있는 파일|드라이브에서?|에셋 중에?|좀|우리|이미지|영상|파일|콘텐츠/g, '').trim();
+  let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|있는 파일|드라이브에서?|에셋 중에?|좀|우리/g, '').trim();
   pendingDriveSearch = term;
   openDrive();
-  // If already authenticated, search directly
   if (driveAccessToken && term) {
     const si = document.getElementById('driveSearchInput');
     if (si) { si.value = term; searchDriveFiles(term); }
   }
+}
+
+async function handleAssetRecommend(prompt) {
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  // Extract search terms
+  let term = prompt.replace(/추천해?줘?|제안해?줘?|골라줘?|뽑아줘?|어울리는|적합한|맞는|괜찮은|에셋|이미지|영상|사진|콘텐츠|소스|비주얼|크리에이티브|좀|우리/g, '').trim();
+  if (!term) term = 'health supplement wellness';
+  // Map Korean terms to English for Unsplash
+  const termMap = {'원료':'natural ingredients supplement','샐러드':'fresh salad greens','건강':'health wellness','대사':'metabolism fitness','식전':'meal preparation food','마키베리':'maqui berry antioxidant','사과식초':'apple cider vinegar','레몬':'lemon citrus fresh','라이프스타일':'wellness lifestyle minimal','루틴':'daily routine morning'};
+  let enTerm = term;
+  for (const [ko, en] of Object.entries(termMap)) { if (term.includes(ko)) { enTerm = en; break; } }
+  if (enTerm === term) enTerm = term + ' health wellness';
+
+  // Search Drive + Unsplash in parallel
+  const [driveResults, unsplashResults] = await Promise.all([
+    driveAccessToken ? searchDriveAPI(term) : Promise.resolve([]),
+    searchUnsplash(enTerm, 12)
+  ]);
+
+  let html = '';
+
+  if (driveResults.length) {
+    html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>Google Drive 에셋</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px">';
+    driveResults.slice(0, 12).forEach(f => {
+      const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
+      html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')">' +
+        (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:11px">미리보기 없음</div>') +
+        '<div style="padding:4px 6px;font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  if (unsplashResults.length) {
+    html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--blue)"></span>Unsplash 스톡 추천</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px">';
+    unsplashResults.forEach(p => {
+      html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised);position:relative" onclick="window.open(\'' + p.link + '?utm_source=odd_ai\',\'_blank\')">' +
+        '<img src="' + p.url + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' +
+        '<div style="padding:4px 6px;font-size:9px;color:var(--t5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">by ' + esc(p.credit) + '</div></div>';
+    });
+    html += '</div><div style="margin-top:8px;font-size:10px;color:var(--t5)">Photos from Unsplash — free to use</div></div>';
+  }
+
+  if (!driveResults.length && !unsplashResults.length) {
+    html = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--t5)"></span>결과 없음</div><div class="result-content">검색 결과가 없습니다. 다른 키워드로 시도해보세요.</div></div>';
+  }
+
+  ra.innerHTML = html;
+  saveHistory(prompt, [{ label: '에셋 추천', content: 'Drive: ' + driveResults.length + '개, Unsplash: ' + unsplashResults.length + '개' }]);
+}
+
+async function searchDriveAPI(query) {
+  if (!driveAccessToken) return [];
+  try {
+    const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
+    const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
+    const nameFilter = "name contains '" + query.replace(/'/g, "\\'") + "'";
+    const qStr = encodeURIComponent(mimeFilter + " and " + nameFilter + " and trashed=false");
+    const fields = encodeURIComponent('files(id,name,mimeType,thumbnailLink,createdTime)');
+    const url = 'https://www.googleapis.com/drive/v3/files?q=' + qStr + '&fields=' + fields + '&pageSize=20&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
+    const r = await fetch(url, { headers });
+    const data = await r.json();
+    return r.ok ? (data.files || []) : [];
+  } catch { return []; }
+}
+
+function handleBuiltInAnswer(prompt, answer) {
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>ODD 제품 정보</div><div class="result-content">' + renderBuiltInMd(answer) + '</div><div class="result-meta"><span class="tag">내장 데이터</span><span class="tag">API 미사용</span></div></div>';
+  saveHistory(prompt, [{ label: '제품 정보', content: answer }]);
+}
+
+function renderBuiltInMd(text) {
+  let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/\n\n/g, '</p><p>');
+  h = h.replace(/\n/g, '<br>');
+  return '<p>' + h + '</p>';
 }
 
 function generate() {
@@ -1716,40 +1861,37 @@ generate = async function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
 
-  // 1) AI 분석이 꼭 필요한 경우 → 바로 Claude
-  if (needsAIAnalysis(prompt) && !isDriveSearchQuery(prompt) && !needsDashboardData(prompt)) {
+  // 1) Drive 파일 검색 (사진 찾아줘, 이미지 보여줘 등)
+  if (isDriveSearchQuery(prompt)) {
+    handleDriveSearch(prompt);
+    return;
+  }
+
+  // 2) 에셋/이미지/영상 추천 (Drive + Unsplash 스톡 병행)
+  if (isAssetRecommendQuery(prompt)) {
+    handleAssetRecommend(prompt);
+    return;
+  }
+
+  // 3) 기본 제품 정보 (내장 데이터로 즉답, API 미사용)
+  if (isBuiltInQuery(prompt)) {
+    const answer = getBuiltInAnswer(prompt);
+    if (answer) { handleBuiltInAnswer(prompt, answer); return; }
+  }
+
+  // 4) 대시보드 데이터 질의
+  if (needsDashboardData(prompt) && shouldUseAI(prompt)) {
     generateWithAI(prompt);
     return;
   }
 
-  // 2) 로컬 검색 시도 (Drive + Dashboard — 토큰 소모 없음)
+  // 5) 복잡한 질문 → AI
   if (shouldUseAI(prompt)) {
-    document.getElementById('landing').classList.add('pushed');
-    const ra = document.getElementById('resultsArea');
-    ra.style.display = 'block';
-    ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
-
-    // 대시보드 데이터가 아직 없으면 빠르게 fetch (최대 3초)
-    if (needsDashboardData(prompt) && dashboardData.lastFetch === 0) {
-      await Promise.race([fetchDashboardData(), new Promise(r => setTimeout(r, 3000))]);
-    }
-
-    const localResults = localSearch(prompt);
-    const hasLocal = localResults.drive.length > 0 || localResults.hasDashboard;
-
-    if (hasLocal) {
-      // 로컬 결과만 표시 (토큰 절약)
-      ra.innerHTML = renderLocalResults(prompt, localResults, ra);
-      saveHistory(prompt, [{ label: 'Local Search', content: 'Drive: ' + localResults.drive.length + ' files, Dashboard: ' + (localResults.hasDashboard ? 'yes' : 'no') }]);
-      return;
-    }
-
-    // 로컬에 없으면 AI로 폴백
     generateWithAI(prompt);
     return;
   }
 
-  // 3) 일반 템플릿 생성
+  // 6) 일반 캡션 템플릿 생성
   _origGenerate();
 };
 
