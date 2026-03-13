@@ -1183,10 +1183,20 @@ const DRIVE_PACKAGING_FOLDER = '1RAtZ4cBinf9F3lRPcIOaelOo10R9FdKz'; // M-01 패�
 let driveAccessToken = null;
 
 async function loginGoogle() {
+  // 캐시된 토큰 먼저 확인
+  const cached = sessionStorage.getItem('odd_drive_token');
+  const cachedExp = sessionStorage.getItem('odd_drive_token_exp');
+  if (cached && cachedExp && Date.now() < parseInt(cachedExp)) {
+    driveAccessToken = cached;
+    return driveAccessToken;
+  }
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/drive.readonly');
   const result = await fireAuth.signInWithPopup(provider);
   driveAccessToken = result.credential.accessToken;
+  // 토큰 캐시 (55분 — Google OAuth 토큰은 60분 유효)
+  sessionStorage.setItem('odd_drive_token', driveAccessToken);
+  sessionStorage.setItem('odd_drive_token_exp', String(Date.now() + 55 * 60 * 1000));
   return driveAccessToken;
 }
 
@@ -1297,6 +1307,9 @@ function expandSearchTerms(query) {
 }
 
 async function searchDriveAPI(query) {
+  if (!driveAccessToken) {
+    try { await loginGoogle(); } catch { return []; }
+  }
   if (!driveAccessToken) return [];
   const allFiles = [];
   const seen = new Set();
@@ -1320,6 +1333,15 @@ async function searchDriveAPI(query) {
           '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
         if (pageToken) url += '&pageToken=' + pageToken;
         let r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+        // 401 = 토큰 만료 → 재발급 시도
+        if (r.status === 401) {
+          sessionStorage.removeItem('odd_drive_token');
+          sessionStorage.removeItem('odd_drive_token_exp');
+          driveAccessToken = null;
+          try { await loginGoogle(); } catch { break; }
+          if (!driveAccessToken) break;
+          r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+        }
         if (!r.ok) {
           url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
             '&fields=nextPageToken,files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=' + (pageSize || 100) +
@@ -2836,10 +2858,13 @@ function handleAccountClick() {
 // Firebase Auth 상태 감지
 fireAuth.onAuthStateChanged(user => {
   updateAccountUI(user);
-  if (user) {
-    // 로그인 시 Drive 토큰 확보 (이미 있으면 스킵)
-    if (!driveAccessToken) {
-      loginGoogle().catch(() => {});
+  if (user && !driveAccessToken) {
+    // 캐시된 토큰 복원 시도 (팝업 없이)
+    const cached = sessionStorage.getItem('odd_drive_token');
+    const cachedExp = sessionStorage.getItem('odd_drive_token_exp');
+    if (cached && cachedExp && Date.now() < parseInt(cachedExp)) {
+      driveAccessToken = cached;
+      console.log('[Drive] 캐시 토큰 복원 완료');
     }
   }
 });
