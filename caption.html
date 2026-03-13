@@ -889,14 +889,11 @@ function handleDriveSearch(query) {
   let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|있는 파일|드라이브에서?|에셋 중에?|좀|우리|이미지|영상|파일|콘텐츠/g, '').trim();
   pendingDriveSearch = term;
   openDrive();
-  // If files already loaded, search immediately
-  if (driveFilesList.length > 0 && term) {
-    setTimeout(() => {
-      const si = document.getElementById('driveSearchInput');
-      if (si) { si.value = term; filterDriveFiles(); }
-    }, 100);
+  // If already authenticated, search directly
+  if (driveAccessToken && term) {
+    const si = document.getElementById('driveSearchInput');
+    if (si) { si.value = term; searchDriveFiles(term); }
   }
-  // Otherwise, loadDriveFiles will check pendingDriveSearch after loading
 }
 
 function generate() {
@@ -1225,7 +1222,19 @@ let driveAccessToken = null, driveFilesList = [], selectedDriveIds = new Set();
 function openDrive() {
   document.getElementById('driveOverlay').classList.add('open');
   document.getElementById('drivePanel').classList.add('open');
-  if (driveAccessToken) loadDriveFiles();
+  if (driveAccessToken) {
+    // Show search-ready state
+    document.getElementById('driveSearchBar').style.display = 'flex';
+    const c = document.getElementById('driveContent');
+    if (!driveFilesList.length) c.innerHTML = '<div class="drive-login"><p>검색어를 입력하여 에셋을 찾으세요</p></div>';
+    // Auto-search if pending
+    if (pendingDriveSearch) {
+      const si = document.getElementById('driveSearchInput');
+      si.value = pendingDriveSearch;
+      pendingDriveSearch = '';
+      searchDriveFiles(si.value);
+    }
+  }
 }
 function closeDrive() {
   document.getElementById('driveOverlay').classList.remove('open');
@@ -1236,90 +1245,81 @@ function driveSignIn() {
   p.addScope('https://www.googleapis.com/auth/drive.readonly');
   fireAuth.signInWithPopup(p).then(r => {
     driveAccessToken = r.credential.accessToken;
-    loadDriveFiles();
+    document.getElementById('driveSearchBar').style.display = 'flex';
+    const c = document.getElementById('driveContent');
+    c.innerHTML = '<div class="drive-login"><p>검색어를 입력하여 에셋을 찾으세요</p></div>';
+    if (pendingDriveSearch) {
+      const si = document.getElementById('driveSearchInput');
+      si.value = pendingDriveSearch;
+      pendingDriveSearch = '';
+      searchDriveFiles(si.value);
+    }
   }).catch(e => showToast('로그인 실패: ' + e.message));
 }
-async function loadDriveFiles() {
+
+let driveSearchTimer = null;
+function filterDriveFiles() {
+  clearTimeout(driveSearchTimer);
+  const q = document.getElementById('driveSearchInput').value.trim();
+  if (!q) {
+    document.getElementById('driveSearchCount').textContent = '';
+    document.getElementById('driveContent').innerHTML = '<div class="drive-login"><p>검색어를 입력하여 에셋을 찾으세요</p></div>';
+    driveFilesList = [];
+    return;
+  }
+  // Debounce 500ms
+  driveSearchTimer = setTimeout(() => searchDriveFiles(q), 500);
+}
+
+async function searchDriveFiles(query) {
+  if (!driveAccessToken || !query.trim()) return;
   const c = document.getElementById('driveContent');
-  const loadingMsg = document.createElement('p');
-  loadingMsg.style.cssText = 'margin-top:12px;font-size:12px;color:var(--t4)';
-  loadingMsg.textContent = '에셋 불러오는 중...';
-  c.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
-  c.querySelector('.drive-login').appendChild(loadingMsg);
-  // Progress callback
-  let fileCount = 0;
-  const onProgress = (n) => { fileCount = n; loadingMsg.textContent = '에셋 불러오는 중... (' + n + '개 발견)'; };
+  const countEl = document.getElementById('driveSearchCount');
+  c.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div><p style="margin-top:12px;font-size:12px;color:var(--t4)">검색 중...</p></div>';
+  countEl.textContent = '';
+
   try {
-    let allFiles = [];
-    for (const fid of DRIVE_FOLDER_IDS) {
-      const files = await fetchAllDriveFiles(fid, onProgress);
-      allFiles = allFiles.concat(files);
-    }
-    // Deduplicate by file id
+    const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
+    let allFiles = [], pageToken = '';
+    // Search across all shared drives for images/videos matching query
+    const mimeFilter = "(mimeType contains 'image/' or mimeType contains 'video/')";
+    const nameFilter = "name contains '" + query.replace(/'/g, "\\'") + "'";
+    const qStr = encodeURIComponent(mimeFilter + " and " + nameFilter + " and trashed=false");
+    const fields = encodeURIComponent('nextPageToken,files(id,name,mimeType,thumbnailLink,webContentLink,createdTime)');
+
+    do {
+      const url = 'https://www.googleapis.com/drive/v3/files?q=' + qStr + '&fields=' + fields + '&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives' + (pageToken ? '&pageToken=' + pageToken : '');
+      const r = await fetch(url, { headers });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error ? data.error.message : 'API error ' + r.status);
+      allFiles = allFiles.concat(data.files || []);
+      pageToken = data.nextPageToken || '';
+      // Cap at 300 results
+      if (allFiles.length >= 300) { pageToken = ''; }
+    } while (pageToken);
+
+    // Deduplicate
     const seen = new Set();
     driveFilesList = allFiles.filter(f => { if (seen.has(f.id)) return false; seen.add(f.id); return true; });
     driveFilesList.sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''));
-    renderDriveGrid();
-    // Apply pending search from main input
-    if (pendingDriveSearch) {
-      const si = document.getElementById('driveSearchInput');
-      if (si) { si.value = pendingDriveSearch; filterDriveFiles(); }
-      pendingDriveSearch = '';
+    countEl.textContent = driveFilesList.length + '개';
+    if (!driveFilesList.length) {
+      c.innerHTML = '<div class="drive-login"><p>검색 결과가 없습니다.</p></div>';
+    } else {
+      renderDriveGrid(driveFilesList);
     }
+    document.getElementById('driveFooter').style.display = driveFilesList.length ? '' : 'none';
+    if (driveFilesList.length) updateDriveFooter();
   } catch (e) {
-    let hint = '';
-    if ((e.message || '').includes('not been used') || (e.message || '').includes('disabled'))
-      hint = '<br><br><span style="font-size:11px;color:var(--t4)">Google Cloud Console에서 Drive API를 활성화하세요</span>';
-    c.innerHTML = '<div class="drive-login"><p style="color:#ff453a;font-size:12px">' + esc(e.message) + '</p>' + hint + '<button class="drive-login-btn" onclick="driveSignIn()" style="margin-top:16px">다시 시도</button></div>';
+    c.innerHTML = '<div class="drive-login"><p style="color:#ff453a;font-size:12px">' + esc(e.message) + '</p></div>';
   }
-}
-async function fetchAllDriveFiles(folderId, onProgress, _allRef) {
-  if (!_allRef) _allRef = { count: 0 };
-  const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
-  let allFiles = [], pageToken = '';
-  do {
-    const q = encodeURIComponent("'" + folderId + "' in parents and trashed=false");
-    const fields = encodeURIComponent('nextPageToken,files(id,name,mimeType,thumbnailLink,webContentLink,createdTime)');
-    const url = 'https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=' + fields + '&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives' + (pageToken ? '&pageToken=' + pageToken : '');
-    const r = await fetch(url, { headers });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error ? data.error.message : 'API error ' + r.status);
-    for (const item of (data.files || [])) {
-      if (item.mimeType === 'application/vnd.google-apps.folder') {
-        const sub = await fetchAllDriveFiles(item.id, onProgress, _allRef);
-        allFiles = allFiles.concat(sub);
-      } else if (item.mimeType.startsWith('image/') || item.mimeType.startsWith('video/')) {
-        allFiles.push(item);
-        _allRef.count++;
-        if (onProgress) onProgress(_allRef.count);
-      }
-    }
-    pageToken = data.nextPageToken || '';
-  } while (pageToken);
-  return allFiles;
-}
-
-function filterDriveFiles() {
-  const q = document.getElementById('driveSearchInput').value.trim().toLowerCase();
-  const countEl = document.getElementById('driveSearchCount');
-  const filtered = q ? driveFilesList.filter(f => f.name.toLowerCase().includes(q)) : driveFilesList;
-  countEl.textContent = q ? filtered.length + '/' + driveFilesList.length : '';
-  renderDriveGrid(filtered);
 }
 
 function renderDriveGrid(fileList) {
   if (!fileList) fileList = driveFilesList;
   const content = document.getElementById('driveContent');
-  if (!driveFilesList.length) {
-    content.innerHTML = '<div class="drive-login"><p>폴더에 파일이 없습니다.</p></div>';
-    document.getElementById('driveSearchBar').style.display = 'none';
-    return;
-  }
-  document.getElementById('driveSearchBar').style.display = 'flex';
   if (!fileList.length) {
     content.innerHTML = '<div class="drive-login"><p>검색 결과가 없습니다.</p></div>';
-    document.getElementById('driveFooter').style.display = '';
-    updateDriveFooter();
     return;
   }
   let html = '<div class="drive-grid">';
