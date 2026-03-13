@@ -1383,6 +1383,90 @@ function updateAIDot() {
   document.getElementById('aiDot').style.display = aiConfig.key ? '' : 'none';
 }
 
+// ── Dashboard Data Integration ──
+const SALES_DATA_URL = 'https://odd-dev.github.io/marketing-dashboard/data.js';
+const PERF_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJQpp9WdjTcj95v9r5BWdk_arYdrYZci_l2g9VouTFh_Avjj7VzfQ1LwRghkLRdI19_qq6AmFFmPsy/pub?output=csv';
+let dashboardData = { sales: null, perf: null, lastFetch: 0 };
+
+async function fetchDashboardData() {
+  if (Date.now() - dashboardData.lastFetch < 5 * 60 * 1000 && dashboardData.sales) return dashboardData;
+  const results = await Promise.allSettled([
+    fetch(SALES_DATA_URL).then(r => r.text()),
+    fetch(PERF_CSV_URL).then(r => r.text()),
+  ]);
+  if (results[0].status === 'fulfilled') {
+    try {
+      const js = results[0].value;
+      const json = js.replace(/^[^{]*/, '').replace(/;?\s*$/, '');
+      dashboardData.sales = JSON.parse(json);
+    } catch (e) { console.warn('Sales data parse error', e); }
+  }
+  if (results[1].status === 'fulfilled') {
+    try { dashboardData.perf = parseCSV(results[1].value); } catch (e) { console.warn('Perf CSV parse error', e); }
+  }
+  dashboardData.lastFetch = Date.now();
+  return dashboardData;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
+    return obj;
+  });
+}
+
+function summarizeSalesData(data) {
+  if (!data) return '';
+  let s = '=== ODD 세일즈 대시보드 데이터 ===\n';
+  if (data.updated_at) s += '최종 업데이트: ' + data.updated_at + '\n';
+  if (data.summary) {
+    s += '총 매출: $' + (data.summary.total_sales || 'N/A') + '\n';
+    s += '총 주문수: ' + (data.summary.total_orders || 'N/A') + '\n';
+    s += '총 유닛: ' + (data.summary.total_units || 'N/A') + '\n';
+  }
+  if (data.daily && data.daily.length) {
+    s += '\n최근 일별 데이터 (최근 14일):\n';
+    data.daily.slice(-14).forEach(d => {
+      s += d.date + ' | 매출: $' + (d.sales || 0) + ' | 주문: ' + (d.orders || 0) + ' | 유닛: ' + (d.units || 0) + '\n';
+    });
+  }
+  if (data.products && data.products.length) {
+    s += '\n제품별 매출:\n';
+    data.products.forEach(p => {
+      s += p.name + ' | $' + (p.sales || 0) + ' | ' + (p.units || 0) + '개\n';
+    });
+  }
+  return s;
+}
+
+function summarizePerfData(rows) {
+  if (!rows || !rows.length) return '';
+  let s = '=== ODD 퍼포먼스 대시보드 데이터 ===\n';
+  const headers = Object.keys(rows[0]);
+  s += '컬럼: ' + headers.join(', ') + '\n';
+  s += '총 ' + rows.length + '행\n\n';
+  const recent = rows.slice(-30);
+  recent.forEach(r => { s += headers.map(h => h + ': ' + r[h]).join(' | ') + '\n'; });
+  return s;
+}
+
+function needsDashboardData(prompt) {
+  const lower = prompt.toLowerCase();
+  const triggers = ['매출','세일즈','sales','주문','order','대시보드','dashboard','퍼포먼스','performance',
+    'roas','acos','cpc','ctr','impression','클릭','노출','광고비','ad spend','spend','revenue',
+    '전환','conversion','유닛','unit','데이터','data','실적','성과','지표','metric','kpi',
+    '추이','트렌드','trend','증가','감소','비교','compare','일별','주별','월별'];
+  return triggers.some(k => lower.includes(k));
+}
+
+// Auto-fetch dashboard data on page load
+fetchDashboardData().then(() => console.log('Dashboard data loaded'));
+
 function shouldUseAI(prompt) {
   if (!aiConfig.key) return false;
   const lower = prompt.toLowerCase();
@@ -1393,15 +1477,25 @@ function shouldUseAI(prompt) {
     '브리프','brief','가이드','guide','톤앤매너','tone','문제','problem','개선','improve',
     '아이디어','idea','마케팅','marketing','브랜드','brand','규정','regulation','위반','violat',
     '평가','evaluat','검토','리서치','research','트렌드','trend','오디언스','audience',
-    '아마존','amazon','리스팅','listing','소셜','social','컨설팅','consult'];
+    '아마존','amazon','리스팅','listing','소셜','social','컨설팅','consult',
+    '매출','세일즈','sales','주문','order','대시보드','dashboard','퍼포먼스','performance',
+    'roas','acos','cpc','ctr','노출','광고비','spend','revenue','실적','성과','지표','kpi',
+    '찾아','알려','해줘','해 줘','줘','원료','성분','ingredient','사진','photo','image','이미지',
+    '뭐','무엇','어디','언제','얼마','몇','알아','검색','search','질문','물어','답변',
+    'm-01','m01','제품','product'];
   return aiTriggers.some(k => lower.includes(k));
 }
 
-// Override generate to support AI
+// Override generate to support AI + Drive search
 const _origGenerate = generate;
 generate = function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
+  // Drive search takes priority
+  if (isDriveSearchQuery(prompt)) {
+    handleDriveSearch(prompt);
+    return;
+  }
   if (shouldUseAI(prompt)) {
     generateWithAI(prompt);
   } else {
@@ -1418,10 +1512,19 @@ async function generateWithAI(prompt) {
 
   aiAbort = new AbortController();
   try {
+    // Inject dashboard data if query is dashboard-related
+    let userMsg = prompt;
+    if (needsDashboardData(prompt)) {
+      await fetchDashboardData();
+      let ctx = '';
+      if (dashboardData.sales) ctx += summarizeSalesData(dashboardData.sales) + '\n\n';
+      if (dashboardData.perf) ctx += summarizePerfData(dashboardData.perf) + '\n\n';
+      if (ctx) userMsg = '아래는 ODD 대시보드의 실제 데이터입니다. 이 데이터를 기반으로 답변해주세요.\n\n' + ctx + '---\n사용자 질문: ' + prompt;
+    }
     const resp = await fetch(AI_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, system: AI_SYSTEM, messages: [{ role: 'user', content: prompt }], stream: true }),
+      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, system: AI_SYSTEM, messages: [{ role: 'user', content: userMsg }], stream: true }),
       signal: aiAbort.signal,
     });
     if (!resp.ok) {
