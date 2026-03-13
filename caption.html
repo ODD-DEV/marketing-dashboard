@@ -230,6 +230,27 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
   .carousel-container{padding:8px 0}
   .slide-card{width:140px;margin-right:6px}
 }
+
+/* Settings button */
+.settings-btn{position:fixed;top:20px;right:72px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:90}
+.settings-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
+.settings-btn svg{width:18px;height:18px}
+
+/* Settings modal */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.settings-overlay.open{display:flex}
+.settings-modal{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);width:90%;max-width:440px;padding:28px 24px;position:relative}
+.settings-modal h3{font-size:16px;font-weight:600;color:var(--t1);margin-bottom:20px}
+.settings-modal .close-btn{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.settings-modal .close-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
+.settings-field{margin-bottom:16px}
+.settings-field label{display:block;font-size:12px;font-weight:500;color:var(--t3);margin-bottom:6px;letter-spacing:.3px}
+.settings-field input{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-s);padding:10px 14px;color:var(--t1);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.settings-field input:focus{border-color:rgba(191,32,38,.4)}
+.settings-field input::placeholder{color:var(--t5)}
+.settings-field .hint{font-size:11px;color:var(--t5);margin-top:4px}
+.settings-save{width:100%;padding:10px;border:none;border-radius:var(--r-s);background:var(--red);color:#fff;font-size:14px;font-weight:500;font-family:var(--sans);cursor:pointer;transition:background .15s;margin-top:8px}
+.settings-save:hover{background:#d4343a}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -326,6 +347,30 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 
 <div class="toast" id="toast"></div>
 
+<!-- Settings -->
+<button class="settings-btn" onclick="openSettings()" title="설정">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+</button>
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-modal">
+    <button class="close-btn" onclick="closeSettings()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h3>Settings</h3>
+    <div class="settings-field">
+      <label>AI API Key (Claude)</label>
+      <input type="password" id="settingsAiKey" placeholder="sk-ant-api03-..." autocomplete="off">
+      <div class="hint">Anthropic API key — 캡션 생성 및 AI 응답에 사용</div>
+    </div>
+    <div class="settings-field">
+      <label>Notion API Key</label>
+      <input type="password" id="settingsNotionKey" placeholder="ntn_..." autocomplete="off">
+      <div class="hint">Notion integration token — 한아원 노션 데이터 검색에 사용</div>
+    </div>
+    <button class="settings-save" onclick="saveSettings()">저장</button>
+  </div>
+</div>
+
 <script src="data.js"></script>
 <script>
 // ── State ──
@@ -421,25 +466,26 @@ TONE REFERENCE (inspiration only, NEVER copy verbatim):
 BANNED: "one bottle salad", "2 second salad", disease claims, guaranteed results
 FDA: Structure/function claims ONLY.
 
-OUTPUT:
+OUTPUT FORMAT:
+- ALL captions MUST be written in ENGLISH. ODD is a global brand — all published copy is English.
+- ALL hashtags in English. Always include #oddtobewell. Campaign: #notsaladbutsalad
+- After the English caption, add a section labeled "---\n🇰🇷 한글 참고:" with a Korean translation for internal reference.
 - Write ONLY caption text — ready to copy-paste and post
 - No meta commentary. No "여기 캡션입니다".
-- Match user language. Korean → Korean caption.
 - Every caption 100% ORIGINAL
 - Length: educational → 8-15+ lines, awareness → 5-10, TikTok → 2-5, Google → RSA
-- End with hashtags. Always #oddtobewell. Campaign: #notsaladbutsalad
 - Carousel: per-slide text, numbered`;
 
 function buildCaptionPrompt(userPrompt, ch, fn, tension, isAd) {
   const chSpec = {
-    meta: 'Instagram/Facebook Feed — 세련된 톤, 여백과 호흡, 해시태그 5개 이내',
-    tiktok: 'TikTok — 짧고 직관적, 2-5줄, 텍스트 오버레이 고려',
-    google: 'Google Ads RSA — 헤드라인 3개 (30자) + 설명 2개 (90자)'
+    meta: 'Instagram/Facebook Feed — refined tone, breathing room, max 5 hashtags',
+    tiktok: 'TikTok — short & punchy, 2-5 lines, consider text overlay',
+    google: 'Google Ads RSA — 3 headlines (30 chars) + 2 descriptions (90 chars)'
   }[ch] || 'Instagram Feed';
   const fnSpec = {
-    tof: 'TOF (인지) — 스크롤 멈추게 하는 훅',
-    mof: 'MOF (이해/신뢰) — 교육적. 성분/원리/차별점. 깊이 있게.',
-    bof: 'BOF (전환) — 오퍼, 보장, 긴급성. CTA.'
+    tof: 'TOF (Awareness) — scroll-stopping hook',
+    mof: 'MOF (Consideration) — educational, ingredients/science/differentiation, depth',
+    bof: 'BOF (Conversion) — offer, guarantee, urgency, CTA'
   }[fn] || 'TOF';
   const tSpec = { '1':'Safe Bold — 절제된 자신감', '2':'Provocative — 도발적 질문', '3':'Max Edge — 서사적/시적' }[tension] || 'Safe Bold';
   const typeSpec = isAd ? '광고 캡션' : '오가닉(비광고) — 커뮤니티 대화 톤';
@@ -830,9 +876,59 @@ function getBuiltInAnswer(text) {
 }
 
 function renderBuiltInMd(text) {
-  let h = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Split Korean reference section into separate box
+  let main = text, koRef = '';
+  const koSplit = text.split(/---\s*\n?\s*🇰🇷\s*한글\s*참고\s*:?\s*/);
+  if (koSplit.length > 1) { main = koSplit[0].trim(); koRef = koSplit[1].trim(); }
+
+  let h = main.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Tables
+  h = h.replace(/((?:^\|.+\|$\n?)+)/gm, function(block) {
+    const rows = block.trim().split('\n').filter(r => r.trim());
+    if (rows.length < 2) return block;
+    let table = '<table>';
+    rows.forEach((row, i) => {
+      const cells = row.split('|').filter(c => c.trim() !== '');
+      if (i === 1 && /^[\s\-:]+$/.test(cells.join(''))) return;
+      const tag = i === 0 ? 'th' : 'td';
+      if (i === 0) table += '<thead>';
+      if (i === 2) table += '<tbody>';
+      table += '<tr>' + cells.map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('') + '</tr>';
+      if (i === 0) table += '</thead>';
+    });
+    table += '</tbody></table>';
+    return table;
+  });
+  h = h.replace(/```(\w*)\n([\s\S]*?)```/g, (_, l, c) => '<pre><code>' + c.trim() + '</code></pre>');
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/(?<!\*)\*([^\*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+  h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  h = h.replace(/^---+$/gm, '<hr>');
+  h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
+  h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  h = h.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  h = h.replace(/\n{2,}/g, '</p><p>');
   h = h.replace(/\n/g, '<br>');
-  return '<p>' + h + '</p>';
+  h = '<p>' + h + '</p>';
+  h = h.replace(/<p><(h[1-3]|pre|ul|ol|table|hr)/g, '<$1');
+  h = h.replace(/<\/(h[1-3]|pre|ul|ol|table)><\/p>/g, '</$1>');
+  h = h.replace(/<p><\/p>/g, '');
+  // Dollar highlight
+  h = h.replace(/\$([\d,]+\.?\d*)/g, '<strong style="color:#4ade80">$$1</strong>');
+
+  // Korean reference box
+  if (koRef) {
+    let kr = koRef.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    kr = kr.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    kr = kr.replace(/\n/g, '<br>');
+    h += '<div style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;border-left:3px solid #60a5fa">' +
+      '<div style="font-size:11px;font-weight:600;color:#60a5fa;margin-bottom:8px;letter-spacing:.5px">🇰🇷 한글 참고</div>' +
+      '<div style="font-size:13px;line-height:1.7;color:var(--t3)">' + kr + '</div></div>';
+  }
+
+  return h;
 }
 
 // ── Unsplash Stock Search ──
@@ -893,7 +989,7 @@ async function searchDriveAPI(query) {
 
 // ── Dashboard Data (매출/주문 from data.js) ──
 // ── Notion Integration ──
-const NOTION_KEY = localStorage.getItem('odd_notion_key') || '';
+let NOTION_KEY = localStorage.getItem('odd_notion_key') || '';
 let notionCache = { pages: [], texts: [], lastFetch: 0 };
 
 async function fetchNotionPages() {
@@ -1032,10 +1128,10 @@ function getDashboardSummary(prompt) {
 const AI_PROXY = 'https://odd-ai-proxy.it-751.workers.dev';
 const aiConfig = {
   key: localStorage.getItem('odd_ai_key') || '',
-  model: localStorage.getItem('odd_ai_model') || 'claude-sonnet-4-20250514',
+  model: localStorage.getItem('odd_ai_model') || 'claude-opus-4-6',
 };
 
-const AI_SYSTEM = 'You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.\n\nPRODUCT M-01: Pre-meal liquid supplement. Twist-and-drink before meals.\n5 Key Ingredients: Delphinol® (Maqui Berry polyphenol, reduces post-meal glucose spikes), Reducose® (Mulberry Leaf extract, ~5x higher DNJ, eases post-meal glucose load), GOFOS™ (prebiotic fiber, feeds beneficial gut bacteria), Orafti® GR (chicory root inulin, manages glucose/cholesterol/elimination), Lalmin® C2000 (organic chromium, supports efficient glucose use).\nBrand: odd.us / m-01.odd.us | Tagline: "Not Salad, But Salad." | 60-Day Money-Back Guarantee | Ships worldwide, made in USA.\n\nRULES: Respond in user\'s language (Korean or English). Be concise & actionable. Use markdown tables for data. Use ## headings. Highlight key metrics with **bold**.';
+const AI_SYSTEM = 'You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.\n\nPRODUCT M-01: Pre-meal liquid supplement. Twist-and-drink before meals.\n5 Key Ingredients: Delphinol® (Maqui Berry polyphenol, reduces post-meal glucose spikes), Reducose® (Mulberry Leaf extract, ~5x higher DNJ, eases post-meal glucose load), GOFOS™ (prebiotic fiber, feeds beneficial gut bacteria), Orafti® GR (chicory root inulin, manages glucose/cholesterol/elimination), Lalmin® C2000 (organic chromium, supports efficient glucose use).\nBrand: odd.us / m-01.odd.us | Tagline: "Not Salad, But Salad." | 60-Day Money-Back Guarantee | Ships worldwide, made in USA.\n\nRULES: Respond in user\'s language (Korean or English). Be concise & actionable. Use markdown tables for data. Use ## headings. Highlight key metrics with **bold**.\n\nCAPTION RULES: ALL captions, taglines, ad copy, and hashtags MUST be written in ENGLISH — ODD is a global brand. After the English version, always include a Korean translation section labeled "---\\n🇰🇷 한글 참고:" for internal team reference.';
 
 async function generateWithAI(prompt) {
   if (!aiConfig.key) { showToast('설정에서 AI API 키를 입력하세요'); return; }
@@ -1617,6 +1713,26 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── Settings Modal ──
+function openSettings() {
+  document.getElementById('settingsAiKey').value = localStorage.getItem('odd_ai_key') || '';
+  document.getElementById('settingsNotionKey').value = localStorage.getItem('odd_notion_key') || '';
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+function saveSettings() {
+  const aiKey = document.getElementById('settingsAiKey').value.trim();
+  const notionKey = document.getElementById('settingsNotionKey').value.trim();
+  if (aiKey) { localStorage.setItem('odd_ai_key', aiKey); aiConfig.key = aiKey; }
+  else { localStorage.removeItem('odd_ai_key'); aiConfig.key = ''; }
+  if (notionKey) { localStorage.setItem('odd_notion_key', notionKey); NOTION_KEY = notionKey; }
+  else { localStorage.removeItem('odd_notion_key'); NOTION_KEY = ''; }
+  closeSettings();
+  showToast('설정이 저장되었습니다');
 }
 
 // Init
