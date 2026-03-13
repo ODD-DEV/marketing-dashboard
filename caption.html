@@ -1138,23 +1138,23 @@ async function generateWithAI(prompt) {
   document.getElementById('landing').classList.add('pushed');
   const ra = document.getElementById('resultsArea');
   ra.style.display = 'block';
-  ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  // 즉시 카드 렌더 + 스트리밍 타겟
+  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--purple)"></span>AI 응답</div><div class="result-content" id="aiStreamTarget" style="white-space:pre-wrap;min-height:60px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span></div><div class="result-meta" id="aiStreamMeta"><span class="tag">Claude AI</span></div></div>';
 
   try {
-    // 컨텍스트 수집 (노션 + 대시보드 — 토큰은 AI 호출에만 사용)
-    let context = '';
-    if (isNotionQuery(prompt)) {
-      const nr = await searchNotion(prompt);
-      if (nr.withContent.length) {
-        context += '=== 노션 문서 ===\n';
-        nr.withContent.forEach(p => { context += '\n## ' + p.title + '\n' + (p.content || '(빈 페이지)').slice(0, 1500) + '\n'; });
-        context += '\n';
-      }
-    }
-    if (isDataQuery(prompt) && typeof EMBEDDED_DATA !== 'undefined') {
-      context += '=== 매출 데이터 ===\n' + getDashboardSummary(prompt) + '\n';
-    }
+    // 컨텍스트 수집 (노션 + 대시보드 병렬)
+    const [notionCtx, dataCtx] = await Promise.all([
+      isNotionQuery(prompt) ? searchNotion(prompt).then(nr => {
+        if (!nr.withContent.length) return '';
+        let c = '=== 노션 문서 ===\n';
+        nr.withContent.forEach(p => { c += '\n## ' + p.title + '\n' + (p.content || '(빈 페이지)').slice(0, 1500) + '\n'; });
+        return c + '\n';
+      }).catch(() => '') : Promise.resolve(''),
+      Promise.resolve(isDataQuery(prompt) && typeof EMBEDDED_DATA !== 'undefined' ? '=== 매출 데이터 ===\n' + getDashboardSummary(prompt) + '\n' : '')
+    ]);
 
+    const context = notionCtx + dataCtx;
     let userMsg = prompt;
     if (context) {
       userMsg = '아래는 내부 시스템에서 가져온 참고 데이터입니다. 이 데이터를 기반으로 답변해주세요.\n\n' + context + '---\n사용자 질문: ' + prompt;
@@ -1163,12 +1163,59 @@ async function generateWithAI(prompt) {
     const r = await fetch(AI_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key },
-      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, system: AI_SYSTEM, messages: [{ role: 'user', content: userMsg }] })
+      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, stream: true, system: AI_SYSTEM, messages: [{ role: 'user', content: userMsg }] })
     });
-    const data = await r.json();
-    const text = (data.content && data.content[0] && data.content[0].text) || '응답을 생성하지 못했습니다.';
-    ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--purple)"></span>AI 응답</div><div class="result-content" style="white-space:normal">' + renderBuiltInMd(text) + '</div><div class="result-meta"><span class="tag">Claude AI</span></div></div>';
-    saveHistory(prompt, [{ label: 'AI 응답', content: text }]);
+
+    const target = document.getElementById('aiStreamTarget');
+
+    if (!r.body) {
+      const data = await r.json();
+      const text = (data.content && data.content[0] && data.content[0].text) || '응답을 생성하지 못했습니다.';
+      target.innerHTML = renderBuiltInMd(text);
+      target.style.whiteSpace = 'normal';
+      saveHistory(prompt, [{ label: 'AI 응답', content: text }]);
+      return;
+    }
+
+    // SSE 스트리밍
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+    target.textContent = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(jsonStr);
+          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+            fullText += evt.delta.text;
+            target.textContent = fullText;
+          }
+        } catch {}
+      }
+    }
+
+    // 스트리밍 완료 → 마크다운 렌더링
+    const finalText = fullText || '응답을 생성하지 못했습니다.';
+    target.innerHTML = renderBuiltInMd(finalText);
+    target.style.whiteSpace = 'normal';
+
+    // 복사 버튼 추가
+    const meta = document.getElementById('aiStreamMeta');
+    if (meta) {
+      const encoded = encodeURIComponent(finalText);
+      meta.innerHTML = '<span class="tag">Claude AI</span><button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>';
+    }
+    saveHistory(prompt, [{ label: 'AI 응답', content: finalText }]);
   } catch (e) {
     ra.innerHTML = '<div class="result-card"><div class="result-content">AI 오류: ' + esc(e.message) + '</div></div>';
   }
