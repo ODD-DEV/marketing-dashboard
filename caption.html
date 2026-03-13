@@ -880,8 +880,17 @@ function removeFile(i) {
 
 // ── Generate ──
 function isDriveSearchQuery(text) {
-  const kw = ['찾아','검색','에셋','보여줘','보여줄래','있는 파일','드라이브','원료','이미지좀','영상좀','파일좀','콘텐츠 찾'];
-  return kw.some(k => text.includes(k));
+  // Must have a file-search action word
+  const actionKw = ['찾아','검색해','보여줘','보여줄래','드라이브','에셋 추천','파일좀','이미지좀','영상좀'];
+  const hasAction = actionKw.some(k => text.includes(k));
+  if (!hasAction) return false;
+  // Must also reference files/assets (not just a question)
+  const assetKw = ['사진','이미지','영상','에셋','파일','콘텐츠','소스','원본','드라이브'];
+  const questionKw = ['뭐야','뭔가','무엇','어떤','알려줘','설명','왜','어떻게'];
+  const isQuestion = questionKw.some(k => text.includes(k));
+  // If it's a question without asset keywords, it's not a Drive search
+  if (isQuestion && !assetKw.some(k => text.includes(k))) return false;
+  return true;
 }
 
 let pendingDriveSearch = '';
