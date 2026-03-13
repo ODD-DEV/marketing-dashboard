@@ -395,97 +395,78 @@ function oddHashtags(ch, isAd, contentTheme) {
   return [...new Set(tags)].slice(0, max).join(' ');
 }
 
-// ── ODD. 캡션 훅 풀 (텐션 레벨별) ──
-const HOOKS = {
-  tof: {
-    1: ['Not Salad, But Salad.','Your salad doesn\'t need a bowl.','Prep time: zero.','Before the first bite — that\'s where it starts.','A simpler way to do what salad does.'],
-    2: ['What if salad was never about the bowl?','They told you to eat more salad. We decoded why.','Salad slows digestion. We put that in a bottle.','The food changed. Your body didn\'t.'],
-    3: ['We didn\'t reinvent salad.\nWe decoded what it was always trying to do.','Before the fork hits the plate —\nthere\'s a moment your body has been waiting for.','Your body was designed for a world that no longer exists.\nM-01 bridges the gap.']
-  },
-  mof: {
-    1: ['5 research-backed ingredients. One bottle.','Twist and drink. That\'s the whole routine.','What salad does — without the bowl.','Built for the moment before your meal.'],
-    2: ['Salad slows digestion. Delphinol® smooths the spike.','42% less impact from carbs. One ingredient. One bottle.','What if your body met carbs differently?'],
-    3: ['Five ingredients. Each one decoded from nature.\nDelphinol®. Reducose®. GOFOS™. Orafti® GR. Lalmin® C2000.\nNot a trend — a system.','Your gut has a language.\nM-01 learned to speak it.']
-  },
-  bof: {
-    1: ['Start your smarter routine.','Try M-01 risk-free — 60-day guarantee.','Ready when you are. Ships worldwide.'],
-    2: ['Love It in 60 Days or Get Your Money Back.','Your body\'s best defense starts before the first bite.','Still prepping salads every morning? There\'s a faster way.'],
-    3: ['This isn\'t about restriction.\nIt\'s about intention.\n\nM-01 — the pre-meal ritual that changes everything.','60 days. That\'s all we ask.\nIf M-01 doesn\'t earn its place in your routine,\nyou get every penny back.']
-  }
-};
+// ── ODD. AI 캡션 생성 엔진 ──
+const CAPTION_SYSTEM = `You are ODD.'s dedicated copywriter. Write ACTUAL ready-to-post captions — never briefs, never templates.
 
-function oddAdCaption(prompt, ch, fn, tension) {
-  const t = parseInt(tension);
-  const hookPool = HOOKS[fn][t] || HOOKS[fn][1];
-  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
+BRAND: ODD. — premium US dietary supplement. Product: M-01, pre-meal liquid supplement (twist-and-drink).
+TAGLINE: "Not Salad, But Salad." / "Original Design Decoded"
+WEBSITE: odd.us / m-01.odd.us
 
-  const templates = {
-    meta: {
-      tof: {
-        text: hook + '\n\nA simpler way to keep your rhythm.\nNo prep. No waste. Just twist and drink.\n\nLearn more. Link in bio.\n\n' + oddHashtags('meta', true, 'campaign'),
-        tags: ['TOF 인지', 'Meta Feed', '스크롤 스토퍼']
-      },
-      mof: {
-        text: hook + '\n\nM-01 is built with 5 research-backed ingredients — each designed to support what salad does, and go further.\n\n• Delphinol® — smooths post-meal glucose spikes\n• Reducose® — eases carb absorption\n• GOFOS™ — feeds your gut\'s good bacteria\n• Orafti® GR — manages glucose & digestion\n• Lalmin® C2000 — supports stable energy\n\nSwipe through.\n\n' + oddHashtags('meta', true, 'campaign'),
-        tags: ['MOF 고려', '교육형', '저장 유도']
-      },
-      bof: {
-        text: hook + '\n\nMeet M-01 — a smarter pre-meal ritual.\n✓ 5 research-backed ingredients\n✓ 60-day satisfaction guarantee\n✓ Ships worldwide\n\nLimited Offer — Get up to 40% OFF.\nm-01.odd.us\n\n' + oddHashtags('meta', true, 'campaign'),
-        tags: ['BOF 전환', '오퍼', '망설임 제거']
-      }
-    },
-    tiktok: {
-      tof: {
-        text: hook + '\n\nNot Salad, But Salad. ✨\n\n' + oddHashtags('tiktok', true, 'campaign'),
-        tags: ['TOF', 'TikTok', '짧은 훅']
-      },
-      mof: {
-        text: hook + '\n\nTwist and drink. That\'s the whole routine. 🍋\n\n' + oddHashtags('tiktok', true, 'campaign'),
-        tags: ['MOF', 'TikTok', '이해 유도']
-      },
-      bof: {
-        text: 'Cut down on prep. 🧺\n\n' + hook + '\n\nProfile link for details.\n\n' + oddHashtags('tiktok', true, 'campaign'),
-        tags: ['BOF', 'TikTok', '전환']
-      }
-    },
-    google: {
-      tof: {
-        text: '[헤드라인 1] Not Salad, But Salad | ODD.\n[헤드라인 2] Pre-Meal Ritual for Metabolic Wellness\n[헤드라인 3] A Simpler Way to Do What Salad Does\n[설명 1] Twist and drink before meals. No prep, no waste. 5 research-backed ingredients.\n[설명 2] 60-day guarantee. Free shipping. Try M-01 today.',
-        tags: ['TOF', 'Google Ads', 'RSA']
-      },
-      mof: {
-        text: '[헤드라인 1] Why M-01? 5 Ingredients, One Bottle\n[헤드라인 2] Metabolic Health Supplement\n[헤드라인 3] What Salad Does, Without the Bowl\n[설명 1] Delphinol®, Reducose®, GOFOS™, Orafti® GR, Lalmin® C2000 — decoded from nature.\n[설명 2] 42% less carb impact (Reducose® studies). Free shipping available.',
-        tags: ['MOF', 'Google Ads', '수치 증거']
-      },
-      bof: {
-        text: '[헤드라인 1] Up to 40% OFF M-01 — Limited Time\n[헤드라인 2] 60-Day Money-Back Guarantee\n[헤드라인 3] Start Your Pre-Meal Ritual\n[설명 1] 5 research-backed ingredients. Try risk-free.\n[설명 2] Loved by thousands. 4.8★ avg review. Order now with free shipping.',
-        tags: ['BOF', 'Google Ads', '전환 최적화']
-      }
-    }
-  };
-  return templates[ch][fn];
+5 KEY INGREDIENTS:
+- Delphinol® (maqui berry polyphenol — smooths post-meal glucose spikes)
+- Reducose® (mulberry leaf, ~5x DNJ — eases post-meal glucose load up to 42%)
+- GOFOS™ (prebiotic fiber — feeds beneficial gut bacteria)
+- Orafti® GR (chicory root inulin — manages glucose, cholesterol, elimination)
+- Lalmin® C2000 (organic chromium — stable energy after meals)
+
+TONE REFERENCE (inspiration only, NEVER copy verbatim):
+- "Not Salad, But Salad." — campaign metaphor
+- "Original Design Decoded" — brand philosophy
+- "Don't blame sugar. We changed its form." — perspective shift
+- Keywords: ritual, intention, rhythm
+- Confident not aggressive. Sophisticated yet warm. Science-informed not heavy.
+- 설명하지 않고 선언한다. 가르치지 않고 보여준다.
+- NEVER fear/shame/negative self-image. Always positive framing.
+
+BANNED: "one bottle salad", "2 second salad", disease claims, guaranteed results
+FDA: Structure/function claims ONLY.
+
+OUTPUT:
+- Write ONLY caption text — ready to copy-paste and post
+- No meta commentary. No "여기 캡션입니다".
+- Match user language. Korean → Korean caption.
+- Every caption 100% ORIGINAL
+- Length: educational → 8-15+ lines, awareness → 5-10, TikTok → 2-5, Google → RSA
+- End with hashtags. Always #oddtobewell. Campaign: #notsaladbutsalad
+- Carousel: per-slide text, numbered`;
+
+function buildCaptionPrompt(userPrompt, ch, fn, tension, isAd) {
+  const chSpec = {
+    meta: 'Instagram/Facebook Feed — 세련된 톤, 여백과 호흡, 해시태그 5개 이내',
+    tiktok: 'TikTok — 짧고 직관적, 2-5줄, 텍스트 오버레이 고려',
+    google: 'Google Ads RSA — 헤드라인 3개 (30자) + 설명 2개 (90자)'
+  }[ch] || 'Instagram Feed';
+  const fnSpec = {
+    tof: 'TOF (인지) — 스크롤 멈추게 하는 훅',
+    mof: 'MOF (이해/신뢰) — 교육적. 성분/원리/차별점. 깊이 있게.',
+    bof: 'BOF (전환) — 오퍼, 보장, 긴급성. CTA.'
+  }[fn] || 'TOF';
+  const tSpec = { '1':'Safe Bold — 절제된 자신감', '2':'Provocative — 도발적 질문', '3':'Max Edge — 서사적/시적' }[tension] || 'Safe Bold';
+  const typeSpec = isAd ? '광고 캡션' : '오가닉(비광고) — 커뮤니티 대화 톤';
+  return userPrompt + '\n\n---\n채널: ' + chSpec + '\n펀넬: ' + fnSpec + '\n톤: ' + tSpec + '\n유형: ' + typeSpec;
 }
 
-function oddOrganicCaption(prompt, ch, tension) {
-  const t = parseInt(tension);
-  const hookPool = [...(HOOKS.tof[t] || []), ...(HOOKS.mof[t] || [])];
-  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
-
-  const templates = {
-    meta: {
-      text: hook + '\n\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'lifestyle'),
-      tags: ['오가닉', 'IG Feed', '선언형']
-    },
-    tiktok: {
-      text: hook + '\n\nTwist and drink. Done. 🍋\n\n' + oddHashtags('tiktok', false, 'lifestyle'),
-      tags: ['오가닉', 'TikTok', '캐주얼']
-    },
-    google: {
-      text: 'M-01 — the pre-meal ritual that simplifies wellness.\n\nLearn more at odd.us',
-      tags: ['오가닉', 'Google', '정보성']
-    }
-  };
-  return templates[ch];
+async function generateCaptionWithAI(prompt, ch, fn, tension, isAd) {
+  const key = aiConfig.key;
+  if (!key) return { text: '⚠️ 캡션 생성을 위해 설정(⚙️)에서 AI API 키를 입력하세요.', tags: ['API 키 필요'] };
+  try {
+    const r = await fetch(AI_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+      body: JSON.stringify({
+        model: aiConfig.model, max_tokens: 2048, system: CAPTION_SYSTEM,
+        messages: [{ role: 'user', content: buildCaptionPrompt(prompt, ch, fn, tension, isAd) }]
+      })
+    });
+    const data = await r.json();
+    const text = (data.content && data.content[0] && data.content[0].text) || '캡션을 생성하지 못했습니다.';
+    const chLabel = { meta:'Meta', tiktok:'TikTok', google:'Google Ads' }[ch] || ch;
+    const fnLabel = { tof:'TOF', mof:'MOF', bof:'BOF' }[fn] || fn;
+    const tLabel = { '1':'Safe Bold', '2':'Provocative', '3':'Max Edge' }[tension] || '';
+    return { text, tags: [isAd ? '광고' : '오가닉', chLabel, fnLabel, tLabel] };
+  } catch (e) {
+    return { text: 'AI 오류: ' + e.message, tags: ['오류'] };
+  }
 }
 
 function oddCTA(ch, fn) {
@@ -814,6 +795,91 @@ async function searchDriveAPI(query) {
 }
 
 // ── Dashboard Data (매출/주문 from data.js) ──
+// ── Notion Integration ──
+const NOTION_KEY = localStorage.getItem('odd_notion_key') || '';
+let notionCache = { pages: [], texts: [], lastFetch: 0 };
+
+async function fetchNotionPages() {
+  if (Date.now() - notionCache.lastFetch < 10 * 60 * 1000 && notionCache.pages.length) return notionCache;
+  try {
+    const r = await fetch(AI_PROXY + '/notion/search', {
+      method: 'POST',
+      headers: { 'x-notion-key': NOTION_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page_size: 100 })
+    });
+    const data = await r.json();
+    notionCache.pages = (data.results || []).map(p => {
+      let title = '';
+      if (p.object === 'page') {
+        const props = p.properties || {};
+        for (const v of Object.values(props)) {
+          if (v.type === 'title' && v.title) { title = v.title.map(t => t.plain_text).join(''); break; }
+        }
+      } else if (p.object === 'database') {
+        title = (p.title || []).map(t => t.plain_text).join('');
+      }
+      return { id: p.id, title, type: p.object, url: p.url };
+    }).filter(p => p.title);
+    notionCache.lastFetch = Date.now();
+  } catch (e) { console.warn('Notion fetch error', e); }
+  return notionCache;
+}
+
+async function fetchNotionPageContent(pageId) {
+  try {
+    const r = await fetch(AI_PROXY + '/notion/blocks/' + pageId + '/children?page_size=100', {
+      headers: { 'x-notion-key': NOTION_KEY }
+    });
+    const data = await r.json();
+    let text = '';
+    for (const block of (data.results || [])) {
+      const rt = block[block.type];
+      if (rt && rt.rich_text) {
+        text += rt.rich_text.map(t => t.plain_text).join('') + '\n';
+      } else if (block.type === 'child_page') {
+        text += '[하위페이지: ' + (block.child_page?.title || '') + ']\n';
+      } else if (block.type === 'child_database') {
+        text += '[하위DB: ' + (block.child_database?.title || '') + ']\n';
+      }
+    }
+    return text.trim();
+  } catch (e) { return ''; }
+}
+
+async function searchNotion(query) {
+  await fetchNotionPages();
+  const lower = query.toLowerCase();
+  const terms = lower.split(/\s+/).filter(t => t.length > 1);
+
+  // 제목 매칭
+  const matched = notionCache.pages.filter(p => {
+    const t = p.title.toLowerCase();
+    return terms.some(term => t.includes(term));
+  }).slice(0, 5);
+
+  // 매칭된 페이지의 본문도 가져오기 (최대 3개, 병렬)
+  const withContent = await Promise.all(matched.slice(0, 3).map(async p => {
+    const content = await fetchNotionPageContent(p.id);
+    return { ...p, content };
+  }));
+
+  return { matched, withContent };
+}
+
+function isNotionQuery(text) {
+  const lower = text.toLowerCase();
+  const triggers = ['제품','product','원료','성분','ingredient','인사이트','insight',
+    'prd','브랜드','brand','패키지','package','리뉴얼','shopify','아마존','amazon',
+    'pdp','리스팅','listing','콘텐츠','content','캠페인','campaign','expo',
+    '임상','clinical','gofos','delphinol','reducose','orafti','lalmin',
+    'm-01','m01','odd','워크플랜','workplan','채용','디자인','design',
+    '노션','notion','문서','document','자료','리서치','research'];
+  return triggers.some(k => lower.includes(k));
+}
+
+// Auto-fetch Notion index on load
+fetchNotionPages().then(() => console.log('Notion: ' + notionCache.pages.length + ' pages indexed'));
+
 function getDashboardSummary(prompt) {
   if (typeof EMBEDDED_DATA === 'undefined') return null;
   const d = EMBEDDED_DATA;
@@ -882,10 +948,29 @@ async function generateWithAI(prompt) {
   ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
   try {
+    // 컨텍스트 수집 (노션 + 대시보드 — 토큰은 AI 호출에만 사용)
+    let context = '';
+    if (isNotionQuery(prompt)) {
+      const nr = await searchNotion(prompt);
+      if (nr.withContent.length) {
+        context += '=== 노션 문서 ===\n';
+        nr.withContent.forEach(p => { context += '\n## ' + p.title + '\n' + (p.content || '(빈 페이지)').slice(0, 1500) + '\n'; });
+        context += '\n';
+      }
+    }
+    if (isDataQuery(prompt) && typeof EMBEDDED_DATA !== 'undefined') {
+      context += '=== 매출 데이터 ===\n' + getDashboardSummary(prompt) + '\n';
+    }
+
+    let userMsg = prompt;
+    if (context) {
+      userMsg = '아래는 내부 시스템에서 가져온 참고 데이터입니다. 이 데이터를 기반으로 답변해주세요.\n\n' + context + '---\n사용자 질문: ' + prompt;
+    }
+
     const r = await fetch(AI_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key },
-      body: JSON.stringify({ model: aiConfig.model, max_tokens: 2048, system: AI_SYSTEM, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, system: AI_SYSTEM, messages: [{ role: 'user', content: userMsg }] })
     });
     const data = await r.json();
     const text = (data.content && data.content[0] && data.content[0].text) || '응답을 생성하지 못했습니다.';
@@ -954,6 +1039,9 @@ function detectIntents(prompt) {
   // Drive search intent
   if (isDriveSearchQuery(prompt)) intents.push('drive');
 
+  // Notion intent (제품, 브랜드, 문서 등)
+  if (isNotionQuery(prompt)) intents.push('notion');
+
   return [...new Set(intents)];
 }
 
@@ -981,15 +1069,36 @@ async function handleMultiIntent(prompt, intents) {
     }
   }
 
+  // Notion section (제품/브랜드/문서 검색)
+  if (intents.includes('notion')) {
+    try {
+      const notionRes = await searchNotion(prompt);
+      if (notionRes.withContent.length > 0) {
+        notionRes.withContent.forEach(p => {
+          const preview = p.content ? p.content.slice(0, 800) + (p.content.length > 800 ? '...' : '') : '(내용 없음)';
+          html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--purple)"></span>' + esc(p.title) + '</div><div class="result-content" style="white-space:pre-wrap">' + esc(preview) + '</div><div class="result-meta"><span class="tag">Notion</span><span class="tag">' + p.type + '</span><a href="' + p.url + '" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none;margin-left:auto">노션에서 열기 →</a></div></div>';
+        });
+        // 나머지 매칭 페이지 링크
+        if (notionRes.matched.length > 3) {
+          html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--t4)"></span>관련 노션 문서 더보기</div><div class="result-content" style="white-space:normal">';
+          notionRes.matched.slice(3).forEach(p => {
+            html += '<a href="' + p.url + '" target="_blank" style="display:block;color:var(--blue);font-size:13px;padding:4px 0;text-decoration:none">' + esc(p.title) + ' →</a>';
+          });
+          html += '</div></div>';
+        }
+      }
+    } catch (e) { console.warn('Notion search error', e); }
+  }
+
   // Caption section
   if (intents.includes('caption')) {
     const channels = state.channel === 'all' ? ['meta'] : [state.channel];
     const detectedMode = detectMode(prompt);
     const allCaptions = [];
-    channels.forEach(ch => {
-      const res = buildCaptions(prompt, ch);
+    for (const ch of channels) {
+      const res = await buildCaptions(prompt, ch);
       allCaptions.push(...res);
-    });
+    }
     if (detectedMode === 'content' || detectedMode === 'hybrid') {
       const contentRes = buildContentResults(prompt);
       allCaptions.push(...contentRes);
@@ -1044,12 +1153,19 @@ async function handleMultiIntent(prompt, intents) {
   }
 
   if (!html) html = '<div class="result-card"><div class="result-content">결과를 생성하지 못했습니다.</div></div>';
+
+  // "AI로 더 분석" 에스컬레이션 버튼 (토큰 절약 — 필요할 때만 AI 호출)
+  if (aiConfig.key) {
+    const safePrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    html += '<div style="text-align:center;padding:16px 0"><button onclick="generateWithAI(\'' + safePrompt + '\')" style="padding:8px 20px;border-radius:100px;border:1px solid var(--border);background:rgba(191,32,38,.08);color:var(--red);cursor:pointer;font-size:12px;font-weight:600;font-family:var(--sans);transition:all .15s" onmouseover="this.style.background=\'rgba(191,32,38,.15)\'" onmouseout="this.style.background=\'rgba(191,32,38,.08)\'">🤖 AI로 더 자세히 분석하기</button></div>';
+  }
+
   ra.innerHTML = html;
   saveHistory(prompt, [{ label: '처리 (' + intents.join('+') + ')', content: prompt }]);
 }
 
 // ── Generate (Smart Router) ──
-const _origGenerate = function() {
+const _origGenerate = async function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
 
@@ -1062,25 +1178,22 @@ const _origGenerate = function() {
   state.detectedMode = detectedMode;
 
   const channels = state.channel === 'all' ? ['meta'] : [state.channel];
+  const allResults = [];
 
-  setTimeout(() => {
-    const allResults = [];
+  if (detectedMode === 'content' || detectedMode === 'hybrid') {
+    const contentResults = buildContentResults(prompt);
+    allResults.push(...contentResults);
+  }
 
-    if (detectedMode === 'content' || detectedMode === 'hybrid') {
-      const contentResults = buildContentResults(prompt);
-      allResults.push(...contentResults);
+  if (!detectedMode || detectedMode === 'caption' || detectedMode === 'hybrid') {
+    for (const ch of channels) {
+      const captionResults = await buildCaptions(prompt, ch);
+      allResults.push(...captionResults);
     }
+  }
 
-    if (!detectedMode || detectedMode === 'caption' || detectedMode === 'hybrid') {
-      channels.forEach(ch => {
-        const captionResults = buildCaptions(prompt, ch);
-        allResults.push(...captionResults);
-      });
-    }
-
-    renderResults(allResults, detectedMode);
-    saveHistory(prompt, allResults);
-  }, 800);
+  renderResults(allResults, detectedMode);
+  saveHistory(prompt, allResults);
 };
 
 function generate() {
@@ -1089,19 +1202,19 @@ function generate() {
 
   const intents = detectIntents(prompt);
 
-  // 데이터/정보/에셋/드라이브 질의 → 멀티인텐트 엔진
-  if (intents.length > 0 && !(intents.length === 1 && intents[0] === 'caption')) {
+  // 에셋 검색 (사진/이미지 찾아줘) → Drive+Unsplash 직행
+  if (intents.includes('drive') || (intents.length === 1 && intents[0] === 'asset')) {
     handleMultiIntent(prompt, intents);
     return;
   }
 
-  // 복잡한 분석 질의 → AI
-  if (shouldUseAI(prompt) && !intents.length) {
+  // 모든 질문 → AI로 즉시 응답 (노션/대시보드 컨텍스트 자동 포함)
+  if (aiConfig.key) {
     generateWithAI(prompt);
     return;
   }
 
-  // 기본 캡션 생성
+  // AI 키 없으면 기본 캡션
   _origGenerate();
 }
 
@@ -1200,7 +1313,7 @@ function buildContentResults(prompt) {
   return results;
 }
 
-function buildCaptions(prompt, ch) {
+async function buildCaptions(prompt, ch) {
   const isAd = state.type === 'ad';
   const fn = state.funnel;
   const tension = state.tension;
@@ -1208,10 +1321,9 @@ function buildCaptions(prompt, ch) {
   const chLabel = { meta: 'Meta', tiktok: 'TikTok', google: 'Google' }[ch];
   const chColor = { meta: '#4f8df9', tiktok: '#ff3b5c', google: '#34a853' }[ch];
   const fnColor = { tof: '#38bdf8', mof: '#a78bfa', bof: '#f97316' }[fn];
-  const tensionLabel = { '1': 'Safe Bold', '2': 'Provocative', '3': 'Max Edge' }[tension];
 
-  const caption = isAd ? oddAdCaption(prompt, ch, fn, tension) : oddOrganicCaption(prompt, ch, tension);
-  const prefix = state.channel === 'all' ? chLabel + ' ' : '';
+  const caption = await generateCaptionWithAI(prompt, ch, fn, tension, isAd);
+  const prefix = state.channel === 'all' ? '통합 ' : '';
 
   const warnings = guidelineCheck(caption.text);
   const captionContent = warnings.length
@@ -1222,7 +1334,7 @@ function buildCaptions(prompt, ch) {
     label: prefix + '캡션' + (isAd ? ' [' + fn.toUpperCase() + ']' : ''),
     content: captionContent,
     color: isAd ? fnColor : chColor,
-    tags: [...caption.tags, tensionLabel],
+    tags: caption.tags,
     channel: ch
   });
 
