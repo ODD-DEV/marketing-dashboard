@@ -1219,7 +1219,7 @@ firebase.initializeApp({
   appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
 });
 const fireAuth = firebase.auth();
-const DRIVE_FOLDER_ID = '1d1K0eFKsYhOjEYQOxKpqvaVVsNPBKKv2';
+const DRIVE_FOLDER_ID = '0AL6p4jOgoTNqUk9PVA';
 let driveAccessToken = null, driveFilesList = [], selectedDriveIds = new Set();
 
 function openDrive() {
@@ -1241,9 +1241,16 @@ function driveSignIn() {
 }
 async function loadDriveFiles() {
   const c = document.getElementById('driveContent');
-  c.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div><p style="margin-top:12px;font-size:12px;color:var(--t4)">에셋 불러오는 중...</p></div>';
+  const loadingMsg = document.createElement('p');
+  loadingMsg.style.cssText = 'margin-top:12px;font-size:12px;color:var(--t4)';
+  loadingMsg.textContent = '에셋 불러오는 중...';
+  c.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  c.querySelector('.drive-login').appendChild(loadingMsg);
+  // Progress callback
+  let fileCount = 0;
+  const onProgress = (n) => { fileCount = n; loadingMsg.textContent = '에셋 불러오는 중... (' + n + '개 발견)'; };
   try {
-    driveFilesList = await fetchAllDriveFiles(DRIVE_FOLDER_ID);
+    driveFilesList = await fetchAllDriveFiles(DRIVE_FOLDER_ID, onProgress);
     driveFilesList.sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''));
     renderDriveGrid();
     // Apply pending search from main input
@@ -1259,22 +1266,25 @@ async function loadDriveFiles() {
     c.innerHTML = '<div class="drive-login"><p style="color:#ff453a;font-size:12px">' + esc(e.message) + '</p>' + hint + '<button class="drive-login-btn" onclick="driveSignIn()" style="margin-top:16px">다시 시도</button></div>';
   }
 }
-async function fetchAllDriveFiles(folderId) {
+async function fetchAllDriveFiles(folderId, onProgress, _allRef) {
+  if (!_allRef) _allRef = { count: 0 };
   const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
   let allFiles = [], pageToken = '';
   do {
     const q = encodeURIComponent("'" + folderId + "' in parents and trashed=false");
     const fields = encodeURIComponent('nextPageToken,files(id,name,mimeType,thumbnailLink,webContentLink,createdTime)');
-    const url = 'https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=' + fields + '&pageSize=200' + (pageToken ? '&pageToken=' + pageToken : '');
+    const url = 'https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=' + fields + '&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives' + (pageToken ? '&pageToken=' + pageToken : '');
     const r = await fetch(url, { headers });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error ? data.error.message : 'API error ' + r.status);
     for (const item of (data.files || [])) {
       if (item.mimeType === 'application/vnd.google-apps.folder') {
-        const sub = await fetchAllDriveFiles(item.id);
+        const sub = await fetchAllDriveFiles(item.id, onProgress, _allRef);
         allFiles = allFiles.concat(sub);
       } else if (item.mimeType.startsWith('image/') || item.mimeType.startsWith('video/')) {
         allFiles.push(item);
+        _allRef.count++;
+        if (onProgress) onProgress(_allRef.count);
       }
     }
     pageToken = data.nextPageToken || '';
@@ -1374,7 +1384,9 @@ Hashtags: Always #oddtobewell. Campaign: #notsaladbutsalad. IG up to 5, TikTok 3
 
 CAPABILITIES: Caption generation (all platforms/funnels), brand tone review, FDA/FTC compliance check, influencer strategy, marketing plans, content strategy, email copy, landing page copy, competitor analysis, product Q&A, A/B test ideas, audience targeting, Amazon listing optimization, crisis comms.
 
-RULES: Respond in user's language (Korean or English). Be concise & actionable. Auto-check compliance with flags. Provide multiple creative options. Use headers/bullets for structure. Maintain ODD voice always.`;
+RULES: Respond in user's language (Korean or English). Be concise & actionable. Auto-check compliance with flags. Provide multiple creative options. Use headers/bullets for structure. Maintain ODD voice always.
+
+DATA FORMATTING: When presenting sales/performance/dashboard data, ALWAYS use markdown tables for numerical data (e.g. | 날짜 | 매출 | 주문 |). Use ## headings to separate sections. Highlight key metrics with **bold**. Summarize key takeaways at the top before showing detailed data. Keep responses clean and well-structured.`;
 
 function openAISettings() {
   document.getElementById('aiKeyInput').value = aiConfig.key;
@@ -1535,21 +1547,194 @@ function shouldUseAI(prompt) {
   return aiTriggers.some(k => lower.includes(k));
 }
 
-// Override generate — Drive search first, then AI
+// ── Smart Routing: Local first → AI fallback ──
+function needsAIAnalysis(prompt) {
+  const lower = prompt.toLowerCase();
+  const analysisTriggers = ['분석','analysis','추천','recommend','플랜','plan','전략','strategy',
+    '법률','legal','fda','ftc','검수','리뷰','review','체크','check','제안','suggest',
+    '브리프','brief','가이드','guide','톤앤매너','tone','개선','improve','최적화','optimize',
+    '아이디어','idea','비교','compare','평가','evaluat','검토','설명','explain',
+    '왜','why','어떻게','how','작성','써줘','만들어','generate','캡션','caption',
+    '이메일','email','경쟁','competitor','인플루언서','influencer','컨설팅','consult',
+    '리서치','research','마케팅','marketing','규정','regulation','위반','violat'];
+  return analysisTriggers.some(k => lower.includes(k));
+}
+
+function localSearch(prompt) {
+  const lower = prompt.toLowerCase();
+  const results = { drive: [], dashboard: null, hasDashboard: false };
+
+  // 1) Drive 파일 검색
+  if (driveFilesList.length > 0) {
+    const terms = prompt.replace(/찾아줘?|검색해?줘?|보여줘?|좀|우리|이미지|영상|파일|콘텐츠|사진|알려줘?/g, '')
+      .trim().toLowerCase().split(/\s+/).filter(t => t.length > 1);
+    if (terms.length > 0) {
+      results.drive = driveFilesList.filter(f => {
+        const fn = f.name.toLowerCase();
+        return terms.some(t => fn.includes(t));
+      }).slice(0, 12);
+    }
+  }
+
+  // 2) 대시보드 데이터 검색
+  if (needsDashboardData(prompt) && dashboardData.lastFetch > 0) {
+    let info = '';
+    if (dashboardData.sales) info += summarizeSalesData(dashboardData.sales);
+    if (dashboardData.perf) info += '\n' + summarizePerfData(dashboardData.perf);
+    if (info.trim()) { results.dashboard = info; results.hasDashboard = true; }
+  }
+
+  return results;
+}
+
+function renderLocalResults(prompt, results, ra) {
+  let html = '';
+
+  // 대시보드 데이터 직접 표시
+  if (results.hasDashboard) {
+    const lower = prompt.toLowerCase();
+    // 날짜 필터링
+    let dateMatch = prompt.match(/(\d{1,2})[\/.월]\s*(\d{1,2})[일]?/);
+    let targetDate = null;
+    if (dateMatch) {
+      const m = dateMatch[1].padStart(2,'0'), d = dateMatch[2].padStart(2,'0');
+      targetDate = '2026-' + m + '-' + d;
+    }
+    if (lower.includes('오늘')) targetDate = new Date().toISOString().slice(0,10);
+    if (lower.includes('어제')) { const y = new Date(); y.setDate(y.getDate()-1); targetDate = y.toISOString().slice(0,10); }
+
+    html += '<div class="ai-response"><div class="ai-label"><span class="dot" style="background:#4ade80"></span>LOCAL DATA</div><div class="ai-text">';
+
+    if (dashboardData.sales && dashboardData.sales.orders) {
+      const orders = dashboardData.sales.orders;
+      let filtered = orders.filter(o => o.s === 'sale');
+      let dateLabel = '전체';
+
+      if (targetDate) {
+        filtered = filtered.filter(o => o.d === targetDate);
+        dateLabel = targetDate;
+      } else if (lower.includes('이번주')) {
+        const now = new Date(), dow = now.getDay();
+        const sun = new Date(now); sun.setDate(now.getDate() - dow);
+        const sunStr = sun.toISOString().slice(0,10);
+        filtered = filtered.filter(o => o.d >= sunStr);
+        dateLabel = sunStr + ' ~ 현재';
+      } else if (lower.includes('이번달') || lower.includes('이번 달')) {
+        const mStr = new Date().toISOString().slice(0,7);
+        filtered = filtered.filter(o => o.d && o.d.startsWith(mStr));
+        dateLabel = mStr;
+      }
+
+      const totalRev = filtered.reduce((s, o) => s + (o.t || 0), 0);
+      const count = filtered.length;
+
+      // 채널별
+      const byCh = {};
+      filtered.forEach(o => { byCh[o.ch || 'unknown'] = (byCh[o.ch || 'unknown'] || 0) + (o.t || 0); });
+
+      // 일별
+      const byDate = {};
+      filtered.forEach(o => { byDate[o.d] = (byDate[o.d] || 0) + (o.t || 0); });
+
+      html += '<h2>📊 매출 현황 (' + dateLabel + ')</h2>';
+      html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">';
+      html += '<div style="flex:1;min-width:130px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--t4)">총 매출</div><div style="font-size:22px;font-weight:700;color:#4ade80;margin-top:4px">$' + totalRev.toFixed(2) + '</div></div>';
+      html += '<div style="flex:1;min-width:130px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--t4)">주문 수</div><div style="font-size:22px;font-weight:700;color:var(--t1);margin-top:4px">' + count + '건</div></div>';
+      html += '</div>';
+
+      // 채널별 테이블
+      if (Object.keys(byCh).length > 1) {
+        html += '<h3>채널별</h3><table><thead><tr><th>채널</th><th>매출</th><th>비중</th></tr></thead><tbody>';
+        Object.entries(byCh).sort((a,b) => b[1]-a[1]).forEach(([ch, amt]) => {
+          html += '<tr><td>' + ch + '</td><td style="color:#4ade80;font-weight:600">$' + amt.toFixed(2) + '</td><td>' + (totalRev > 0 ? (amt/totalRev*100).toFixed(1) : 0) + '%</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+
+      // 일별 (여러 날이면)
+      const dateKeys = Object.keys(byDate).sort();
+      if (dateKeys.length > 1 && dateKeys.length <= 31) {
+        html += '<h3>일별 매출</h3><table><thead><tr><th>날짜</th><th>매출</th><th>건수</th></tr></thead><tbody>';
+        dateKeys.forEach(d => {
+          const dc = filtered.filter(o => o.d === d).length;
+          html += '<tr><td>' + d + '</td><td style="color:#4ade80;font-weight:600">$' + byDate[d].toFixed(2) + '</td><td>' + dc + '건</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+
+      // 재고
+      if (dashboardData.sales.inventory && (lower.includes('재고') || lower.includes('inventory'))) {
+        html += '<h3>재고 현황</h3><table><thead><tr><th>제품</th><th>수량</th></tr></thead><tbody>';
+        dashboardData.sales.inventory.forEach(i => {
+          html += '<tr><td>' + (i.title || i.name || 'N/A') + '</td><td>' + (i.inventory_quantity || i.on_hand || 0) + '개</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+    }
+
+    html += '</div>';
+    // AI 에스컬레이션 버튼
+    html += '<div class="ai-actions"><button class="ai-copy-btn" onclick="generateWithAI(\'' + prompt.replace(/'/g,"\\'") + '\')">🤖 AI로 더 자세히 분석</button></div>';
+    html += '</div>';
+  }
+
+  // Drive 파일 결과
+  if (results.drive.length > 0) {
+    html += '<div class="ai-response"><div class="ai-label"><span class="dot" style="background:#60a5fa"></span>DRIVE ASSETS</div>';
+    html += '<div style="font-size:13px;color:var(--t3);margin-bottom:12px">' + results.drive.length + '개 관련 파일</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">';
+    results.drive.forEach(f => {
+      const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
+      html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised);transition:all .15s" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')" onmouseover="this.style.borderColor=\'rgba(255,255,255,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
+        (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:11px">미리보기 없음</div>') +
+        '<div style="padding:5px 7px;font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  return html;
+}
+
 const _origGenerate = generate;
-generate = function() {
+generate = async function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
-  // Drive asset search takes priority
-  if (isDriveSearchQuery(prompt)) {
-    handleDriveSearch(prompt);
+
+  // 1) AI 분석이 꼭 필요한 경우 → 바로 Claude
+  if (needsAIAnalysis(prompt) && !isDriveSearchQuery(prompt) && !needsDashboardData(prompt)) {
+    generateWithAI(prompt);
     return;
   }
+
+  // 2) 로컬 검색 시도 (Drive + Dashboard — 토큰 소모 없음)
   if (shouldUseAI(prompt)) {
+    document.getElementById('landing').classList.add('pushed');
+    const ra = document.getElementById('resultsArea');
+    ra.style.display = 'block';
+    ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+    // 대시보드 데이터가 아직 없으면 빠르게 fetch (최대 3초)
+    if (needsDashboardData(prompt) && dashboardData.lastFetch === 0) {
+      await Promise.race([fetchDashboardData(), new Promise(r => setTimeout(r, 3000))]);
+    }
+
+    const localResults = localSearch(prompt);
+    const hasLocal = localResults.drive.length > 0 || localResults.hasDashboard;
+
+    if (hasLocal) {
+      // 로컬 결과만 표시 (토큰 절약)
+      ra.innerHTML = renderLocalResults(prompt, localResults, ra);
+      saveHistory(prompt, [{ label: 'Local Search', content: 'Drive: ' + localResults.drive.length + ' files, Dashboard: ' + (localResults.hasDashboard ? 'yes' : 'no') }]);
+      return;
+    }
+
+    // 로컬에 없으면 AI로 폴백
     generateWithAI(prompt);
-  } else {
-    _origGenerate();
+    return;
   }
+
+  // 3) 일반 템플릿 생성
+  _origGenerate();
 };
 
 let aiAbort = null;
