@@ -395,93 +395,97 @@ function oddHashtags(ch, isAd, contentTheme) {
   return [...new Set(tags)].slice(0, max).join(' ');
 }
 
-// ── ODD. 크리에이티브 브리프 엔진 ──
-// 이 도구는 "캡션을 조합"하는 것이 아니라, ODD. 톤앤매너에 맞는 "크리에이티브 방향성 브리프"를 생성한다.
-// 실제 캡션 작성은 이 브리프를 기반으로 Claude 스킬이 담당한다.
-
-const BRIEF_DATA = {
-  tonePillars: {
-    1: { label:'Safe Bold', voice:'절제된 자신감. 짧고 단정한 선언. 설명 최소화.', rhythm:'1-2줄 단문 위주. 여백으로 호흡.' },
-    2: { label:'Provocative', voice:'관습에 질문. "왜?"라는 화두를 던지는 방식. 도발적이되 공격적이지 않게.', rhythm:'질문형 오프닝 + 반전 한 줄. 긴장감 있는 호흡.' },
-    3: { label:'Maximum Edge', voice:'철학적 무게감. 서사적 흐름. 브랜드 매니페스토 톤.', rhythm:'3-4줄 내러티브. 시적 호흡. 마지막에 제품 등장.' }
+// ── ODD. 캡션 훅 풀 (텐션 레벨별) ──
+const HOOKS = {
+  tof: {
+    1: ['Not Salad, But Salad.','Your salad doesn\'t need a bowl.','Prep time: zero.','Before the first bite — that\'s where it starts.','A simpler way to do what salad does.'],
+    2: ['What if salad was never about the bowl?','They told you to eat more salad. We decoded why.','Salad slows digestion. We put that in a bottle.','The food changed. Your body didn\'t.'],
+    3: ['We didn\'t reinvent salad.\nWe decoded what it was always trying to do.','Before the fork hits the plate —\nthere\'s a moment your body has been waiting for.','Your body was designed for a world that no longer exists.\nM-01 bridges the gap.']
   },
-  funnelGoals: {
-    tof: { goal:'인지 & 호기심', audience:'ODD.를 처음 접하는 사람', hook:'스크롤을 멈추게 하는 1줄', structure:'훅 → 공감/호기심 → 부드러운 유입' },
-    mof: { goal:'이해 & 신뢰 구축', audience:'관심은 있지만 확신이 없는 사람', hook:'구체적 성분/원리/차별점 기반', structure:'교육적 훅 → 근거 → 저장/공유 유도' },
-    bof: { goal:'전환 & 망설임 제거', audience:'구매 직전 단계', hook:'오퍼/보장/긴급성 기반', structure:'직접적 혜택 → 신뢰 장치 → 명확한 CTA' }
+  mof: {
+    1: ['5 research-backed ingredients. One bottle.','Twist and drink. That\'s the whole routine.','What salad does — without the bowl.','Built for the moment before your meal.'],
+    2: ['Salad slows digestion. Delphinol® smooths the spike.','42% less impact from carbs. One ingredient. One bottle.','What if your body met carbs differently?'],
+    3: ['Five ingredients. Each one decoded from nature.\nDelphinol®. Reducose®. GOFOS™. Orafti® GR. Lalmin® C2000.\nNot a trend — a system.','Your gut has a language.\nM-01 learned to speak it.']
   },
-  channelTone: {
-    meta: { platform:'Instagram / Facebook', style:'세련되고 여유로운 브랜드 미디어 톤. 여백과 호흡 중시.', length:'5-12줄', note:'해시태그 5개 이내. 첫 줄이 핵심.' },
-    tiktok: { platform:'TikTok', style:'짧고 직관적. 설명보다 감각. 1-3초 안에 잡아야 함.', length:'2-4줄', note:'텍스트 오버레이 고려. 영상 맥락과 연동.' },
-    google: { platform:'Google Ads', style:'RSA 포맷. 헤드라인 30자 제한, 설명 90자 제한. 검색 의도 매칭.', length:'헤드라인 3개 + 설명 2개', note:'키워드 포함 필수. 감성보다 명확성 우선.' }
-  },
-  brandVoiceRef: [
-    'Not Salad, But Salad. — 캠페인 핵심 메타포',
-    'Original Design Decoded — 브랜드 철학 축',
-    '"Don\'t blame sugar. We changed its form." — 관점 전환의 대표 표현',
-    'ritual, intention, rhythm — 반복되는 감성 키워드',
-    '설명하지 않고 선언한다. 가르치지 않고 보여준다.',
-    '공포 마케팅 절대 금지 — fear → intention 전환'
-  ]
+  bof: {
+    1: ['Start your smarter routine.','Try M-01 risk-free — 60-day guarantee.','Ready when you are. Ships worldwide.'],
+    2: ['Love It in 60 Days or Get Your Money Back.','Your body\'s best defense starts before the first bite.','Still prepping salads every morning? There\'s a faster way.'],
+    3: ['This isn\'t about restriction.\nIt\'s about intention.\n\nM-01 — the pre-meal ritual that changes everything.','60 days. That\'s all we ask.\nIf M-01 doesn\'t earn its place in your routine,\nyou get every penny back.']
+  }
 };
 
 function oddAdCaption(prompt, ch, fn, tension) {
   const t = parseInt(tension);
-  const tone = BRIEF_DATA.tonePillars[t] || BRIEF_DATA.tonePillars[1];
-  const funnel = BRIEF_DATA.funnelGoals[fn] || BRIEF_DATA.funnelGoals.tof;
-  const channel = BRIEF_DATA.channelTone[ch] || BRIEF_DATA.channelTone.meta;
+  const hookPool = HOOKS[fn][t] || HOOKS[fn][1];
+  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
 
-  const brief = '📌 크리에이티브 브리프\n' +
-    '━━━━━━━━━━━━━━━━━\n\n' +
-    '방향: ' + (prompt || '(러프 입력 없음)') + '\n\n' +
-    '🎯 목표: ' + funnel.goal + '\n' +
-    '👤 타겟: ' + funnel.audience + '\n' +
-    '📐 구조: ' + funnel.structure + '\n\n' +
-    '🔊 톤: ' + tone.label + '\n' +
-    '   보이스 — ' + tone.voice + '\n' +
-    '   리듬 — ' + tone.rhythm + '\n\n' +
-    '📱 채널: ' + channel.platform + '\n' +
-    '   스타일 — ' + channel.style + '\n' +
-    '   분량 — ' + channel.length + '\n' +
-    '   참고 — ' + channel.note + '\n\n' +
-    '🧬 ODD. 보이스 레퍼런스:\n' +
-    BRIEF_DATA.brandVoiceRef.map(r => '   · ' + r).join('\n') + '\n\n' +
-    '━━━━━━━━━━━━━━━━━\n' +
-    '💡 이 브리프를 Claude에 전달하면\nODD. 톤앤매너로 새로운 캡션을 생성합니다.';
-
-  return {
-    text: brief,
-    tags: [fn.toUpperCase(), channel.platform, tone.label, '광고']
+  const templates = {
+    meta: {
+      tof: {
+        text: hook + '\n\nA simpler way to keep your rhythm.\nNo prep. No waste. Just twist and drink.\n\nLearn more. Link in bio.\n\n' + oddHashtags('meta', true, 'campaign'),
+        tags: ['TOF 인지', 'Meta Feed', '스크롤 스토퍼']
+      },
+      mof: {
+        text: hook + '\n\nM-01 is built with 5 research-backed ingredients — each designed to support what salad does, and go further.\n\n• Delphinol® — smooths post-meal glucose spikes\n• Reducose® — eases carb absorption\n• GOFOS™ — feeds your gut\'s good bacteria\n• Orafti® GR — manages glucose & digestion\n• Lalmin® C2000 — supports stable energy\n\nSwipe through.\n\n' + oddHashtags('meta', true, 'campaign'),
+        tags: ['MOF 고려', '교육형', '저장 유도']
+      },
+      bof: {
+        text: hook + '\n\nMeet M-01 — a smarter pre-meal ritual.\n✓ 5 research-backed ingredients\n✓ 60-day satisfaction guarantee\n✓ Ships worldwide\n\nLimited Offer — Get up to 40% OFF.\nm-01.odd.us\n\n' + oddHashtags('meta', true, 'campaign'),
+        tags: ['BOF 전환', '오퍼', '망설임 제거']
+      }
+    },
+    tiktok: {
+      tof: {
+        text: hook + '\n\nNot Salad, But Salad. ✨\n\n' + oddHashtags('tiktok', true, 'campaign'),
+        tags: ['TOF', 'TikTok', '짧은 훅']
+      },
+      mof: {
+        text: hook + '\n\nTwist and drink. That\'s the whole routine. 🍋\n\n' + oddHashtags('tiktok', true, 'campaign'),
+        tags: ['MOF', 'TikTok', '이해 유도']
+      },
+      bof: {
+        text: 'Cut down on prep. 🧺\n\n' + hook + '\n\nProfile link for details.\n\n' + oddHashtags('tiktok', true, 'campaign'),
+        tags: ['BOF', 'TikTok', '전환']
+      }
+    },
+    google: {
+      tof: {
+        text: '[헤드라인 1] Not Salad, But Salad | ODD.\n[헤드라인 2] Pre-Meal Ritual for Metabolic Wellness\n[헤드라인 3] A Simpler Way to Do What Salad Does\n[설명 1] Twist and drink before meals. No prep, no waste. 5 research-backed ingredients.\n[설명 2] 60-day guarantee. Free shipping. Try M-01 today.',
+        tags: ['TOF', 'Google Ads', 'RSA']
+      },
+      mof: {
+        text: '[헤드라인 1] Why M-01? 5 Ingredients, One Bottle\n[헤드라인 2] Metabolic Health Supplement\n[헤드라인 3] What Salad Does, Without the Bowl\n[설명 1] Delphinol®, Reducose®, GOFOS™, Orafti® GR, Lalmin® C2000 — decoded from nature.\n[설명 2] 42% less carb impact (Reducose® studies). Free shipping available.',
+        tags: ['MOF', 'Google Ads', '수치 증거']
+      },
+      bof: {
+        text: '[헤드라인 1] Up to 40% OFF M-01 — Limited Time\n[헤드라인 2] 60-Day Money-Back Guarantee\n[헤드라인 3] Start Your Pre-Meal Ritual\n[설명 1] 5 research-backed ingredients. Try risk-free.\n[설명 2] Loved by thousands. 4.8★ avg review. Order now with free shipping.',
+        tags: ['BOF', 'Google Ads', '전환 최적화']
+      }
+    }
   };
+  return templates[ch][fn];
 }
 
 function oddOrganicCaption(prompt, ch, tension) {
   const t = parseInt(tension);
-  const tone = BRIEF_DATA.tonePillars[t] || BRIEF_DATA.tonePillars[1];
-  const channel = BRIEF_DATA.channelTone[ch] || BRIEF_DATA.channelTone.meta;
+  const hookPool = [...(HOOKS.tof[t] || []), ...(HOOKS.mof[t] || [])];
+  const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
 
-  const brief = '📌 오가닉 콘텐츠 브리프\n' +
-    '━━━━━━━━━━━━━━━━━\n\n' +
-    '방향: ' + (prompt || '(러프 입력 없음)') + '\n\n' +
-    '🎨 콘텐츠 성격: 브랜드 미디어 (비광고)\n' +
-    '   커뮤니티와의 대화. 세일즈 톤 배제.\n' +
-    '   팔로워가 저장하고 싶은 가치 있는 콘텐츠.\n\n' +
-    '🔊 톤: ' + tone.label + '\n' +
-    '   보이스 — ' + tone.voice + '\n' +
-    '   리듬 — ' + tone.rhythm + '\n\n' +
-    '📱 채널: ' + channel.platform + '\n' +
-    '   스타일 — ' + channel.style + '\n' +
-    '   분량 — ' + channel.length + '\n\n' +
-    '🧬 ODD. 보이스 레퍼런스:\n' +
-    BRIEF_DATA.brandVoiceRef.map(r => '   · ' + r).join('\n') + '\n\n' +
-    '🏷️ 해시태그 방향: ' + oddHashtags(ch, false, 'lifestyle') + '\n\n' +
-    '━━━━━━━━━━━━━━━━━\n' +
-    '💡 이 브리프를 Claude에 전달하면\nODD. 톤앤매너로 새로운 캡션을 생성합니다.';
-
-  return {
-    text: brief,
-    tags: ['오가닉', channel.platform, tone.label]
+  const templates = {
+    meta: {
+      text: hook + '\n\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'lifestyle'),
+      tags: ['오가닉', 'IG Feed', '선언형']
+    },
+    tiktok: {
+      text: hook + '\n\nTwist and drink. Done. 🍋\n\n' + oddHashtags('tiktok', false, 'lifestyle'),
+      tags: ['오가닉', 'TikTok', '캐주얼']
+    },
+    google: {
+      text: 'M-01 — the pre-meal ritual that simplifies wellness.\n\nLearn more at odd.us',
+      tags: ['오가닉', 'Google', '정보성']
+    }
   };
+  return templates[ch];
 }
 
 function oddCTA(ch, fn) {
@@ -505,41 +509,33 @@ function oddCTA(ch, fn) {
   return ctas[ch][fn];
 }
 
-// ── Content Mode: Carousel Slide Brief ──
+// ── Content Mode: Carousel Slides ──
 function generateCarouselSlides(prompt, fn, tension) {
-  const t = parseInt(tension);
-  const tone = BRIEF_DATA.tonePillars[t] || BRIEF_DATA.tonePillars[1];
-  const funnel = BRIEF_DATA.funnelGoals[fn] || BRIEF_DATA.funnelGoals.tof;
-
-  // 슬라이드별 "역할"만 정의 — 실제 카피는 AI가 생성
-  const roleConfigs = {
+  const slideConfigs = {
     tof: [
-      { num:1, role:'훅 슬라이드', direction:'첫 1초 안에 스크롤 멈추게. 선언적 한 줄.', visual:'다크 톤, 강렬한 타이포, 미니멀 배경' },
-      { num:2, role:'문제 제기', direction:'공감 유발. "왜?"라는 질문을 심는 슬라이드.', visual:'감성적 푸드포토 또는 일상 장면' },
-      { num:3, role:'해결책 암시', direction:'M-01의 존재를 자연스럽게 드러냄.', visual:'제품 중심, 어두운 톤, 세련된 스타일링' },
-      { num:4, role:'행동 유도', direction:'다음 단계로 넘어가게. 부드러운 CTA.', visual:'라이프스타일 컨셉, 따뜻한 조명' }
+      { num:1, headline:'Not Salad, But Salad.', body:'The ritual before the meal.', visual:'다크 톤 라이프스타일, 신선한 음식 소재' },
+      { num:2, headline:'The Food Changed.', body:'Your body didn\'t.', visual:'어두운 배경, 미니멀 푸드포토' },
+      { num:3, headline:'Prep time: Zero.', body:'Just twist and drink.', visual:'제품 중심, 어두운 톤, 세련된 스타일링' },
+      { num:4, headline:'Built for Before-Meal.', body:'A smarter way to support your rhythm.', visual:'라이프스타일, 모닝루틴 컨셉' },
+      { num:5, headline:'Learn more.', body:'Link in bio.', visual:'브랜드 시그니처, CTA 강조' }
     ],
     mof: [
-      { num:1, role:'교육 훅', direction:'궁금증 유발하는 팩트 또는 질문.', visual:'성분 배치, 다크 백그라운드, 과학적 톤' },
-      { num:2, role:'핵심 근거', direction:'구체적 데이터나 성분 설명. 신뢰 구축.', visual:'데이터 시각화, 모던 클린 디자인' },
-      { num:3, role:'차별화', direction:'기존 대안 대비 M-01만의 강점.', visual:'비교 레이아웃 또는 효율성 강조' },
-      { num:4, role:'마무리', direction:'핵심 메시지 요약 + 저장/공유 유도.', visual:'제품 쇼케이스, 브랜드 시그니처 톤' }
+      { num:1, headline:'5 Research-Backed Ingredients.', body:'Built for what salad does.', visual:'성분 배치, 다크 백그라운드' },
+      { num:2, headline:'Reducose®', body:'Eases post-meal glucose load by up to 42%.', visual:'데이터 시각화, 모던 디자인' },
+      { num:3, headline:'Delphinol®', body:'Maqui berry polyphenol — smooths glucose spikes.', visual:'원료 클로즈업, 자연 느낌' },
+      { num:4, headline:'GOFOS™ + Orafti® GR', body:'Prebiotic fiber + chicory root inulin for gut balance.', visual:'과학적 톤, 클린 배경' },
+      { num:5, headline:'Lalmin® C2000', body:'Organic chromium for stable energy after meals.', visual:'에너지 컨셉, 밝은 톤' }
     ],
     bof: [
-      { num:1, role:'핵심 제안', direction:'M-01을 만나야 하는 이유. 직접적.', visual:'라이프스타일 완성도, 세련된 루틴' },
-      { num:2, role:'신뢰 장치', direction:'보장, 리뷰, 사회적 증거.', visual:'신뢰 구축 요소, 따뜻한 톤' },
-      { num:3, role:'오퍼', direction:'구체적 혜택. 긴급성 부여.', visual:'오퍼 강조, 콘트라스트 높은 배경' },
-      { num:4, role:'최종 CTA', direction:'명확한 행동 지시. 망설임 제거.', visual:'강한 CTA 타이포, 브랜드 컬러' }
+      { num:1, headline:'Meet Your New Ritual.', body:'M-01 — the smarter choice.', visual:'라이프스타일, 세련된 루틴' },
+      { num:2, headline:'60-Day Money-Back Guarantee.', body:'Risk-free. You\'re protected.', visual:'신뢰 구축, 따뜻한 톤' },
+      { num:3, headline:'Up to 40% OFF.', body:'Limited time — order now.', visual:'오퍼 강조, 긴급성' },
+      { num:4, headline:'Join Thousands.', body:'4.8★ average rating. Ships worldwide.', visual:'사회적 증거, 커뮤니티' },
+      { num:5, headline:'Start Today.', body:'m-01.odd.us', visual:'강한 CTA, 브랜드 컬러' }
     ]
   };
 
-  const configs = roleConfigs[fn] || roleConfigs.tof;
-  return configs.map(cfg => ({
-    num: cfg.num,
-    headline: cfg.role,
-    body: cfg.direction,
-    visual: cfg.visual
-  }));
+  return slideConfigs[fn] || slideConfigs.tof;
 }
 
 function generateStockKeywords(text) {
