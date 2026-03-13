@@ -252,27 +252,39 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .ai-fg .hint{font-size:10px;color:var(--t5);margin-top:5px}
 .ai-save-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;margin-top:8px}
 .ai-save-btn:hover{background:#d4343a}
-.ai-response{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:12px;animation:fadeUp .4s ease both}
-.ai-response .ai-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--red)}
-.ai-response .ai-label .dot{width:6px;height:6px;border-radius:50%;background:var(--red)}
-.ai-text{font-size:15px;line-height:1.8;color:var(--t2);word-break:break-word}
-.ai-text h1,.ai-text h2,.ai-text h3{color:var(--t1);margin:16px 0 8px}
-.ai-text h1{font-size:17px}.ai-text h2{font-size:15px}.ai-text h3{font-size:14px}
+.ai-response{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:28px 28px 20px;margin-bottom:12px;animation:fadeUp .4s ease both}
+.ai-response .ai-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--red)}
+.ai-response .ai-label .dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:aiBlink 1.5s ease infinite}
+.ai-text{font-size:14px;line-height:1.75;color:var(--t2);word-break:break-word}
+.ai-text h1,.ai-text h2,.ai-text h3{color:var(--t1);margin:20px 0 10px;letter-spacing:-.2px}
+.ai-text h1{font-size:18px;font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.ai-text h2{font-size:15px;font-weight:700}
+.ai-text h3{font-size:13px;font-weight:600;color:var(--t2)}
 .ai-text strong{color:var(--t1);font-weight:600}
+.ai-text em{color:var(--t3);font-style:italic}
 .ai-text code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;font-size:12px;font-family:'SF Mono',Menlo,monospace}
-.ai-text pre{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:14px;margin:12px 0;overflow-x:auto}
+.ai-text pre{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px;margin:14px 0;overflow-x:auto}
 .ai-text pre code{background:none;padding:0;font-size:12px;line-height:1.6}
-.ai-text ul,.ai-text ol{margin:8px 0;padding-left:20px}
-.ai-text li{margin:4px 0;line-height:1.7}
-.ai-text p{margin:8px 0}.ai-text p:first-child{margin-top:0}
-.ai-text blockquote{border-left:3px solid var(--red);padding-left:14px;margin:10px 0;color:var(--t3)}
-.ai-text table{border-collapse:collapse;margin:10px 0;width:100%;font-size:13px}
-.ai-text th,.ai-text td{border:1px solid var(--border);padding:6px 10px;text-align:left}
-.ai-text th{background:rgba(255,255,255,.04);font-weight:600;color:var(--t1)}
-.streaming-cursor::after{content:'';display:inline-block;width:2px;height:16px;background:var(--red);margin-left:2px;vertical-align:text-bottom;animation:aiBlink .6s step-end infinite}
+.ai-text ul,.ai-text ol{margin:10px 0;padding-left:20px}
+.ai-text li{margin:6px 0;line-height:1.65;color:var(--t2)}
+.ai-text li::marker{color:var(--t4)}
+.ai-text p{margin:10px 0}.ai-text p:first-child{margin-top:0}.ai-text p:last-child{margin-bottom:0}
+.ai-text blockquote{border-left:3px solid var(--red);padding:8px 14px;margin:14px 0;color:var(--t3);background:rgba(255,255,255,.02);border-radius:0 8px 8px 0}
+.ai-text hr{border:none;border-top:1px solid var(--border);margin:18px 0}
+.ai-text table{border-collapse:collapse;margin:14px 0;width:100%;font-size:13px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.ai-text th,.ai-text td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.ai-text th{background:rgba(255,255,255,.05);font-weight:600;color:var(--t1);font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+.ai-text td{color:var(--t2)}
+.ai-text tr:hover td{background:rgba(255,255,255,.02)}
+/* Metric highlight cards inside AI response */
+.ai-text .metric-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.ai-text .metric-card{flex:1;min-width:120px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.ai-text .metric-card .label{font-size:11px;color:var(--t4);margin-bottom:4px}
+.ai-text .metric-card .value{font-size:18px;font-weight:700;color:var(--t1)}
+.streaming-cursor::after{content:'';display:inline-block;width:2px;height:14px;background:var(--red);margin-left:2px;vertical-align:text-bottom;animation:aiBlink .6s step-end infinite}
 @keyframes aiBlink{50%{opacity:0}}
-.ai-actions{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
-.ai-copy-btn{padding:5px 12px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s}
+.ai-actions{display:flex;gap:6px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.ai-copy-btn{padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s}
 .ai-copy-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
 @media(max-width:600px){.settings-btn{top:16px;right:64px}}
 
@@ -1424,34 +1436,63 @@ function summarizeSalesData(data) {
   if (!data) return '';
   let s = '=== ODD 세일즈 대시보드 데이터 ===\n';
   if (data.updated_at) s += '최종 업데이트: ' + data.updated_at + '\n';
-  if (data.summary) {
-    s += '총 매출: $' + (data.summary.total_sales || 'N/A') + '\n';
-    s += '총 주문수: ' + (data.summary.total_orders || 'N/A') + '\n';
-    s += '총 유닛: ' + (data.summary.total_units || 'N/A') + '\n';
+  s += '총 ERP 주문수: ' + (data.total_erp_orders || 'N/A') + '\n';
+
+  // 주문 데이터 요약
+  if (data.orders && data.orders.length) {
+    const sales = data.orders.filter(o => o.s === 'sale');
+    const totalRev = sales.reduce((sum, o) => sum + (o.t || 0), 0);
+    s += '총 매출(sale): $' + totalRev.toFixed(2) + '\n';
+    s += '판매 건수: ' + sales.length + '건\n';
+
+    // 채널별 집계
+    const byCh = {};
+    sales.forEach(o => { const ch = o.ch || 'unknown'; byCh[ch] = (byCh[ch] || 0) + (o.t || 0); });
+    s += '\n채널별 매출:\n';
+    Object.entries(byCh).sort((a,b) => b[1]-a[1]).forEach(([ch, amt]) => { s += '  ' + ch + ': $' + amt.toFixed(2) + '\n'; });
+
+    // 일별 집계 (최근 14일)
+    const byDate = {};
+    sales.forEach(o => { byDate[o.d] = (byDate[o.d] || 0) + (o.t || 0); });
+    const dates = Object.keys(byDate).sort().slice(-14);
+    s += '\n최근 일별 매출:\n';
+    dates.forEach(d => { s += '  ' + d + ': $' + byDate[d].toFixed(2) + '\n'; });
+
+    // 주별 상위 지역
+    const bySt = {};
+    sales.forEach(o => { if (o.st) bySt[o.st] = (bySt[o.st] || 0) + (o.t || 0); });
+    s += '\n상위 주(State) 매출 (Top 10):\n';
+    Object.entries(bySt).sort((a,b) => b[1]-a[1]).slice(0,10).forEach(([st, amt]) => { s += '  ' + st + ': $' + amt.toFixed(2) + '\n'; });
   }
-  if (data.daily && data.daily.length) {
-    s += '\n최근 일별 데이터 (최근 14일):\n';
-    data.daily.slice(-14).forEach(d => {
-      s += d.date + ' | 매출: $' + (d.sales || 0) + ' | 주문: ' + (d.orders || 0) + ' | 유닛: ' + (d.units || 0) + '\n';
-    });
+
+  // 재고
+  if (data.inventory && data.inventory.length) {
+    s += '\n재고 현황:\n';
+    data.inventory.forEach(i => { s += '  ' + (i.title || i.name || 'N/A') + ': ' + (i.inventory_quantity || i.on_hand || 0) + '개\n'; });
   }
-  if (data.products && data.products.length) {
-    s += '\n제품별 매출:\n';
-    data.products.forEach(p => {
-      s += p.name + ' | $' + (p.sales || 0) + ' | ' + (p.units || 0) + '개\n';
-    });
+
+  // 구독
+  if (data.recharge_active) {
+    s += '\n활성 구독: ' + data.recharge_active.length + '건\n';
   }
+  if (data.recharge_cancelled) {
+    s += '취소된 구독: ' + data.recharge_cancelled.length + '건\n';
+  }
+
   return s;
 }
 
 function summarizePerfData(rows) {
   if (!rows || !rows.length) return '';
-  let s = '=== ODD 퍼포먼스 대시보드 데이터 ===\n';
+  let s = '=== ODD 퍼포먼스 대시보드 데이터 (Meta/TikTok 광고) ===\n';
   const headers = Object.keys(rows[0]);
   s += '컬럼: ' + headers.join(', ') + '\n';
   s += '총 ' + rows.length + '행\n\n';
-  const recent = rows.slice(-30);
-  recent.forEach(r => { s += headers.map(h => h + ': ' + r[h]).join(' | ') + '\n'; });
+  // 모든 행 출력 (metric별 일별 데이터)
+  rows.forEach(r => {
+    const vals = headers.map(h => r[h]).filter(v => v && v.trim());
+    if (vals.length > 0) s += vals.join(' | ') + '\n';
+  });
   return s;
 }
 
@@ -1460,7 +1501,12 @@ function needsDashboardData(prompt) {
   const triggers = ['매출','세일즈','sales','주문','order','대시보드','dashboard','퍼포먼스','performance',
     'roas','acos','cpc','ctr','impression','클릭','노출','광고비','ad spend','spend','revenue',
     '전환','conversion','유닛','unit','데이터','data','실적','성과','지표','metric','kpi',
-    '추이','트렌드','trend','증가','감소','비교','compare','일별','주별','월별'];
+    '추이','트렌드','trend','증가','감소','비교','compare','일별','주별','월별',
+    '오늘','어제','그제','이번주','지난주','이번달','지난달','현황','today','yesterday',
+    '하루','일간','weekly','monthly','daily','몇건','몇개','총','합계','inventory','재고',
+    '구독','subscription','cancel','취소','환불','refund','배송','shipping'];
+  // 날짜 패턴 (3/10, 3월 10일, 2026-03-10 등)
+  if (/\d{1,2}\/\d{1,2}|\d{1,2}월\s*\d{1,2}일|\d{4}-\d{2}-\d{2}/.test(prompt)) return true;
   return triggers.some(k => lower.includes(k));
 }
 
@@ -1482,16 +1528,19 @@ function shouldUseAI(prompt) {
     'roas','acos','cpc','ctr','노출','광고비','spend','revenue','실적','성과','지표','kpi',
     '찾아','알려','해줘','해 줘','줘','원료','성분','ingredient','사진','photo','image','이미지',
     '뭐','무엇','어디','언제','얼마','몇','알아','검색','search','질문','물어','답변',
-    'm-01','m01','제품','product'];
+    'm-01','m01','제품','product',
+    '오늘','어제','그제','이번주','지난주','이번달','지난달','현황','today','yesterday',
+    '하루','일간','재고','구독','환불','배송','몇건','총','합계'];
+  if (/\d{1,2}\/\d{1,2}|\d{1,2}월\s*\d{1,2}일|\d{4}-\d{2}-\d{2}/.test(prompt)) return true;
   return aiTriggers.some(k => lower.includes(k));
 }
 
-// Override generate to support AI + Drive search
+// Override generate — Drive search first, then AI
 const _origGenerate = generate;
 generate = function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
-  // Drive search takes priority
+  // Drive asset search takes priority
   if (isDriveSearchQuery(prompt)) {
     handleDriveSearch(prompt);
     return;
@@ -1557,6 +1606,36 @@ async function generateWithAI(prompt) {
     }
     textEl.classList.remove('streaming-cursor');
     textEl.innerHTML = renderAIMd(fullText);
+    // Search Drive for related assets if query mentions files/images/assets
+    if (isDriveSearchQuery(prompt) && driveAccessToken) {
+      try {
+        if (!driveFilesList.length) await loadDriveFiles();
+        const searchTerms = prompt.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|좀|우리|이미지|영상|파일|콘텐츠|사진/g, '').trim().toLowerCase().split(/\s+/).filter(t => t.length > 1);
+        const matched = driveFilesList.filter(f => {
+          const fname = f.name.toLowerCase();
+          return searchTerms.some(t => fname.includes(t));
+        }).slice(0, 12);
+        if (matched.length > 0) {
+          const grid = document.createElement('div');
+          grid.style.cssText = 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px';
+          grid.innerHTML = '<div style="font-size:12px;color:var(--t3);margin-bottom:10px;font-weight:600">📁 Google Drive에서 찾은 관련 에셋 (' + matched.length + '개)</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">' +
+            matched.map(f => {
+              const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
+              return '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')">' +
+                (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:11px">미리보기 없음</div>') +
+                '<div style="padding:4px 6px;font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
+            }).join('') + '</div>';
+          ra.querySelector('.ai-response').appendChild(grid);
+        }
+      } catch (e) { console.warn('Drive search in AI failed', e); }
+    } else if (isDriveSearchQuery(prompt) && !driveAccessToken) {
+      const loginHint = document.createElement('div');
+      loginHint.style.cssText = 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px;text-align:center';
+      loginHint.innerHTML = '<p style="font-size:12px;color:var(--t4);margin-bottom:10px">Google Drive 에셋을 검색하려면 로그인이 필요합니다</p>' +
+        '<button onclick="driveSignIn()" style="padding:8px 20px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--t2);cursor:pointer;font-size:12px;font-weight:600">Google 로그인</button>';
+      ra.querySelector('.ai-response').appendChild(loginHint);
+    }
     const act = document.createElement('div');
     act.className = 'ai-actions';
     act.innerHTML = '<button class="ai-copy-btn" onclick="navigator.clipboard.writeText(decodeURIComponent(\'' + encodeURIComponent(fullText) + '\')).then(()=>showToast(\'복사됨\'))">복사</button>';
@@ -1571,26 +1650,52 @@ async function generateWithAI(prompt) {
 function renderAIMd(text) {
   if (!text) return '';
   let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Code blocks
   h = h.replace(/```(\w*)\n([\s\S]*?)```/g, (_, l, c) => '<pre><code>' + c.trim() + '</code></pre>');
   h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  // Tables (| col | col |)
+  h = h.replace(/((?:^\|.+\|$\n?)+)/gm, function(block) {
+    const rows = block.trim().split('\n').filter(r => r.trim());
+    if (rows.length < 2) return block;
+    let table = '<table>';
+    rows.forEach((row, i) => {
+      const cells = row.split('|').filter(c => c.trim() !== '');
+      if (i === 1 && /^[\s\-:]+$/.test(cells.join(''))) return; // separator row
+      const tag = i === 0 ? 'th' : 'td';
+      const tr = i === 0 ? 'thead' : (i === 2 && rows.length > 2 ? 'tbody' : '');
+      if (tr === 'thead') table += '<thead>';
+      if (tr === 'tbody') table += '<tbody>';
+      table += '<tr>' + cells.map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('') + '</tr>';
+      if (i === 0) table += '</thead>';
+    });
+    table += '</tbody></table>';
+    return table;
+  });
+  // Inline formatting
   h = h.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
   h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   h = h.replace(/(?<!\*)\*([^\*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+  // Headings
   h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
   h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
   h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
   h = h.replace(/^---+$/gm, '<hr>');
+  // Blockquote
   h = h.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+  // Lists
   h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
   h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
   h = h.replace(/^\d+\. (.+)$/gm, '<oli>$1</oli>');
   h = h.replace(/((?:<oli>.*<\/oli>\n?)+)/g, m => '<ol>' + m.replace(/<\/?oli>/g, t => t.replace('oli','li')) + '</ol>');
+  // Paragraphs
   h = h.replace(/\n{2,}/g, '</p><p>');
   h = h.replace(/\n/g, '<br>');
   h = '<p>' + h + '</p>';
-  h = h.replace(/<p><(h[1-3]|pre|ul|ol|blockquote|hr)/g, '<$1');
-  h = h.replace(/<\/(h[1-3]|pre|ul|ol|blockquote)><\/p>/g, '</$1>');
+  h = h.replace(/<p><(h[1-3]|pre|ul|ol|blockquote|hr|table)/g, '<$1');
+  h = h.replace(/<\/(h[1-3]|pre|ul|ol|blockquote|table)><\/p>/g, '</$1>');
   h = h.replace(/<p><\/p>/g, '');
+  // Dollar amounts highlighting
+  h = h.replace(/\$[\d,]+\.?\d*/g, '<strong style="color:#4ade80">$&</strong>');
   return h;
 }
 
