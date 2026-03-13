@@ -1219,7 +1219,7 @@ firebase.initializeApp({
   appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
 });
 const fireAuth = firebase.auth();
-const DRIVE_FOLDER_ID = '0AL6p4jOgoTNqUk9PVA';
+const DRIVE_FOLDER_IDS = ['0AL6p4jOgoTNqUk9PVA', '0AHEsTFpszXSNUk9PVA'];
 let driveAccessToken = null, driveFilesList = [], selectedDriveIds = new Set();
 
 function openDrive() {
@@ -1250,7 +1250,14 @@ async function loadDriveFiles() {
   let fileCount = 0;
   const onProgress = (n) => { fileCount = n; loadingMsg.textContent = '에셋 불러오는 중... (' + n + '개 발견)'; };
   try {
-    driveFilesList = await fetchAllDriveFiles(DRIVE_FOLDER_ID, onProgress);
+    let allFiles = [];
+    for (const fid of DRIVE_FOLDER_IDS) {
+      const files = await fetchAllDriveFiles(fid, onProgress);
+      allFiles = allFiles.concat(files);
+    }
+    // Deduplicate by file id
+    const seen = new Set();
+    driveFilesList = allFiles.filter(f => { if (seen.has(f.id)) return false; seen.add(f.id); return true; });
     driveFilesList.sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''));
     renderDriveGrid();
     // Apply pending search from main input
