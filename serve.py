@@ -539,12 +539,18 @@ def fetch_recharge_subscriptions(config):
                     next_fmt = next_dt[:10]
             else:
                 next_fmt = "-"
-            # 결제 회차 계산 (created_at → now)
+            # 결제 회차: next_charge와 created_at 간격으로 정확 계산
             charge_count = 1
             try:
                 cr_date = datetime.strptime(s.get("created_at", "")[:10], "%Y-%m-%d")
-                days_active = (datetime.now() - cr_date).days
-                charge_count = max(1, days_active // 30 + 1)
+                interval = int(s.get("charge_interval_frequency", 30) or 30)
+                if next_dt:
+                    nxt = datetime.strptime(next_dt[:10], "%Y-%m-%d")
+                    total_days = (nxt - cr_date).days
+                    charge_count = max(1, total_days // interval)
+                else:
+                    days_active = (datetime.now() - cr_date).days
+                    charge_count = max(1, days_active // interval + 1)
             except:
                 pass
             active.append({
@@ -584,7 +590,8 @@ def fetch_recharge_subscriptions(config):
             if email in ("test@test.com", "baek@hanah1.com"):
                 continue
             # 결제 회차 계산
-            charge_count = max(1, days // 30 + 1) if days > 0 else 1
+            interval = int(s.get("charge_interval_frequency", 30) or 30)
+            charge_count = max(1, days // interval + 1) if days > 0 else 1
             cancelled.append({
                 "n": cust.get("name", email),
                 "email": email,
