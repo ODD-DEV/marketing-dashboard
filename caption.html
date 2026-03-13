@@ -2447,7 +2447,7 @@ async function autoGenerateImages(matches, nanoKey, targetEl) {
 
   // 병렬로 이미지 생성
   const results = await Promise.allSettled(prompts.map(p =>
-    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=' + nanoKey, {
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=' + nanoKey, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2502,7 +2502,7 @@ async function generateImageWithNano(prompt) {
   const fullPrompt = prompt + '. ' + brandContext;
 
   try {
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=' + nanoKey, {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=' + nanoKey, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
