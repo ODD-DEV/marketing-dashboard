@@ -1050,6 +1050,112 @@ function renderBuiltInMd(text) {
   return '<p>' + h + '</p>';
 }
 
+// ── Multi-Intent Engine ──
+function detectIntents(prompt) {
+  const intents = [];
+  const lower = prompt.toLowerCase();
+
+  // Info intent (원료, 성분, 제품 설명 등)
+  const infoKw = ['원료','성분','ingredient','설명','제품','m-01','m01','효과','효능','사용법'];
+  if (infoKw.some(k => lower.includes(k))) intents.push('info');
+
+  // Caption intent (캡션, 카피, 문구, 글귀 등)
+  const captionKw = ['캡션','카피','문구','글귀','텍스트','copy','caption','헤드라인','슬로건'];
+  if (captionKw.some(k => lower.includes(k))) intents.push('caption');
+
+  // Asset recommend intent (이미지 추천, 에셋 추천 등)
+  if (isAssetRecommendQuery(prompt)) intents.push('asset');
+
+  // Drive search intent (파일 찾기)
+  if (isDriveSearchQuery(prompt)) intents.push('drive');
+
+  // If nothing detected but looks like caption work
+  if (!intents.length) intents.push('caption');
+
+  return [...new Set(intents)];
+}
+
+async function handleMultiIntent(prompt, intents) {
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  let html = '';
+  const tasks = [];
+
+  // Info section
+  if (intents.includes('info')) {
+    const answer = getBuiltInAnswer(prompt);
+    if (answer) {
+      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>제품 정보</div><div class="result-content">' + renderBuiltInMd(answer) + '</div><div class="result-meta"><span class="tag">내장 데이터</span></div></div>';
+    }
+  }
+
+  // Caption section
+  if (intents.includes('caption')) {
+    const channels = state.channel === 'all' ? ['meta','tiktok','google'] : [state.channel];
+    const detectedMode = detectMode(prompt);
+    const allCaptions = [];
+    channels.forEach(ch => {
+      const res = buildCaptions(prompt, ch);
+      allCaptions.push(...res);
+    });
+    if (detectedMode === 'content' || detectedMode === 'hybrid') {
+      const contentRes = buildContentResults(prompt);
+      allCaptions.push(...contentRes);
+    }
+    allCaptions.forEach(r => {
+      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:' + (r.color || 'var(--t4)') + '"></span>' + esc(r.label) + '</div><div class="result-content">' + esc(r.content) + '</div>';
+      if (r.hashtags) html += '<div class="result-meta"><span class="tag">' + esc(r.hashtags) + '</span></div>';
+      html += '</div>';
+    });
+  }
+
+  // Asset recommend section (Drive + Unsplash in parallel)
+  if (intents.includes('asset')) {
+    let term = prompt.replace(/추천해?줘?|제안해?줘?|골라줘?|해주고|하고|그리고|좀|우리/g,'').trim();
+    if (!term) term = 'health supplement';
+    const termMap = {'원료':'natural ingredients supplement','샐러드':'fresh salad greens','건강':'health wellness','캐러셀':'social media carousel','SNS':'social media content','라이프스타일':'wellness lifestyle'};
+    let enTerm = term;
+    for (const [ko,en] of Object.entries(termMap)) { if (term.includes(ko)) { enTerm = en; break; } }
+    if (enTerm === term) enTerm += ' health wellness';
+
+    const [driveRes, unsplashRes] = await Promise.all([
+      driveAccessToken ? searchDriveAPI(term) : Promise.resolve([]),
+      searchUnsplash(enTerm, 12)
+    ]);
+
+    if (driveRes.length) {
+      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>Drive 에셋 추천</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:12px">';
+      driveRes.slice(0,12).forEach(f => {
+        const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220','=s400') : '';
+        html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\'https://drive.google.com/file/d/'+f.id+'/view\',\'_blank\')">'+(thumb?'<img src="'+thumb+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">':'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">미리보기 없음</div>')+'<div style="padding:4px 6px;font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(f.name)+'</div></div>';
+      });
+      html += '</div></div>';
+    }
+
+    if (unsplashRes.length) {
+      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--blue)"></span>Unsplash 스톡 추천</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:12px">';
+      unsplashRes.forEach(p => {
+        html += '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised)" onclick="window.open(\''+p.link+'?utm_source=odd_ai\',\'_blank\')"><img src="'+p.url+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy"><div style="padding:4px 6px;font-size:9px;color:var(--t5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">by '+esc(p.credit)+'</div></div>';
+      });
+      html += '</div><div style="margin-top:6px;font-size:10px;color:var(--t5)">Unsplash — free to use</div></div>';
+    }
+  }
+
+  // Drive search intent
+  if (intents.includes('drive') && !intents.includes('asset')) {
+    handleDriveSearch(prompt);
+  }
+
+  if (!html) html = '<div class="result-card"><div class="result-content">결과를 생성하지 못했습니다.</div></div>';
+  ra.innerHTML = html;
+  saveHistory(prompt, [{ label: '복합 처리 (' + intents.join('+') + ')', content: prompt }]);
+}
+
 function generate() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
@@ -1861,44 +1967,27 @@ generate = async function() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
 
-  // 0) 복합 요청 (여러 작업 동시 요청) → AI가 처리
-  const isComplex = prompt.length > 60 && ['하고','해주고','그리고','더해서','또한','같이','함께','추가로'].some(k => prompt.includes(k));
-  if (isComplex && shouldUseAI(prompt)) {
-    generateWithAI(prompt);
+  // 복합 요청 분석 — 각 의도를 감지하여 병렬 처리
+  const intents = detectIntents(prompt);
+
+  if (intents.length > 1 || (intents.length === 1 && intents[0] !== 'caption')) {
+    handleMultiIntent(prompt, intents);
     return;
   }
 
-  // 1) Drive 파일 검색 (사진 찾아줘, 이미지 보여줘 등)
-  if (isDriveSearchQuery(prompt)) {
-    handleDriveSearch(prompt);
-    return;
-  }
-
-  // 2) 에셋/이미지/영상 추천 — 단순 추천만 (Drive + Unsplash 스톡 병행)
-  if (isAssetRecommendQuery(prompt)) {
-    handleAssetRecommend(prompt);
-    return;
-  }
-
-  // 3) 기본 제품 정보 (내장 데이터로 즉답, API 미사용)
-  if (isBuiltInQuery(prompt)) {
-    const answer = getBuiltInAnswer(prompt);
-    if (answer) { handleBuiltInAnswer(prompt, answer); return; }
-  }
-
-  // 4) 대시보드 데이터 질의
+  // 단일 의도 — 대시보드 질의
   if (needsDashboardData(prompt) && shouldUseAI(prompt)) {
     generateWithAI(prompt);
     return;
   }
 
-  // 5) 복잡한 질문 → AI
-  if (shouldUseAI(prompt)) {
+  // 단일 의도 — AI가 필요한 복잡한 질문
+  if (shouldUseAI(prompt) && !intents.length) {
     generateWithAI(prompt);
     return;
   }
 
-  // 6) 일반 캡션 템플릿 생성
+  // 일반 캡션 템플릿 생성
   _origGenerate();
 };
 
