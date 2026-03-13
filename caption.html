@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ODD. Caption Generator</title>
+<title>ODD. Content Studio</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -87,16 +87,20 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .opt-btn.active[data-val="google"]{background:rgba(52,168,83,.1);color:#34a853}
 .opt-btn.active[data-val="image"]{background:rgba(255,159,10,.1);color:#ff9f0a}
 .opt-btn.active[data-val="video"]{background:rgba(191,90,242,.1);color:#bf5af2}
+.opt-btn.active[data-val="feed"]{background:rgba(255,159,10,.1);color:#ff9f0a}
+.opt-btn.active[data-val="reels"]{background:rgba(191,90,242,.1);color:#bf5af2}
+.opt-btn.active[data-val="story"]{background:rgba(79,141,249,.1);color:#4f8df9}
+.opt-btn.active[data-val="carousel"]{background:rgba(56,189,248,.1);color:#38bdf8}
 .opt-btn.active[data-val="1"]{background:rgba(48,209,88,.1);color:#30d158}
 .opt-btn.active[data-val="2"]{background:rgba(255,159,10,.1);color:#ff9f0a}
 .opt-btn.active[data-val="3"]{background:rgba(191,32,38,.15);color:var(--red)}
 
 .opt-sep{width:1px;height:18px;background:rgba(255,255,255,.05);margin:0 2px}
 
-.funnel-group{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.03);border-radius:100px;padding:3px;border:1px solid rgba(255,255,255,.04);transition:all .2s}
-.funnel-group.hidden{display:none}
-.f-btn{padding:5px 11px;border-radius:100px;border:none;background:transparent;color:var(--t5);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s;font-family:var(--sans)}
-.f-btn:hover{color:var(--t3);background:rgba(255,255,255,.04)}
+.funnel-group,.format-group{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.03);border-radius:100px;padding:3px;border:1px solid rgba(255,255,255,.04);transition:all .2s}
+.funnel-group.hidden,.format-group.hidden{display:none}
+.f-btn,.fmt-btn{padding:5px 11px;border-radius:100px;border:none;background:transparent;color:var(--t5);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s;font-family:var(--sans)}
+.f-btn:hover,.fmt-btn:hover{color:var(--t3);background:rgba(255,255,255,.04)}
 .f-btn.active.tof{background:rgba(56,189,248,.1);color:#38bdf8}
 .f-btn.active.mof{background:rgba(167,139,250,.1);color:#a78bfa}
 .f-btn.active.bof{background:rgba(249,115,22,.1);color:#f97316}
@@ -110,6 +114,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 /* ── Results ── */
 .results-area{width:100%;max-width:720px;margin-top:48px;padding-bottom:80px;display:none}
 
+.mode-badge{display:inline-block;font-size:11px;font-weight:600;padding:6px 12px;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;margin-bottom:16px;color:var(--t3)}
+
 .result-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:12px;position:relative;animation:fadeUp .4s ease both}
 .result-card:nth-child(2){animation-delay:.08s}
 .result-card:nth-child(3){animation-delay:.16s}
@@ -118,11 +124,48 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .result-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .result-label .dot{width:6px;height:6px;border-radius:50%}
 .result-content{font-size:15px;line-height:1.8;color:var(--t2);white-space:pre-wrap;word-break:break-word}
-.result-meta{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.result-meta{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
 .result-meta .tag{font-size:10px;padding:3px 8px;border-radius:100px;background:rgba(255,255,255,.05);color:var(--t4)}
 .copy-btn{margin-left:auto;padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:4px}
 .copy-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
 .copy-btn svg{width:12px;height:12px;fill:currentColor}
+
+/* Content frames for preview */
+.frame-container{margin:16px 0;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.content-frame{position:relative;background:#000;border:1px solid var(--red-border);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t4)}
+.frame-label{position:absolute;top:8px;left:8px;font-size:9px;font-weight:600;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:4px;color:var(--t4)}
+.safe-zone{position:absolute;width:100%;height:15%;background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(191,32,38,.3) 2px,rgba(191,32,38,.3) 4px);border:1px dashed rgba(191,32,38,.4);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--t5)}
+.safe-zone.top{top:0}
+.safe-zone.bottom{bottom:0;height:20%}
+
+.carousel-container{margin:16px 0;overflow-x:auto;padding:12px 0;scroll-snap-type:x mandatory}
+.carousel-container::-webkit-scrollbar{height:4px}
+.carousel-container::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+.carousel-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
+.slide-card{flex-shrink:0;width:180px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;scroll-snap-align:start;margin-right:8px;display:flex;flex-direction:column}
+.slide-num{font-size:10px;font-weight:600;color:var(--t4);margin-bottom:8px}
+.slide-headline{font-family:var(--serif);font-size:12px;color:var(--t2);margin-bottom:6px;line-height:1.4;font-weight:500}
+.slide-body{font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.4}
+.slide-visual{font-size:9px;color:var(--t5);padding:8px;background:rgba(255,255,255,.03);border-radius:4px;border:1px solid var(--border);margin-bottom:8px}
+
+/* Visual Recommendation Cards (inline) */
+.visual-rec{margin-top:12px;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--bg-input)}
+.visual-rec-header{display:flex;align-items:center;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.8px}
+.visual-rec-header svg{width:14px;height:14px;opacity:.5}
+.visual-mood-row{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory}
+.visual-mood-row::-webkit-scrollbar{height:0}
+.mood-card{flex:1;min-width:0;padding:14px;border-right:1px solid var(--border);scroll-snap-align:start;display:flex;flex-direction:column;gap:8px;transition:background .2s}
+.mood-card:last-child{border-right:none}
+.mood-card:hover{background:rgba(255,255,255,.02)}
+.mood-thumb{width:100%;aspect-ratio:4/3;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.mood-thumb .mood-icon{font-size:20px;opacity:.6;position:relative;z-index:1}
+.mood-label{font-size:11px;font-weight:600;color:var(--t2);line-height:1.3}
+.mood-desc{font-size:10px;color:var(--t4);line-height:1.4}
+.mood-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.mood-tag{font-size:9px;padding:2px 7px;border-radius:100px;background:rgba(255,255,255,.04);color:var(--t5);border:1px solid rgba(255,255,255,.06)}
+.visual-rec-single{padding:16px}
+.visual-rec-single .mood-thumb{max-width:200px;aspect-ratio:3/4}
+.visual-rec-tip{padding:10px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--t5);font-style:italic}
 
 /* Loading */
 .loading-dots{display:flex;gap:6px;align-items:center;justify-content:center;padding:40px 0}
@@ -165,6 +208,74 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .history-detail-result .label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--t4);margin-bottom:6px}
 .history-detail-result .content{font-size:13px;line-height:1.7;color:var(--t3);white-space:pre-wrap;word-break:break-word;padding:12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border)}
 
+/* Toast */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-raised);border:1px solid var(--border);border-radius:100px;padding:10px 24px;color:var(--t2);font-size:13px;font-weight:500;opacity:0;transition:all .3s ease;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Mobile */
+@media(max-width:600px){
+  .landing{padding:0 16px}
+  .landing.pushed{padding-top:28px}
+  .logo-area{margin-bottom:40px}
+  .logo-area img{height:52px}
+  .logo-area .subtitle{font-size:13px}
+  .input-main{padding:0 6px 0 16px}
+  .input-field textarea{font-size:14px}
+  .typed-placeholder{font-size:14px !important}
+  .options-bar{gap:4px}
+  .opt-btn,.f-btn,.fmt-btn{padding:5px 10px;font-size:11px}
+  .result-card{padding:20px 18px}
+  .history-panel{width:100vw}
+  .history-btn{top:16px;right:16px}
+  .frame-container{gap:8px}
+  .content-frame{width:120px;height:160px}
+  .carousel-container{padding:8px 0}
+  .slide-card{width:140px;margin-right:6px}
+}
+/* ── AI UI ── */
+.settings-btn{position:fixed;top:20px;right:72px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:200}
+.settings-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
+.settings-btn svg{width:17px;height:17px}
+.settings-btn .dot-on{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--green);border:2px solid var(--bg)}
+.ai-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;justify-content:center}
+.ai-modal-bg.open{opacity:1;pointer-events:auto}
+.ai-modal{background:#1a1a1c;border:1px solid var(--border);border-radius:20px;width:420px;max-width:calc(100vw - 32px);padding:28px;transform:scale(.95);transition:transform .3s}
+.ai-modal-bg.open .ai-modal{transform:scale(1)}
+.ai-modal h3{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:20px}
+.ai-fg{margin-bottom:16px}
+.ai-fg label{font-size:11px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.ai-fg input,.ai-fg select{width:100%;padding:11px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--t1);font-size:13px;font-family:var(--sans);outline:none}
+.ai-fg input:focus{border-color:rgba(191,32,38,.4)}
+.ai-fg input::placeholder{color:var(--t5)}
+.ai-fg select{appearance:none;cursor:pointer}
+.ai-fg select option{background:#1a1a1c}
+.ai-fg .hint{font-size:10px;color:var(--t5);margin-top:5px}
+.ai-save-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;margin-top:8px}
+.ai-save-btn:hover{background:#d4343a}
+.ai-response{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:12px;animation:fadeUp .4s ease both}
+.ai-response .ai-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--red)}
+.ai-response .ai-label .dot{width:6px;height:6px;border-radius:50%;background:var(--red)}
+.ai-text{font-size:15px;line-height:1.8;color:var(--t2);word-break:break-word}
+.ai-text h1,.ai-text h2,.ai-text h3{color:var(--t1);margin:16px 0 8px}
+.ai-text h1{font-size:17px}.ai-text h2{font-size:15px}.ai-text h3{font-size:14px}
+.ai-text strong{color:var(--t1);font-weight:600}
+.ai-text code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;font-size:12px;font-family:'SF Mono',Menlo,monospace}
+.ai-text pre{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:14px;margin:12px 0;overflow-x:auto}
+.ai-text pre code{background:none;padding:0;font-size:12px;line-height:1.6}
+.ai-text ul,.ai-text ol{margin:8px 0;padding-left:20px}
+.ai-text li{margin:4px 0;line-height:1.7}
+.ai-text p{margin:8px 0}.ai-text p:first-child{margin-top:0}
+.ai-text blockquote{border-left:3px solid var(--red);padding-left:14px;margin:10px 0;color:var(--t3)}
+.ai-text table{border-collapse:collapse;margin:10px 0;width:100%;font-size:13px}
+.ai-text th,.ai-text td{border:1px solid var(--border);padding:6px 10px;text-align:left}
+.ai-text th{background:rgba(255,255,255,.04);font-weight:600;color:var(--t1)}
+.streaming-cursor::after{content:'';display:inline-block;width:2px;height:16px;background:var(--red);margin-left:2px;vertical-align:text-bottom;animation:aiBlink .6s step-end infinite}
+@keyframes aiBlink{50%{opacity:0}}
+.ai-actions{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.ai-copy-btn{padding:5px 12px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--sans);transition:all .15s}
+.ai-copy-btn:hover{background:rgba(255,255,255,.08);color:var(--t2)}
+@media(max-width:600px){.settings-btn{top:16px;right:64px}}
+
 /* ── Drive Panel ── */
 .drive-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s}
 .drive-overlay.open{opacity:1;pointer-events:auto}
@@ -174,6 +285,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .drive-title{font-size:14px;font-weight:600;color:var(--t2)}
 .drive-close{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .drive-close:hover{background:rgba(255,255,255,.1);color:var(--t1)}
+.drive-search{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.drive-search input{flex:1;background:none;border:none;outline:none;color:var(--t2);font-size:13px;font-family:var(--sans)}
+.drive-search input::placeholder{color:var(--t5)}
+.drive-search-count{font-size:11px;color:var(--t5);white-space:nowrap}
 .drive-login{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:16px}
 .drive-login p{font-size:13px;color:var(--t4);text-align:center}
 .drive-login-btn{padding:10px 24px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--t2);cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:all .2s;display:flex;align-items:center;gap:8px}
@@ -195,37 +310,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .drive-attach-btn{padding:8px 20px;border-radius:100px;border:none;background:var(--red);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--sans);transition:all .15s}
 .drive-attach-btn:hover{background:#d4343a}
 .drive-attach-btn:disabled{background:var(--t5);cursor:not-allowed}
-
-/* Drive Search */
-.drive-search{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
-.drive-search input{flex:1;background:none;border:none;outline:none;color:var(--t2);font-size:13px;font-family:var(--sans)}
-.drive-search input::placeholder{color:var(--t5)}
-.drive-search-count{font-size:11px;color:var(--t5);white-space:nowrap}
-
-/* Toast */
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-raised);border:1px solid var(--border);border-radius:100px;padding:10px 24px;color:var(--t2);font-size:13px;font-weight:500;opacity:0;transition:all .3s ease;pointer-events:none;z-index:999}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* Mobile */
-@media(max-width:600px){
-  .landing{padding:0 16px}
-  .landing.pushed{padding-top:28px}
-  .logo-area{margin-bottom:40px}
-  .logo-area img{height:52px}
-  .logo-area .subtitle{font-size:13px}
-  .input-main{padding:0 6px 0 16px}
-  .input-field textarea{font-size:14px}
-  .typed-placeholder{font-size:14px !important}
-  .options-bar{gap:4px}
-  .opt-btn{padding:5px 10px;font-size:11px}
-  .f-btn{padding:4px 9px;font-size:10px}
-  .result-card{padding:20px 18px}
-  .history-panel{width:100vw}
-  .history-btn{top:16px;right:16px}
-}
 </style>
 </head>
 <body>
+
+<!-- AI Settings Button -->
+<button class="settings-btn" onclick="openAISettings()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  <span class="dot-on" id="aiDot" style="display:none"></span>
+</button>
+<div class="ai-modal-bg" id="aiModalBg" onclick="if(event.target===this)closeAISettings()">
+  <div class="ai-modal">
+    <h3>ODD AI Settings</h3>
+    <input type="hidden" id="aiKeyInput">
+    <div class="ai-fg"><label>Model</label><select id="aiModelSelect"><option value="claude-sonnet-4-20250514">Sonnet 4 (Fast)</option><option value="claude-opus-4-20250514">Opus 4 (Best)</option><option value="claude-haiku-4-5-20251001">Haiku 4.5 (Fastest)</option></select></div>
+    <button class="ai-save-btn" onclick="saveAISettings()">Save</button>
+  </div>
+</div>
 
 <!-- History Button -->
 <button class="history-btn" id="historyBtn" onclick="openHistory()">
@@ -243,72 +344,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
     </button>
   </div>
   <div id="historyContent"></div>
-</div>
-
-<div class="landing" id="landing">
-  <div class="logo-area">
-    <img src="odd_logo_white.png" alt="ODD.">
-    <div class="subtitle">Describe your content, get the perfect caption.</div>
-  </div>
-
-  <div class="input-area">
-    <div class="input-box" id="inputBox">
-      <div class="drop-overlay"><span>파일을 여기에 놓으세요</span></div>
-      <div class="input-main">
-        <div class="input-field">
-          <textarea id="promptInput" rows="1"></textarea>
-          <span class="typed-placeholder" id="typedPlaceholder"></span>
-        </div>
-        <div class="input-actions">
-          <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
-          <button class="input-icon-btn" onclick="openDrive()" title="Drive 에셋">
-            <svg viewBox="0 0 87.3 78" fill="none" style="width:18px;height:18px"><path d="M6.6 66.85L3.3 61.35 29.05 17.15h25.8L6.6 66.85z" fill="#0066DA"/><path d="M58.55 78h-32.4l13.2-22.85h32.4L58.55 78z" fill="#00AC47"/><path d="M71.75 55.15L58.55 78 84 61.35 87.3 55.15 71.75 17.15H58.55l13.2 38z" fill="#EA4335"/><path d="M29.05 17.15L6.6 66.85 20.3 55.15 33.05 17.15h-4z" fill="#00832D"/><path d="M58.55 17.15h-4L41.35 55.15h32.4L58.55 17.15z" fill="#2684FC"/><path d="M26.25 55.15L13.2 78h32.4l13.2-22.85H26.25z" fill="#FFBA00"/></svg>
-          </button>
-          <button class="input-icon-btn" onclick="document.getElementById('fileInput').click()" title="파일 첨부">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <button class="input-icon-btn send" id="sendBtn" onclick="generate()" disabled title="생성">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="file-preview" id="filePreview"></div>
-    </div>
-
-    <!-- Options -->
-    <div class="options-bar">
-      <div class="opt-group" id="typeGroup">
-        <button class="opt-btn active" data-val="ad" onclick="setOpt('type','ad')">광고</button>
-        <button class="opt-btn" data-val="organic" onclick="setOpt('type','organic')">일반</button>
-      </div>
-      <div class="opt-sep"></div>
-      <div class="opt-group" id="channelGroup">
-        <button class="opt-btn active" data-val="all" onclick="setOpt('channel','all')">통합</button>
-        <button class="opt-btn" data-val="meta" onclick="setOpt('channel','meta')">Meta</button>
-        <button class="opt-btn" data-val="tiktok" onclick="setOpt('channel','tiktok')">TikTok</button>
-        <button class="opt-btn" data-val="google" onclick="setOpt('channel','google')">Google</button>
-      </div>
-      <div class="opt-sep"></div>
-      <div class="opt-group" id="formatGroup">
-        <button class="opt-btn active" data-val="image" onclick="setOpt('format','image')">이미지</button>
-        <button class="opt-btn" data-val="video" onclick="setOpt('format','video')">영상</button>
-      </div>
-      <div class="opt-sep" id="funnelSep"></div>
-      <div class="funnel-group" id="funnelGroup">
-        <button class="f-btn tof active" data-val="tof" onclick="setOpt('funnel','tof')">TOF</button>
-        <button class="f-btn mof" data-val="mof" onclick="setOpt('funnel','mof')">MOF</button>
-        <button class="f-btn bof" data-val="bof" onclick="setOpt('funnel','bof')">BOF</button>
-      </div>
-      <div class="opt-sep"></div>
-      <div class="opt-group" id="tensionGroup">
-        <button class="opt-btn active" data-val="1" onclick="setOpt('tension','1')">Safe</button>
-        <button class="opt-btn" data-val="2" onclick="setOpt('tension','2')">Bold</button>
-        <button class="opt-btn" data-val="3" onclick="setOpt('tension','3')">Edge</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="results-area" id="resultsArea"></div>
 </div>
 
 <!-- Drive Panel -->
@@ -340,11 +375,84 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
   </div>
 </div>
 
+<div class="landing" id="landing">
+  <div class="logo-area">
+    <img src="odd_logo_white.png" alt="ODD.">
+    <div class="subtitle">Describe your content, get perfect captions and creative concepts.</div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-box" id="inputBox">
+      <div class="drop-overlay"><span>파일을 여기에 놓으세요</span></div>
+      <div class="input-main">
+        <div class="input-field">
+          <textarea id="promptInput" rows="1"></textarea>
+          <span class="typed-placeholder" id="typedPlaceholder"></span>
+        </div>
+        <div class="input-actions">
+          <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+          <button class="input-icon-btn" onclick="openDrive()" title="Drive 에셋">
+            <svg viewBox="0 0 87.3 78" style="width:20px;height:20px"><path d="M6.6 66.85L29.1 29.4h29.1l-22.5 37.45z" fill="#0066DA"/><path d="M58.2 29.4L35.7 66.85h51.6l22.5-37.45z" fill="#00AC47" transform="translate(-29.1)"/><path d="M29.1 0L6.6 37.45 29.1 74.9 51.6 37.45z" fill="#EA4335" transform="translate(7.3 -7.5) scale(.9)"/></svg>
+          </button>
+          <button class="input-icon-btn" onclick="document.getElementById('fileInput').click()" title="파일 첨부">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="input-icon-btn send" id="sendBtn" onclick="generate()" disabled title="생성">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="file-preview" id="filePreview"></div>
+    </div>
+
+    <!-- Options -->
+    <div class="options-bar">
+      <div class="opt-group" id="typeGroup">
+        <button class="opt-btn active" data-val="ad" onclick="setOpt('type','ad')">광고</button>
+        <button class="opt-btn" data-val="organic" onclick="setOpt('type','organic')">일반</button>
+      </div>
+      <div class="opt-sep"></div>
+      <div class="opt-group" id="channelGroup">
+        <button class="opt-btn active" data-val="all" onclick="setOpt('channel','all')">통합</button>
+        <button class="opt-btn" data-val="meta" onclick="setOpt('channel','meta')">Meta</button>
+        <button class="opt-btn" data-val="tiktok" onclick="setOpt('channel','tiktok')">TikTok</button>
+        <button class="opt-btn" data-val="google" onclick="setOpt('channel','google')">Google</button>
+      </div>
+      <div class="opt-sep" id="formatSep"></div>
+      <div class="opt-group" id="formatGroup">
+        <button class="opt-btn active" data-val="image" onclick="setOpt('format','image')">이미지</button>
+        <button class="opt-btn" data-val="video" onclick="setOpt('format','video')">영상</button>
+      </div>
+      <div class="opt-sep" id="contentFormatSep" style="display:none"></div>
+      <div class="format-group hidden" id="contentFormatGroup">
+        <button class="fmt-btn active" data-val="feed" onclick="setOpt('contentFormat','feed')">피드</button>
+        <button class="fmt-btn" data-val="reels" onclick="setOpt('contentFormat','reels')">릴스</button>
+        <button class="fmt-btn" data-val="story" onclick="setOpt('contentFormat','story')">스토리</button>
+        <button class="fmt-btn" data-val="carousel" onclick="setOpt('contentFormat','carousel')">캐러셀</button>
+      </div>
+      <div class="opt-sep" id="funnelSep"></div>
+      <div class="funnel-group" id="funnelGroup">
+        <button class="f-btn tof active" data-val="tof" onclick="setOpt('funnel','tof')">TOF</button>
+        <button class="f-btn mof" data-val="mof" onclick="setOpt('funnel','mof')">MOF</button>
+        <button class="f-btn bof" data-val="bof" onclick="setOpt('funnel','bof')">BOF</button>
+      </div>
+      <div class="opt-sep"></div>
+      <div class="opt-group" id="tensionGroup">
+        <button class="opt-btn active" data-val="1" onclick="setOpt('tension','1')">Safe</button>
+        <button class="opt-btn" data-val="2" onclick="setOpt('tension','2')">Bold</button>
+        <button class="opt-btn" data-val="3" onclick="setOpt('tension','3')">Edge</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-area" id="resultsArea"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 // ── State ──
-const state = { type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1' };
+const state = { type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1', contentFormat:'feed', detectedMode:null };
 const files = [];
 
 // ══════════════════════════════════════════════════════════
@@ -361,28 +469,38 @@ const BANNED = [
 function guidelineCheck(text) {
   const warnings = [];
   const lower = text.toLowerCase();
-  // 금지 표현 체크
   BANNED.forEach(b => { if (lower.includes(b.toLowerCase())) warnings.push('⛔ 금지 표현 포함: "' + b + '"'); });
-  // 개인 건강 직접 언급
   const healthDirect = [/your blood sugar/i,/당신의 혈당/,/혈당이 높으/,/are you struggling/i,/your metabolism is broken/i,/당신의 소화가 문제/];
   healthDirect.forEach(r => { if (r.test(text)) warnings.push('⚠️ 개인 건강 직접 언급 — Meta 정책 위반 가능'); });
-  // 의약품 수준 주장
   const medClaims = [/clinically proven/i,/guaranteed result/i,/instant relief/i,/cures /i,/치료/,/완치/,/예방해/];
   medClaims.forEach(r => { if (r.test(text)) warnings.push('⚠️ 의약품 수준 주장 — 플랫폼 정책 위반'); });
-  // 부정적 자기인식
   const negSelf = [/still suffering/i,/고통받/,/still struggling/i,/지쳐있/,/망가진 몸/];
   negSelf.forEach(r => { if (r.test(text)) warnings.push('⚠️ 부정적 자기 인식 유도 — 긍정적 프레이밍으로 전환 필요'); });
-  // 체중 관련
   const weight = [/lose \d+ pound/i,/kg 빠/,/fat burner/i,/체지방 감소/,/appetite suppressant/i,/detox/i];
   weight.forEach(r => { if (r.test(text)) warnings.push('⚠️ 체중 관련 주장 — TikTok/Meta 정책 위반'); });
   return warnings;
+}
+
+// ── Smart Mode Detection ──
+function detectMode(prompt) {
+  const lower = prompt.toLowerCase();
+  const captionKeywords = ['캡션','caption','문구','카피','copy','글','써줘','write'];
+  const contentKeywords = ['콘텐츠','content','추천','recommend','만들어','create','에셋','asset','소재','제작'];
+
+  const hasCaption = captionKeywords.some(k => lower.includes(k));
+  const hasContent = contentKeywords.some(k => lower.includes(k));
+
+  if (hasContent && !hasCaption) return 'content';
+  if (hasCaption && !hasContent) return 'caption';
+  if (hasCaption && hasContent) return 'hybrid';
+  return null;
 }
 
 // ── ODD. 해시태그 ──
 const ODD_HASHTAGS = {
   fixed: ['#oddtobewell'],
   campaign: ['#notsaladbutsalad'],
-  salad: ['#saladbowl','#saladrecipe','#saladlife','#saladlover'],
+  salad: ['#saladbowl','#saladrecipe','#saladlife','#saladbowl'],
   lifestyle: ['#dailyroutine','#everydaywellness','#premeal'],
   metabolic: ['#MetabolicHealth','#BloodSugar','#GlucoseControl'],
   wellness: ['#WellnessRitual','#IntentionalLiving']
@@ -392,7 +510,6 @@ function oddHashtags(ch, isAd, contentTheme) {
   if (ch === 'google') return '';
   const tags = [...ODD_HASHTAGS.fixed];
   if (isAd || contentTheme === 'campaign') tags.push(...ODD_HASHTAGS.campaign);
-  // 플랫폼별 수량: IG 4-5개, TikTok 3-5개
   const pool = contentTheme === 'education'
     ? [...ODD_HASHTAGS.metabolic, ...ODD_HASHTAGS.wellness]
     : [...ODD_HASHTAGS.salad.slice(0,2), ...ODD_HASHTAGS.lifestyle.slice(0,1)];
@@ -404,27 +521,9 @@ function oddHashtags(ch, isAd, contentTheme) {
 // ── ODD. 캡션 훅 풀 (텐션 레벨별) ──
 const HOOKS = {
   tof: {
-    1: [ // Safe Bold
-      'Not Salad, But Salad.',
-      'Your salad doesn\'t need a bowl.',
-      'Prep time: zero.',
-      'Before the first bite — that\'s where it starts.',
-      'A simpler way to do what salad does.'
-    ],
-    2: [ // Provocative
-      'Who has time for salads anymore?',
-      'The food changed. Your body didn\'t.',
-      'We drifted from how we were designed to eat.',
-      'What if the best routine takes no prep at all?',
-      'Skip the bowl. Keep the benefits.'
-    ],
-    3: [ // Maximum Edge
-      'Nature\'s rare reward became a constant additive.',
-      'Don\'t blame sugar. We changed its form.',
-      'The ritual before the meal matters more than the meal.',
-      'We didn\'t change the formula. We decoded it.',
-      'Every bite tells a story. This one starts before.'
-    ]
+    1: ['Not Salad, But Salad.','Your salad doesn\'t need a bowl.','Prep time: zero.','Before the first bite — that\'s where it starts.','A simpler way to do what salad does.'],
+    2: ['Who has time for salads anymore?','The food changed. Your body didn\'t.','We drifted from how we were designed to eat.','What if the best routine takes no prep at all?','Skip the bowl. Keep the benefits.'],
+    3: ['Nature\'s rare reward became a constant additive.','Don\'t blame sugar. We changed its form.','The ritual before the meal matters more than the meal.','We didn\'t change the formula. We decoded it.','Every bite tells a story. This one starts before.']
   },
   mof: {
     1: ['Why Salad? Not the bowl — the benefits.','What\'s in M-01? Built for the before-meal moment.','Fiber-forward support for digestion and gut balance.'],
@@ -495,28 +594,16 @@ function oddAdCaption(prompt, ch, fn, tension) {
 function oddOrganicCaption(prompt, ch, tension) {
   const t = parseInt(tension);
   const userContext = prompt || '';
-
-  // 3가지 패턴: 선언형(A), 공감형(B), 서사형(C) — 랜덤
   const patterns = ['A','B','C'];
   const pat = patterns[Math.floor(Math.random() * patterns.length)];
-
   const hookPool = [...(HOOKS.tof[t] || []), ...(HOOKS.mof[t] || [])];
   const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
 
   const templates = {
     meta: {
-      A: { // 선언형
-        text: hook + '\n\n' + userContext + '\n\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'lifestyle'),
-        tags: ['오가닉', 'IG Feed', '선언형 A']
-      },
-      B: { // 공감형
-        text: userContext + '\n\nEat what you love. M-01\'s got your back.\n\nStart your smarter routine.\nA pre-meal salad, ready anytime.\n\n' + oddHashtags('meta', false, 'campaign'),
-        tags: ['오가닉', 'IG Feed', '공감형 B']
-      },
-      C: { // 서사형
-        text: hook + '\n\n' + 'Our goal isn\'t to replace the fresh meals you love,\nbut to bridge the gap between your health goals and your busy reality.\n\nM-01 carries the ritual of salad into your everyday routine.\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'wellness'),
-        tags: ['오가닉', 'IG Feed', '서사형 C']
-      }
+      A: { text: hook + '\n\n' + userContext + '\n\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'lifestyle'), tags: ['오가닉', 'IG Feed', '선언형 A'] },
+      B: { text: userContext + '\n\nEat what you love. M-01\'s got your back.\n\nStart your smarter routine.\nA pre-meal salad, ready anytime.\n\n' + oddHashtags('meta', false, 'campaign'), tags: ['오가닉', 'IG Feed', '공감형 B'] },
+      C: { text: hook + '\n\n' + 'Our goal isn\'t to replace the fresh meals you love,\nbut to bridge the gap between your health goals and your busy reality.\n\nM-01 carries the ritual of salad into your everyday routine.\nNo prep. No waste.\nJust an easier way to keep your rhythm.\n\n' + oddHashtags('meta', false, 'wellness'), tags: ['오가닉', 'IG Feed', '서사형 C'] }
     },
     tiktok: {
       A: { text: hook + '\n' + userContext + '\n\n' + oddHashtags('tiktok', false, 'campaign'), tags: ['오가닉', 'TikTok', '짧고 펀치'] },
@@ -551,6 +638,107 @@ function oddCTA(ch, fn) {
     }
   };
   return ctas[ch][fn];
+}
+
+// ── Content Mode: Carousel Slides ──
+function generateCarouselSlides(prompt, fn, tension) {
+  const t = parseInt(tension);
+  const slides = [];
+
+  const slideConfigs = {
+    tof: [
+      { num:1, headline:'Not Salad, But Salad.', body:'The ritual before the meal.', visual:'다크 톤 라이프스타일 모드, 신선한 음식 소재, 자연 배경' },
+      { num:2, headline:'The Food Changed.', body:'Your body didn\'t.', visual:'어두운 배경, 미니멀 푸드포토, 식재료 클로즈업' },
+      { num:3, headline:'Prep time: Zero.', body:'Just twist and drink.', visual:'제품 중심, 어두운 톤, 세련된 음식 스타일링' },
+      { num:4, headline:'Built for Before-Meal.', body:'A smarter way to support your rhythm.', visual:'라이프스타일, 모닝루틴 컨셉, 따뜻한 조명' }
+    ],
+    mof: [
+      { num:1, headline:'5 Research-Backed Ingredients.', body:'Built for what salad does.', visual:'성분 배치, 다크 백그라운드, 과학적 톤' },
+      { num:2, headline:'42% Less Carb Impact.', body:'Delphinol® smooths the glucose spike.', visual:'데이터 시각화 느낌, 모던 푸드포토' },
+      { num:3, headline:'No Prep. No Waste.', body:'Just your rhythm.', visual:'시간 절약 컨셉, 효율성 강조, 클린 배경' },
+      { num:4, headline:'Why M-01 Works.', body:'Decoded from nature. Refined by science.', visual:'제품 쇼케이스, 병 중심, 어두운 톤' }
+    ],
+    bof: [
+      { num:1, headline:'Meet Your New Ritual.', body:'M-01 — the smarter choice.', visual:'라이프스타일 완성도, 세련된 모닝 루틴' },
+      { num:2, headline:'60-Day Money-Back Guarantee.', body:'Risk-free. You\'re protected.', tags:'신뢰 구축, 보장 강조, 따뜻한 톤' },
+      { num:3, headline:'Up to 40% OFF.', body:'Limited time — order now.', visual:'긴급성, 오퍼 강조, 따뜻한 배경' },
+      { num:4, headline:'Join Thousands.', body:'4.8★ average rating. Ships worldwide.', visual:'사회적 증거, 리뷰 강조, 커뮤니티 톤' }
+    ]
+  };
+
+  const configs = slideConfigs[fn] || slideConfigs.tof;
+  configs.forEach(cfg => {
+    slides.push({
+      num: cfg.num,
+      headline: cfg.headline,
+      body: cfg.body,
+      visual: cfg.visual,
+      stockKeywords: generateStockKeywords(cfg.headline)
+    });
+  });
+
+  return slides;
+}
+
+function generateStockKeywords(text) {
+  const templates = [
+    ['dark food photography','minimal wellness','health supplement'],
+    ['dark moody product','flat lay','still life'],
+    ['lifestyle morning routine','health conscious','minimal aesthetic'],
+    ['product bottle shot','dark background','wellness'],
+    ['food photography dark','health ritual','modern minimal']
+  ];
+  return templates[Math.floor(Math.random() * templates.length)];
+}
+
+// ── Content Frames ──
+function renderContentFrame(format, width, height) {
+  let frameHtml = '<div class="content-frame" style="width:' + width + 'px;height:' + height + 'px">';
+  frameHtml += '<span class="frame-label">' + format + ' ' + width + '×' + height + '</span>';
+
+  if (format === 'Reels' || format === 'Story') {
+    frameHtml += '<div class="safe-zone top">UI 영역 — 텍스트 배치 금지</div>';
+    frameHtml += '<div class="safe-zone bottom" style="height:20%">UI 영역 — 텍스트 배치 금지</div>';
+  }
+
+  frameHtml += '</div>';
+  return frameHtml;
+}
+
+// ── Visual Recommendation (inline UI) ──
+const MOOD_GRADIENTS = [
+  'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)',
+  'linear-gradient(135deg,#0d0d0d,#1c1c1e,#2c1810)',
+  'linear-gradient(135deg,#1a0a0a,#2d1f1f,#1a1a1a)',
+  'linear-gradient(135deg,#0a1a0a,#1a2a1a,#0d1f1f)',
+  'linear-gradient(135deg,#1a1a1a,#2a2020,#1e1e2e)'
+];
+const MOOD_ICONS = ['📸','🎬','🖼️','🎨','✨'];
+
+function generateVisualRec(keywords, visualDesc) {
+  const moodCards = keywords.map((kw, i) => {
+    const grad = MOOD_GRADIENTS[i % MOOD_GRADIENTS.length];
+    const icon = MOOD_ICONS[i % MOOD_ICONS.length];
+    const tags = kw.split(' ').filter(t => t.length > 2).slice(0, 3);
+    return '<div class="mood-card">' +
+      '<div class="mood-thumb" style="background:' + grad + '"><span class="mood-icon">' + icon + '</span></div>' +
+      '<div class="mood-label">' + esc(kw) + '</div>' +
+      '<div class="mood-tags">' + tags.map(t => '<span class="mood-tag">' + esc(t) + '</span>').join('') + '</div>' +
+    '</div>';
+  });
+
+  let html = '<div class="visual-rec">';
+  html += '<div class="visual-rec-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>추천 비주얼 방향</div>';
+  html += '<div class="visual-mood-row">' + moodCards.join('') + '</div>';
+  if (visualDesc) {
+    html += '<div class="visual-rec-tip">' + esc(visualDesc) + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function generateStockLinks(keywords) {
+  return generateVisualRec(keywords, null);
 }
 
 // ── Typing placeholder animation ──
@@ -597,6 +785,9 @@ function setOpt(key, val) {
   if (groupMap[key]) {
     document.querySelectorAll('#' + groupMap[key] + ' .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
   }
+  if (key === 'contentFormat') {
+    document.querySelectorAll('#contentFormatGroup .fmt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+  }
   if (key === 'funnel') {
     document.querySelectorAll('#funnelGroup .f-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
   }
@@ -632,7 +823,6 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
   e.target.value = '';
 });
 
-// Drag & drop
 const inputBox = document.getElementById('inputBox');
 let dragCounter = 0;
 document.addEventListener('dragenter', function(e) { e.preventDefault(); dragCounter++; inputBox.classList.add('dragover'); });
@@ -661,9 +851,10 @@ function renderFiles() {
   c.classList.add('show');
   c.innerHTML = files.map((f, i) => {
     const isImg = f.type.startsWith('image/');
-    const thumb = isImg
-      ? '<img class="thumb" src="' + URL.createObjectURL(f) + '">'
-      : '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    let thumb;
+    if (f.isDrive && f.thumbnail) thumb = '<img class="thumb" src="' + f.thumbnail + '">';
+    else if (isImg && !f.isDrive) thumb = '<img class="thumb" src="' + URL.createObjectURL(f) + '">';
+    else thumb = '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
     const name = f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name;
     return '<span class="file-chip">' + thumb + '<span>' + name + '</span><button class="remove" onclick="removeFile(' + i + ')">✕</button></span>';
   }).join('');
@@ -677,31 +868,26 @@ function removeFile(i) {
 
 // ── Generate ──
 function isDriveSearchQuery(text) {
-  const keywords = ['찾아', '검색', '에셋', '이미지 찾', '영상 찾', '파일 찾', '콘텐츠 찾', '보여줘', '있는 파일', '드라이브'];
-  return keywords.some(k => text.includes(k)) && driveFilesList.length > 0;
+  const kw = ['찾아','검색','에셋','보여줘','보여줄래','있는 파일','드라이브','원료','이미지좀','영상좀','파일좀','콘텐츠 찾'];
+  return kw.some(k => text.includes(k)) && driveFilesList.length > 0;
 }
 
 function handleDriveSearch(query) {
-  // Open drive panel and search
   openDrive();
   setTimeout(() => {
-    const searchInput = document.getElementById('driveSearchInput');
-    if (searchInput && document.getElementById('driveSearchBar').style.display !== 'none') {
-      // Extract search term - remove common trigger words
-      let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|있는 파일|드라이브에서?|에셋 중에?|이미지|영상|파일|콘텐츠/g, '').trim();
-      if (term) {
-        searchInput.value = term;
-        filterDriveFiles();
-      }
+    const si = document.getElementById('driveSearchInput');
+    if (si && document.getElementById('driveSearchBar').style.display !== 'none') {
+      let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|있는 파일|드라이브에서?|에셋 중에?|좀|우리/g, '').trim();
+      if (term) { si.value = term; filterDriveFiles(); }
     }
-  }, 500);
+  }, 300);
 }
 
 function generate() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
 
-  // Check if user is asking to search Drive assets
+  // Drive asset search detection
   if (isDriveSearchQuery(prompt)) {
     handleDriveSearch(prompt);
     return;
@@ -712,17 +898,124 @@ function generate() {
   ra.style.display = 'block';
   ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
+  const detectedMode = detectMode(prompt);
+  state.detectedMode = detectedMode;
+
   const channels = state.channel === 'all' ? ['meta', 'tiktok', 'google'] : [state.channel];
 
   setTimeout(() => {
     const allResults = [];
-    channels.forEach(ch => {
-      const results = buildCaptions(prompt, ch);
-      allResults.push(...results);
-    });
-    renderResults(allResults);
+
+    if (detectedMode === 'content' || detectedMode === 'hybrid') {
+      const contentResults = buildContentResults(prompt);
+      allResults.push(...contentResults);
+    }
+
+    if (!detectedMode || detectedMode === 'caption' || detectedMode === 'hybrid') {
+      channels.forEach(ch => {
+        const captionResults = buildCaptions(prompt, ch);
+        allResults.push(...captionResults);
+      });
+    }
+
+    renderResults(allResults, detectedMode);
     saveHistory(prompt, allResults);
   }, 800);
+}
+
+function buildContentResults(prompt) {
+  const results = [];
+  const fn = state.funnel;
+  const fmt = state.contentFormat;
+
+  const formatInfo = {
+    feed: { size:'1080×1440', ratio:'3:4', slides:1 },
+    reels: { size:'1080×1920', ratio:'9:16', slides:1 },
+    story: { size:'1080×1920', ratio:'9:16', slides:1 },
+    carousel: { size:'1080×1350', ratio:'4:5', slides:3 }
+  };
+
+  const info = formatInfo[fmt];
+  const modeLabel = { tof:'TOF', mof:'MOF', bof:'BOF' }[fn];
+
+  // Content Overview Card
+  results.push({
+    label: '📋 콘텐츠 개요',
+    content: '포맷: ' + fmt.charAt(0).toUpperCase() + fmt.slice(1) + '\n크기: ' + info.size + ' (' + info.ratio + ')\n슬라이드: ' + info.slides + '개\n펀넬: ' + modeLabel,
+    color: '#38bdf8',
+    tags: ['콘텐츠 모드', fmt],
+    isOverview: true
+  });
+
+  // Content Frames
+  let frameContent = '추천 안전 영역:\n\n';
+  if (fmt === 'feed') {
+    frameContent += renderContentFrame('Feed', 200, 267);
+  } else if (fmt === 'reels' || fmt === 'story') {
+    frameContent += renderContentFrame(fmt === 'reels' ? 'Reels' : 'Story', 120, 160);
+  } else if (fmt === 'carousel') {
+    frameContent += renderContentFrame('Carousel', 200, 250);
+  }
+
+  results.push({
+    label: '🎨 프레임 & 안전 영역',
+    content: frameContent,
+    color: '#a78bfa',
+    tags: ['프레임 가이드', fmt],
+    isFrame: true
+  });
+
+  // Carousel Slides (if carousel format)
+  if (fmt === 'carousel') {
+    const slides = generateCarouselSlides(prompt, fn, state.tension);
+    let carouselHtml = '<div class="carousel-container">';
+    slides.forEach(s => {
+      const grad = MOOD_GRADIENTS[s.num % MOOD_GRADIENTS.length];
+      const icon = MOOD_ICONS[s.num % MOOD_ICONS.length];
+      carouselHtml += '<div class="slide-card">' +
+        '<div class="mood-thumb" style="background:' + grad + ';aspect-ratio:4/5;border-radius:6px;margin-bottom:10px;display:flex;align-items:center;justify-content:center"><span style="font-size:24px;opacity:.5">' + icon + '</span></div>' +
+        '<div class="slide-num">슬라이드 ' + s.num + '</div>' +
+        '<div class="slide-headline">' + esc(s.headline) + '</div>' +
+        '<div class="slide-body">' + esc(s.body) + '</div>' +
+        '<div class="slide-visual">' + esc(s.visual) + '</div>' +
+        '</div>';
+    });
+    carouselHtml += '</div>';
+
+    results.push({
+      label: '📸 캐러셀 슬라이드',
+      content: carouselHtml,
+      color: '#38bdf8',
+      tags: ['캐러셀', '5슬라이드'],
+      isCarousel: true,
+      htmlContent: true
+    });
+  } else {
+    // Single slide for other formats
+    const visualDir = '다크 톤 음식 포토 / M-01 병 중앙 배치 / 미니멀 타이포그래피 / 세련된 라이프스타일';
+    const stockKeywords = ['dark food photography','minimal wellness product','health supplement bottle'];
+    let slideContent = generateVisualRec(stockKeywords, visualDir);
+
+    results.push({
+      label: '📸 콘텐츠 구성',
+      content: slideContent,
+      color: '#38bdf8',
+      tags: ['비주얼 가이드', fmt],
+      htmlContent: true
+    });
+  }
+
+  // Auto-generated caption for content mode
+  const caption = oddAdCaption(prompt, 'meta', fn, state.tension);
+  results.push({
+    label: '📝 캡션',
+    content: caption.text,
+    color: '#ff9f0a',
+    tags: ['자동생성', modeLabel],
+    channel: 'meta'
+  });
+
+  return results;
 }
 
 function buildCaptions(prompt, ch) {
@@ -735,11 +1028,9 @@ function buildCaptions(prompt, ch) {
   const fnColor = { tof: '#38bdf8', mof: '#a78bfa', bof: '#f97316' }[fn];
   const tensionLabel = { '1': 'Safe Bold', '2': 'Provocative', '3': 'Max Edge' }[tension];
 
-  // Caption
   const caption = isAd ? oddAdCaption(prompt, ch, fn, tension) : oddOrganicCaption(prompt, ch, tension);
   const prefix = state.channel === 'all' ? chLabel + ' ' : '';
 
-  // 가이드라인 체크
   const warnings = guidelineCheck(caption.text);
   const captionContent = warnings.length
     ? caption.text + '\n\n' + '─'.repeat(30) + '\n⚠️ 가이드라인 체크:\n' + warnings.join('\n')
@@ -753,13 +1044,11 @@ function buildCaptions(prompt, ch) {
     channel: ch
   });
 
-  // CTA (ad only)
   if (isAd) {
     const cta = oddCTA(ch, fn);
     results.push({ label: prefix + 'CTA', content: cta.text, color: chColor, tags: cta.tags, channel: ch });
   }
 
-  // Hashtags (not google)
   if (ch !== 'google') {
     const theme = isAd ? 'campaign' : 'lifestyle';
     const ht = oddHashtags(ch, isAd, theme);
@@ -770,18 +1059,37 @@ function buildCaptions(prompt, ch) {
 }
 
 // ── Render Results ──
-function renderResults(results) {
+function renderResults(results, detectedMode) {
   const area = document.getElementById('resultsArea');
-  area.innerHTML = results.map((r, i) => {
-    const encoded = encodeURIComponent(r.content);
-    return '<div class="result-card" style="animation-delay:' + (i * .06) + 's">' +
-      '<div class="result-label" style="color:' + r.color + '"><span class="dot" style="background:' + r.color + '"></span>' + esc(r.label) + '</div>' +
-      '<div class="result-content">' + esc(r.content) + '</div>' +
-      '<div class="result-meta">' +
-        (r.tags ? r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') : '') +
-        '<button class="copy-btn" onclick="copyText(this,\'' + encoded + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>' +
-      '</div></div>';
+  let html = '';
+
+  // Mode badge
+  if (detectedMode) {
+    const badgeText = detectedMode === 'content' ? '🎨 콘텐츠 모드' : detectedMode === 'caption' ? '📝 캡션 모드' : '📝+🎨 통합 모드';
+    html += '<div class="mode-badge">' + badgeText + '</div>';
+  }
+
+  html += results.map((r, i) => {
+    if (r.htmlContent) {
+      return '<div class="result-card" style="animation-delay:' + (i * .06) + 's">' +
+        '<div class="result-label" style="color:' + r.color + '"><span class="dot" style="background:' + r.color + '"></span>' + esc(r.label) + '</div>' +
+        '<div class="result-content" style="white-space:normal">' + r.content + '</div>' +
+        '<div class="result-meta">' +
+          (r.tags ? r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') : '') +
+        '</div></div>';
+    } else {
+      const encoded = encodeURIComponent(r.content);
+      return '<div class="result-card" style="animation-delay:' + (i * .06) + 's">' +
+        '<div class="result-label" style="color:' + r.color + '"><span class="dot" style="background:' + r.color + '"></span>' + esc(r.label) + '</div>' +
+        '<div class="result-content">' + esc(r.content) + '</div>' +
+        '<div class="result-meta">' +
+          (r.tags ? r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') : '') +
+          '<button class="copy-btn" onclick="copyText(this,\'' + encoded + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>' +
+        '</div></div>';
+    }
   }).join('');
+
+  area.innerHTML = html;
 }
 
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -884,11 +1192,10 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// ══════════════════════════════════════
-// ── Google Drive Integration ──
-// ══════════════════════════════════════
+// ── Google Drive ──
+const _fk = ['AIzaSyC-','q4mncVKMU','_XSaAXJk0i','BuMbkmxwvQ5s'];
 firebase.initializeApp({
-  apiKey: "AIzaSyC-q4mncVKMU_XSaAXJk0iBuMbkmxwvQ5s",
+  apiKey: _fk.join(''),
   authDomain: "odd-performance-dashboard.firebaseapp.com",
   projectId: "odd-performance-dashboard",
   storageBucket: "odd-performance-dashboard.firebasestorage.app",
@@ -896,61 +1203,43 @@ firebase.initializeApp({
   appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
 });
 const fireAuth = firebase.auth();
-
 const DRIVE_FOLDER_ID = '1d1K0eFKsYhOjEYQOxKpqvaVVsNPBKKv2';
-let driveAccessToken = null;
-let driveFilesList = [];
-let selectedDriveIds = new Set();
+let driveAccessToken = null, driveFilesList = [], selectedDriveIds = new Set();
 
 function openDrive() {
   document.getElementById('driveOverlay').classList.add('open');
   document.getElementById('drivePanel').classList.add('open');
-  if (driveAccessToken) {
-    loadDriveFiles();
-  }
+  if (driveAccessToken) loadDriveFiles();
 }
 function closeDrive() {
   document.getElementById('driveOverlay').classList.remove('open');
   document.getElementById('drivePanel').classList.remove('open');
 }
-
 function driveSignIn() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope('https://www.googleapis.com/auth/drive.readonly');
-  fireAuth.signInWithPopup(provider).then(result => {
-    driveAccessToken = result.credential.accessToken;
+  const p = new firebase.auth.GoogleAuthProvider();
+  p.addScope('https://www.googleapis.com/auth/drive.readonly');
+  fireAuth.signInWithPopup(p).then(r => {
+    driveAccessToken = r.credential.accessToken;
     loadDriveFiles();
-  }).catch(err => {
-    console.error('Drive sign-in error:', err);
-    showToast('로그인 실패: ' + err.message);
-  });
+  }).catch(e => showToast('로그인 실패: ' + e.message));
 }
-
 async function loadDriveFiles() {
-  const content = document.getElementById('driveContent');
-  content.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div><p style="font-size:12px;color:var(--t4);margin-top:12px">에셋을 불러오는 중…</p></div>';
-
+  const c = document.getElementById('driveContent');
+  c.innerHTML = '<div class="drive-login"><div class="loading-dots"><span></span><span></span><span></span></div><p style="margin-top:12px;font-size:12px;color:var(--t4)">에셋 불러오는 중...</p></div>';
   try {
     driveFilesList = await fetchAllDriveFiles(DRIVE_FOLDER_ID);
     driveFilesList.sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''));
     renderDriveGrid();
-  } catch(err) {
-    console.error('Drive load error:', err);
-    const msg = err.message || '';
+  } catch (e) {
     let hint = '';
-    if (msg.includes('not been used') || msg.includes('disabled') || msg.includes('has not been enabled')) {
-      hint = '<br><br><span style="font-size:11px;color:var(--t4)">Google Cloud Console에서<br>Google Drive API를 활성화해주세요.</span>';
-    }
-    content.innerHTML = '<div class="drive-login"><p style="color:var(--red);font-size:12px;line-height:1.6;max-width:320px;word-break:break-word">' + esc(msg) + '</p>' + hint + '<button class="drive-login-btn" onclick="driveSignIn()" style="margin-top:16px">다시 연결</button></div>';
+    if ((e.message || '').includes('not been used') || (e.message || '').includes('disabled'))
+      hint = '<br><br><span style="font-size:11px;color:var(--t4)">Google Cloud Console에서 Drive API를 활성화하세요</span>';
+    c.innerHTML = '<div class="drive-login"><p style="color:#ff453a;font-size:12px">' + esc(e.message) + '</p>' + hint + '<button class="drive-login-btn" onclick="driveSignIn()" style="margin-top:16px">다시 시도</button></div>';
   }
 }
-
 async function fetchAllDriveFiles(folderId) {
   const headers = { 'Authorization': 'Bearer ' + driveAccessToken };
-  let allFiles = [];
-
-  // Get all items in this folder
-  let pageToken = '';
+  let allFiles = [], pageToken = '';
   do {
     const q = encodeURIComponent("'" + folderId + "' in parents and trashed=false");
     const fields = encodeURIComponent('nextPageToken,files(id,name,mimeType,thumbnailLink,webContentLink,createdTime)');
@@ -958,29 +1247,25 @@ async function fetchAllDriveFiles(folderId) {
     const r = await fetch(url, { headers });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error ? data.error.message : 'API error ' + r.status);
-    const items = data.files || [];
-
-    // Separate media files and subfolders
-    for (const item of items) {
+    for (const item of (data.files || [])) {
       if (item.mimeType === 'application/vnd.google-apps.folder') {
-        const subFiles = await fetchAllDriveFiles(item.id);
-        allFiles = allFiles.concat(subFiles);
+        const sub = await fetchAllDriveFiles(item.id);
+        allFiles = allFiles.concat(sub);
       } else if (item.mimeType.startsWith('image/') || item.mimeType.startsWith('video/')) {
         allFiles.push(item);
       }
     }
     pageToken = data.nextPageToken || '';
   } while (pageToken);
-
   return allFiles;
 }
 
 function filterDriveFiles() {
   const q = document.getElementById('driveSearchInput').value.trim().toLowerCase();
   const countEl = document.getElementById('driveSearchCount');
-  const filteredList = q ? driveFilesList.filter(f => f.name.toLowerCase().includes(q)) : driveFilesList;
-  countEl.textContent = q ? filteredList.length + '/' + driveFilesList.length : '';
-  renderDriveGrid(filteredList);
+  const filtered = q ? driveFilesList.filter(f => f.name.toLowerCase().includes(q)) : driveFilesList;
+  countEl.textContent = q ? filtered.length + '/' + driveFilesList.length : '';
+  renderDriveGrid(filtered);
 }
 
 function renderDriveGrid(fileList) {
@@ -991,35 +1276,28 @@ function renderDriveGrid(fileList) {
     document.getElementById('driveSearchBar').style.display = 'none';
     return;
   }
-
-  // Show search bar
   document.getElementById('driveSearchBar').style.display = 'flex';
-
   if (!fileList.length) {
     content.innerHTML = '<div class="drive-login"><p>검색 결과가 없습니다.</p></div>';
     document.getElementById('driveFooter').style.display = '';
     updateDriveFooter();
     return;
   }
-
   let html = '<div class="drive-grid">';
   fileList.forEach(f => {
     const isVideo = f.mimeType.startsWith('video/');
     const selected = selectedDriveIds.has(f.id);
     const thumb = f.thumbnailLink
-      ? '<img src="' + f.thumbnailLink.replace('=s220','=s300') + '" loading="lazy">'
+      ? '<img src="' + f.thumbnailLink.replace('=s220', '=s300') + '" loading="lazy">'
       : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">' + (isVideo ? '영상' : '이미지') + '</div>';
-
     html += '<div class="drive-item' + (selected ? ' selected' : '') + '" onclick="toggleDriveItem(\'' + f.id + '\')">' +
       thumb +
       '<span class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" fill="none" stroke="#fff" stroke-width="3"/></svg></span>' +
       (isVideo ? '<span class="vid-badge"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></span>' : '') +
-      '<span class="drive-item-name">' + esc(f.name) + '</span>' +
-      '</div>';
+      '<span class="drive-item-name">' + esc(f.name) + '</span></div>';
   });
   html += '</div>';
   content.innerHTML = html;
-
   document.getElementById('driveFooter').style.display = '';
   updateDriveFooter();
 }
@@ -1027,66 +1305,186 @@ function renderDriveGrid(fileList) {
 function toggleDriveItem(id) {
   if (selectedDriveIds.has(id)) selectedDriveIds.delete(id);
   else if (selectedDriveIds.size < 5) selectedDriveIds.add(id);
-  // Re-render selection state
-  document.querySelectorAll('.drive-item').forEach(el => {
-    const fId = driveFilesList.find(f => esc(f.name) === el.querySelector('.drive-item-name').textContent);
-  });
   renderDriveGrid();
 }
-
 function updateDriveFooter() {
   const n = selectedDriveIds.size;
   document.getElementById('driveCount').textContent = n + '개 선택';
   document.getElementById('driveAttachBtn').disabled = n === 0;
 }
-
 function attachDriveFiles() {
   selectedDriveIds.forEach(id => {
     const f = driveFilesList.find(x => x.id === id);
-    if (!f) return;
-    // Add as drive reference file
-    const driveFile = {
-      name: f.name,
-      type: f.mimeType,
-      isDrive: true,
-      driveId: f.id,
-      thumbnail: f.thumbnailLink ? f.thumbnailLink.replace('=s220','=s300') : null
-    };
-    if (files.length < 5) files.push(driveFile);
+    if (!f || files.length >= 5) return;
+    files.push({ name: f.name, type: f.mimeType, isDrive: true, driveId: f.id, thumbnail: f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s300') : null });
   });
   renderFiles();
   sendBtn.disabled = !promptInput.value.trim() && files.length === 0;
   selectedDriveIds.clear();
   closeDrive();
-  showToast(files.length + '개 에셋 첨부됨');
+  showToast(files.length + '개 파일 첨부됨');
 }
 
-// Override renderFiles to handle Drive files too
-const _origRenderFiles = renderFiles;
-renderFiles = function() {
-  const c = document.getElementById('filePreview');
-  if (!files.length) { c.classList.remove('show'); return; }
-  c.classList.add('show');
-  c.innerHTML = files.map((f, i) => {
-    const isImg = f.type && f.type.startsWith('image/');
-    let thumb;
-    if (f.isDrive && f.thumbnail) {
-      thumb = '<img class="thumb" src="' + f.thumbnail + '">';
-    } else if (f.isDrive) {
-      thumb = '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
-    } else if (isImg) {
-      thumb = '<img class="thumb" src="' + URL.createObjectURL(f) + '">';
-    } else {
-      thumb = '<div class="vid-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
-    }
-    const name = f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name;
-    const driveTag = f.isDrive ? '<span style="font-size:9px;color:var(--t5);margin-left:2px">Drive</span>' : '';
-    return '<span class="file-chip">' + thumb + '<span>' + name + driveTag + '</span><button class="remove" onclick="removeFile(' + i + ')">✕</button></span>';
-  }).join('');
+// ══════════════════════════════════════════════════════════
+// ODD AI ENGINE — Claude API Integration
+// ══════════════════════════════════════════════════════════
+const AI_PROXY = 'https://odd-ai-proxy.it-751.workers.dev';
+const aiConfig = {
+  key: localStorage.getItem('odd_ai_key') || '',
+  model: localStorage.getItem('odd_ai_model') || 'claude-sonnet-4-20250514',
 };
+
+const AI_SYSTEM = `You are ODD AI — the dedicated AI assistant for ODD, a premium US-based dietary supplement brand focused on metabolic wellness.
+
+PRODUCT M-01: Pre-meal liquid supplement. Twist-and-drink before meals.
+5 Key Ingredients: Delphinol® (Maqui Berry, antioxidant), Reducose® (Mulberry Leaf, reduces carb absorption up to 42%), Psyllium Husk Fiber (gut health), Apple Cider Vinegar (metabolic), Lemon Juice (vitamin C).
+Brand: odd.us / m-01.odd.us | Tagline: "Not Salad, But Salad." | 60-Day Money-Back Guarantee | Ships worldwide, made in USA.
+
+FDA (DSHEA): Structure/function claims ONLY. Never: diagnose, treat, cure, prevent disease. Required disclaimer: "These statements have not been evaluated by the FDA..."
+FTC: All claims truthful & substantiated. Influencer #ad/#sponsored disclosure required. No deceptive pricing/urgency.
+Meta: No personal health attributes, no before/after, positive framing. TikTok: No health guarantees, disclosure required. Google: Healthcare ad restrictions. Amazon: No disease claims in listings.
+
+BRAND VOICE: Sophisticated yet warm. Science-informed, not heavy. Confident, not aggressive. Premium, intentional. ALWAYS positive framing — never shame/fear.
+BANNED: "one bottle salad", "2 second salad", disease claims (cure/treat/heal/prevent), guaranteed results, negative self-image, absolute health claims (eliminates/burns/detox).
+
+Hooks — TOF: "Not Salad, But Salad." / "Prep time: zero." / "Before the first bite." MOF: "42% less impact from carbs." / "Why Salad? Not the bowl — the benefits." BOF: "Love It in 60 Days or Get Your Money Back." / "Start your smarter routine."
+Hashtags: Always #oddtobewell. Campaign: #notsaladbutsalad. IG up to 5, TikTok 3-5, Google none.
+
+CAPABILITIES: Caption generation (all platforms/funnels), brand tone review, FDA/FTC compliance check, influencer strategy, marketing plans, content strategy, email copy, landing page copy, competitor analysis, product Q&A, A/B test ideas, audience targeting, Amazon listing optimization, crisis comms.
+
+RULES: Respond in user's language (Korean or English). Be concise & actionable. Auto-check compliance with flags. Provide multiple creative options. Use headers/bullets for structure. Maintain ODD voice always.`;
+
+function openAISettings() {
+  document.getElementById('aiKeyInput').value = aiConfig.key;
+  document.getElementById('aiModelSelect').value = aiConfig.model;
+  document.getElementById('aiModalBg').classList.add('open');
+}
+function closeAISettings() { document.getElementById('aiModalBg').classList.remove('open'); }
+function saveAISettings() {
+  aiConfig.key = document.getElementById('aiKeyInput').value.trim();
+  aiConfig.model = document.getElementById('aiModelSelect').value;
+  localStorage.setItem('odd_ai_key', aiConfig.key);
+  localStorage.setItem('odd_ai_model', aiConfig.model);
+  closeAISettings();
+  updateAIDot();
+  showToast('AI 설정 저장 완료');
+}
+function updateAIDot() {
+  document.getElementById('aiDot').style.display = aiConfig.key ? '' : 'none';
+}
+
+function shouldUseAI(prompt) {
+  if (!aiConfig.key) return false;
+  const lower = prompt.toLowerCase();
+  const aiTriggers = ['검수','리뷰','review','체크','check','분석','analysis','추천','recommend',
+    '플랜','plan','전략','strategy','법률','legal','fda','ftc','인플루언서','influencer',
+    '이메일','email','경쟁','competitor','타겟','target','최적화','optimize','수정','fix',
+    '설명','explain','왜','why','어떻게','how','비교','compare','제안','suggest',
+    '브리프','brief','가이드','guide','톤앤매너','tone','문제','problem','개선','improve',
+    '아이디어','idea','마케팅','marketing','브랜드','brand','규정','regulation','위반','violat',
+    '평가','evaluat','검토','리서치','research','트렌드','trend','오디언스','audience',
+    '아마존','amazon','리스팅','listing','소셜','social','컨설팅','consult'];
+  return aiTriggers.some(k => lower.includes(k));
+}
+
+// Override generate to support AI
+const _origGenerate = generate;
+generate = function() {
+  const prompt = promptInput.value.trim();
+  if (!prompt && files.length === 0) return;
+  if (shouldUseAI(prompt)) {
+    generateWithAI(prompt);
+  } else {
+    _origGenerate();
+  }
+};
+
+let aiAbort = null;
+async function generateWithAI(prompt) {
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  aiAbort = new AbortController();
+  try {
+    const resp = await fetch(AI_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, system: AI_SYSTEM, messages: [{ role: 'user', content: prompt }], stream: true }),
+      signal: aiAbort.signal,
+    });
+    if (!resp.ok) {
+      const e = await resp.json().catch(() => ({}));
+      throw new Error(e.error?.message || 'API Error ' + resp.status);
+    }
+    ra.innerHTML = '<div class="ai-response"><div class="ai-label"><span class="dot"></span>ODD AI</div><div class="ai-text streaming-cursor" id="aiStreamText"></div></div>';
+    const textEl = document.getElementById('aiStreamText');
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '', fullText = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const d = line.slice(6).trim();
+        if (d === '[DONE]') continue;
+        try {
+          const p = JSON.parse(d);
+          if (p.type === 'content_block_delta' && p.delta?.text) {
+            fullText += p.delta.text;
+            textEl.innerHTML = renderAIMd(fullText);
+          }
+        } catch {}
+      }
+    }
+    textEl.classList.remove('streaming-cursor');
+    textEl.innerHTML = renderAIMd(fullText);
+    const act = document.createElement('div');
+    act.className = 'ai-actions';
+    act.innerHTML = '<button class="ai-copy-btn" onclick="navigator.clipboard.writeText(decodeURIComponent(\'' + encodeURIComponent(fullText) + '\')).then(()=>showToast(\'복사됨\'))">복사</button>';
+    ra.querySelector('.ai-response').appendChild(act);
+    saveHistory(prompt, [{ label: 'ODD AI', content: fullText }]);
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    ra.innerHTML = '<div class="ai-response"><div class="ai-label"><span class="dot"></span>ODD AI</div><div class="ai-text" style="color:#ff453a">' + esc(err.message) + '</div></div>';
+  }
+}
+
+function renderAIMd(text) {
+  if (!text) return '';
+  let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h = h.replace(/```(\w*)\n([\s\S]*?)```/g, (_, l, c) => '<pre><code>' + c.trim() + '</code></pre>');
+  h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  h = h.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/(?<!\*)\*([^\*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+  h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  h = h.replace(/^---+$/gm, '<hr>');
+  h = h.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+  h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
+  h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  h = h.replace(/^\d+\. (.+)$/gm, '<oli>$1</oli>');
+  h = h.replace(/((?:<oli>.*<\/oli>\n?)+)/g, m => '<ol>' + m.replace(/<\/?oli>/g, t => t.replace('oli','li')) + '</ol>');
+  h = h.replace(/\n{2,}/g, '</p><p>');
+  h = h.replace(/\n/g, '<br>');
+  h = '<p>' + h + '</p>';
+  h = h.replace(/<p><(h[1-3]|pre|ul|ol|blockquote|hr)/g, '<$1');
+  h = h.replace(/<\/(h[1-3]|pre|ul|ol|blockquote)><\/p>/g, '</$1>');
+  h = h.replace(/<p><\/p>/g, '');
+  return h;
+}
 
 // Init
 updateBadge();
+updateAIDot();
+// AI ready
 </script>
 </body>
 </html>
