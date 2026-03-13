@@ -196,6 +196,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .drive-attach-btn:hover{background:#d4343a}
 .drive-attach-btn:disabled{background:var(--t5);cursor:not-allowed}
 
+/* Drive Search */
+.drive-search{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.drive-search input{flex:1;background:none;border:none;outline:none;color:var(--t2);font-size:13px;font-family:var(--sans)}
+.drive-search input::placeholder{color:var(--t5)}
+.drive-search-count{font-size:11px;color:var(--t5);white-space:nowrap}
+
 /* Toast */
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-raised);border:1px solid var(--border);border-radius:100px;padding:10px 24px;color:var(--t2);font-size:13px;font-weight:500;opacity:0;transition:all .3s ease;pointer-events:none;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -313,6 +319,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
     <button class="drive-close" onclick="closeDrive()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
+  </div>
+  <div class="drive-search" id="driveSearchBar" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="driveSearchInput" placeholder="파일명 검색..." oninput="filterDriveFiles()">
+    <span class="drive-search-count" id="driveSearchCount"></span>
   </div>
   <div id="driveContent">
     <div class="drive-login" id="driveLogin">
@@ -665,9 +676,36 @@ function removeFile(i) {
 }
 
 // ── Generate ──
+function isDriveSearchQuery(text) {
+  const keywords = ['찾아', '검색', '에셋', '이미지 찾', '영상 찾', '파일 찾', '콘텐츠 찾', '보여줘', '있는 파일', '드라이브'];
+  return keywords.some(k => text.includes(k)) && driveFilesList.length > 0;
+}
+
+function handleDriveSearch(query) {
+  // Open drive panel and search
+  openDrive();
+  setTimeout(() => {
+    const searchInput = document.getElementById('driveSearchInput');
+    if (searchInput && document.getElementById('driveSearchBar').style.display !== 'none') {
+      // Extract search term - remove common trigger words
+      let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|있는 파일|드라이브에서?|에셋 중에?|이미지|영상|파일|콘텐츠/g, '').trim();
+      if (term) {
+        searchInput.value = term;
+        filterDriveFiles();
+      }
+    }
+  }, 500);
+}
+
 function generate() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
+
+  // Check if user is asking to search Drive assets
+  if (isDriveSearchQuery(prompt)) {
+    handleDriveSearch(prompt);
+    return;
+  }
 
   document.getElementById('landing').classList.add('pushed');
   const ra = document.getElementById('resultsArea');
@@ -898,12 +936,12 @@ async function loadDriveFiles() {
     renderDriveGrid();
   } catch(err) {
     console.error('Drive load error:', err);
-    if (err.message.includes('401') || err.message.includes('403')) {
-      driveAccessToken = null;
-      content.innerHTML = '<div class="drive-login" id="driveLogin"><p>세션이 만료되었습니다.<br>다시 연결해주세요.</p><button class="drive-login-btn" onclick="driveSignIn()">다시 연결</button></div>';
-    } else {
-      content.innerHTML = '<div class="drive-login"><p style="color:var(--red)">파일을 불러올 수 없습니다.<br>' + esc(err.message) + '</p><button class="drive-login-btn" onclick="loadDriveFiles()">다시 시도</button></div>';
+    const msg = err.message || '';
+    let hint = '';
+    if (msg.includes('not been used') || msg.includes('disabled') || msg.includes('has not been enabled')) {
+      hint = '<br><br><span style="font-size:11px;color:var(--t4)">Google Cloud Console에서<br>Google Drive API를 활성화해주세요.</span>';
     }
+    content.innerHTML = '<div class="drive-login"><p style="color:var(--red);font-size:12px;line-height:1.6;max-width:320px;word-break:break-word">' + esc(msg) + '</p>' + hint + '<button class="drive-login-btn" onclick="driveSignIn()" style="margin-top:16px">다시 연결</button></div>';
   }
 }
 
@@ -918,8 +956,8 @@ async function fetchAllDriveFiles(folderId) {
     const fields = encodeURIComponent('nextPageToken,files(id,name,mimeType,thumbnailLink,webContentLink,createdTime)');
     const url = 'https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=' + fields + '&pageSize=200' + (pageToken ? '&pageToken=' + pageToken : '');
     const r = await fetch(url, { headers });
-    if (!r.ok) throw new Error('API error ' + r.status);
     const data = await r.json();
+    if (!r.ok) throw new Error(data.error ? data.error.message : 'API error ' + r.status);
     const items = data.files || [];
 
     // Separate media files and subfolders
@@ -937,15 +975,35 @@ async function fetchAllDriveFiles(folderId) {
   return allFiles;
 }
 
-function renderDriveGrid() {
+function filterDriveFiles() {
+  const q = document.getElementById('driveSearchInput').value.trim().toLowerCase();
+  const countEl = document.getElementById('driveSearchCount');
+  const filteredList = q ? driveFilesList.filter(f => f.name.toLowerCase().includes(q)) : driveFilesList;
+  countEl.textContent = q ? filteredList.length + '/' + driveFilesList.length : '';
+  renderDriveGrid(filteredList);
+}
+
+function renderDriveGrid(fileList) {
+  if (!fileList) fileList = driveFilesList;
   const content = document.getElementById('driveContent');
   if (!driveFilesList.length) {
     content.innerHTML = '<div class="drive-login"><p>폴더에 파일이 없습니다.</p></div>';
+    document.getElementById('driveSearchBar').style.display = 'none';
+    return;
+  }
+
+  // Show search bar
+  document.getElementById('driveSearchBar').style.display = 'flex';
+
+  if (!fileList.length) {
+    content.innerHTML = '<div class="drive-login"><p>검색 결과가 없습니다.</p></div>';
+    document.getElementById('driveFooter').style.display = '';
+    updateDriveFooter();
     return;
   }
 
   let html = '<div class="drive-grid">';
-  driveFilesList.forEach(f => {
+  fileList.forEach(f => {
     const isVideo = f.mimeType.startsWith('video/');
     const selected = selectedDriveIds.has(f.id);
     const thumb = f.thumbnailLink
