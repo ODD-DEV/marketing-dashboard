@@ -446,24 +446,58 @@ function buildCaptionPrompt(userPrompt, ch, fn, tension, isAd) {
   return userPrompt + '\n\n---\n채널: ' + chSpec + '\n펀넬: ' + fnSpec + '\n톤: ' + tSpec + '\n유형: ' + typeSpec;
 }
 
-async function generateCaptionWithAI(prompt, ch, fn, tension, isAd) {
+async function generateCaptionWithAI(prompt, ch, fn, tension, isAd, streamTarget) {
   const key = aiConfig.key;
   if (!key) return { text: '⚠️ 캡션 생성을 위해 설정(⚙️)에서 AI API 키를 입력하세요.', tags: ['API 키 필요'] };
+  const chLabel = { meta:'Meta', tiktok:'TikTok', google:'Google Ads' }[ch] || ch;
+  const fnLabel = { tof:'TOF', mof:'MOF', bof:'BOF' }[fn] || fn;
+  const tLabel = { '1':'Safe Bold', '2':'Provocative', '3':'Max Edge' }[tension] || '';
+  const tags = [isAd ? '광고' : '오가닉', chLabel, fnLabel, tLabel];
+
   try {
     const r = await fetch(AI_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': key },
       body: JSON.stringify({
-        model: aiConfig.model, max_tokens: 2048, system: CAPTION_SYSTEM,
+        model: 'claude-haiku-4-5-20251001', max_tokens: 2048, stream: true,
+        system: CAPTION_SYSTEM,
         messages: [{ role: 'user', content: buildCaptionPrompt(prompt, ch, fn, tension, isAd) }]
       })
     });
-    const data = await r.json();
-    const text = (data.content && data.content[0] && data.content[0].text) || '캡션을 생성하지 못했습니다.';
-    const chLabel = { meta:'Meta', tiktok:'TikTok', google:'Google Ads' }[ch] || ch;
-    const fnLabel = { tof:'TOF', mof:'MOF', bof:'BOF' }[fn] || fn;
-    const tLabel = { '1':'Safe Bold', '2':'Provocative', '3':'Max Edge' }[tension] || '';
-    return { text, tags: [isAd ? '광고' : '오가닉', chLabel, fnLabel, tLabel] };
+
+    if (!r.body) {
+      const data = await r.json();
+      const text = (data.content && data.content[0] && data.content[0].text) || '캡션을 생성하지 못했습니다.';
+      return { text, tags };
+    }
+
+    // 스트리밍 처리
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(jsonStr);
+          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+            fullText += evt.delta.text;
+            if (streamTarget) streamTarget.textContent = fullText;
+          }
+        } catch {}
+      }
+    }
+
+    return { text: fullText || '캡션을 생성하지 못했습니다.', tags };
   } catch (e) {
     return { text: 'AI 오류: ' + e.message, tags: ['오류'] };
   }
@@ -529,6 +563,69 @@ function generateStockKeywords(text) {
   ];
   return templates[Math.floor(Math.random() * templates.length)];
 }
+
+// ── FORMAT_SPECS: 콘텐츠 포맷 상세 규격 ──
+const FORMAT_SPECS = {
+  feed: { w:1080, h:1440, label:"Feed", ratio:"3:4", safeZone:null, tip:"정사각형 대비 20% 더 넓은 세로형. 텍스트는 중앙 60% 영역 권장." },
+  reels: { w:1080, h:1920, label:"Reels/Story", ratio:"9:16", safeZone:{ top:"15%", bottom:"20%" }, tip:"상단 15%는 계정명, 하단 20%는 CTA/UI 영역. 핵심 메시지는 중앙 65%에." },
+  carousel: { w:1080, h:1350, label:"Carousel", ratio:"4:5", safeZone:null, tip:"스와이프 유도. 첫 슬라이드=훅, 마지막=CTA. 넘버링 권장." },
+  story: { w:1080, h:1920, label:"Story", ratio:"9:16", safeZone:{ top:"15%", bottom:"20%" }, tip:"24시간 휘발성. 폴/퀴즈/링크 스티커 활용." },
+  tiktok: { w:1080, h:1920, label:"TikTok", ratio:"9:16", safeZone:{ top:"10%", bottom:"25%" }, tip:"하단 25%는 캡션/UI. 텍스트 오버레이는 중앙 상단에." }
+};
+
+// ── CONTENT_KEYWORDS: 입력 분석용 키워드 매핑 ──
+const CONTENT_KEYWORDS = {
+  product: ["M-01","제품","product","성분","ingredient","리추얼","ritual","병","bottle","twist"],
+  education: ["교육","education","인사이트","insight","혈당","glucose","대사","metabolic","설탕","sugar","인슐린","insulin","과학","science"],
+  lifestyle: ["라이프스타일","lifestyle","무드","mood","루틴","routine","아침","morning","일상","daily"],
+  community: ["커뮤니티","community","질문","question","댓글","comment","참여","engage","경험","experience"],
+  campaign: ["캠페인","campaign","Not Salad","낫샐러드","태그라인","tagline"]
+};
+
+// ── oddContentRecommend: 입력 기반 콘텐츠 방향 추천 ──
+function oddContentRecommend(prompt) {
+  const lower = prompt.toLowerCase();
+  const scores = {};
+  Object.entries(CONTENT_KEYWORDS).forEach(([cat, keywords]) => {
+    scores[cat] = keywords.filter(k => lower.includes(k.toLowerCase())).length;
+  });
+  const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  const primary = sorted[0][1] > 0 ? sorted[0][0] : "lifestyle";
+  const secondary = sorted[1] && sorted[1][1] > 0 ? sorted[1][0] : null;
+  const directions = {
+    product: { angle:"제품 경험 중심", hook:"리추얼/편의성 프레이밍", visual:"다크 톤 제품샷, M-01 중앙 배치" },
+    education: { angle:"과학 기반 인사이트", hook:"통념 전복 또는 불편한 진실", visual:"데이터 시각화, 클린 인포그래픽" },
+    lifestyle: { angle:"일상 속 루틴", hook:"공감 상황 묘사", visual:"무디 라이프스타일, 식사 장면" },
+    community: { angle:"대화형 참여 유도", hook:"열린 질문 또는 경험 공유", visual:"UGC 스타일, 자연스러운 톤" },
+    campaign: { angle:"캠페인 태그라인 활용", hook:"역설적 선언", visual:"브랜드 시그니처 비주얼" }
+  };
+  return { primary, secondary, direction: directions[primary] };
+}
+
+// ── BRIEF_DATA: 크리에이티브 브리프 생성용 데이터 ──
+const BRIEF_DATA = {
+  brandVoice: {
+    pillars: ["confident-not-aggressive","scientific-yet-poetic","minimal-but-rich","ritual-not-supplement"],
+    doList: ["선언한다","질문한다","여백을 남긴다","과학을 시적으로 말한다","우리를 쓴다"],
+    dontList: ["가르치지 않는다","공포를 팔지 않는다","과장하지 않는다","설명하지 않는다","이모지를 도배하지 않는다"]
+  },
+  funnelGoals: {
+    tof: { goal:"스크롤 멈춤 + 호기심", kpi:"도달/노출/프로필 방문", emotion:"이건 뭐지?", avoid:"제품 상세, 가격, CTA 과다" },
+    mof: { goal:"이해 + 신뢰 구축", kpi:"저장/공유/체류시간", emotion:"이 브랜드 알겠다", avoid:"직접 판매, 할인 언급" },
+    bof: { goal:"망설임 제거 + 전환", kpi:"클릭/전환/ROAS", emotion:"해보자", avoid:"새 정보 과다, 교육 톤" }
+  },
+  tensionGuide: {
+    "1": { name:"Safe Bold", desc:"절제된 자신감, 미니멀 선언", example:"Prep time: zero." },
+    "2": { name:"Provocative", desc:"통념 전복, 불편한 질문", example:"Who has time for salads anymore?" },
+    "3": { name:"Maximum Edge", desc:"역설적 선언, 과학의 시적 무장", example:"We didn't change the formula. We decoded it." }
+  },
+  channelRoles: {
+    meta: { role:"브랜드 미디어", focus:"미학+세계관+반복각인", captionLen:"3-7줄", hashtagCount:5 },
+    tiktok: { role:"직관적 이해 채널", focus:"상황공감+빠른이해+행동시뮬", captionLen:"2-5줄", hashtagCount:5 },
+    google: { role:"검색 의도 매칭", focus:"키워드+CTA+오퍼", captionLen:"RSA형식", hashtagCount:0 }
+  }
+};
+
 
 // ── Content Frames ──
 function renderContentFrame(format, width, height) {
@@ -1154,12 +1251,6 @@ async function handleMultiIntent(prompt, intents) {
 
   if (!html) html = '<div class="result-card"><div class="result-content">결과를 생성하지 못했습니다.</div></div>';
 
-  // "AI로 더 분석" 에스컬레이션 버튼 (토큰 절약 — 필요할 때만 AI 호출)
-  if (aiConfig.key) {
-    const safePrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    html += '<div style="text-align:center;padding:16px 0"><button onclick="generateWithAI(\'' + safePrompt + '\')" style="padding:8px 20px;border-radius:100px;border:1px solid var(--border);background:rgba(191,32,38,.08);color:var(--red);cursor:pointer;font-size:12px;font-weight:600;font-family:var(--sans);transition:all .15s" onmouseover="this.style.background=\'rgba(191,32,38,.15)\'" onmouseout="this.style.background=\'rgba(191,32,38,.08)\'">🤖 AI로 더 자세히 분석하기</button></div>';
-  }
-
   ra.innerHTML = html;
   saveHistory(prompt, [{ label: '처리 (' + intents.join('+') + ')', content: prompt }]);
 }
@@ -1172,28 +1263,70 @@ const _origGenerate = async function() {
   document.getElementById('landing').classList.add('pushed');
   const ra = document.getElementById('resultsArea');
   ra.style.display = 'block';
-  ra.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
   const detectedMode = detectMode(prompt);
   state.detectedMode = detectedMode;
-
+  const isAd = state.type === 'ad';
+  const fn = state.funnel;
+  const tension = state.tension;
   const channels = state.channel === 'all' ? ['meta'] : [state.channel];
-  const allResults = [];
+  const ch = channels[0];
+  const chColor = { meta: '#4f8df9', tiktok: '#ff3b5c', google: '#34a853' }[ch] || '#4f8df9';
+  const fnColor = { tof: '#38bdf8', mof: '#a78bfa', bof: '#f97316' }[fn] || '#38bdf8';
+  const color = isAd ? fnColor : chColor;
+  const prefix = state.channel === 'all' ? '통합 ' : '';
+  const label = prefix + '캡션' + (isAd ? ' [' + fn.toUpperCase() + ']' : '');
 
+  // 즉시 캡션 카드 렌더링 (스트리밍용)
+  let html = '';
+  if (detectedMode) {
+    const badgeText = detectedMode === 'content' ? '🎨 콘텐츠 모드' : detectedMode === 'caption' ? '📝 캡션 모드' : '📝+🎨 통합 모드';
+    html += '<div class="mode-badge">' + badgeText + '</div>';
+  }
+
+  // 콘텐츠 모드 결과 먼저 렌더
+  const contentResults = [];
   if (detectedMode === 'content' || detectedMode === 'hybrid') {
-    const contentResults = buildContentResults(prompt);
-    allResults.push(...contentResults);
+    const cr = buildContentResults(prompt);
+    contentResults.push(...cr);
+    cr.forEach(r => {
+      if (r.htmlContent) {
+        html += '<div class="result-card"><div class="result-label" style="color:' + r.color + '"><span class="dot" style="background:' + r.color + '"></span>' + esc(r.label) + '</div><div class="result-content" style="white-space:normal">' + r.content + '</div><div class="result-meta">' + (r.tags ? r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') : '') + '</div></div>';
+      }
+    });
   }
 
+  // 캡션 카드 (스트리밍 타겟)
   if (!detectedMode || detectedMode === 'caption' || detectedMode === 'hybrid') {
-    for (const ch of channels) {
-      const captionResults = await buildCaptions(prompt, ch);
-      allResults.push(...captionResults);
-    }
+    html += '<div class="result-card"><div class="result-label" style="color:' + color + '"><span class="dot" style="background:' + color + '"></span>' + esc(label) + '</div><div class="result-content" id="streamTarget" style="white-space:pre-wrap;min-height:60px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span></div><div class="result-meta" id="streamMeta"></div></div>';
   }
 
-  renderResults(allResults, detectedMode);
-  saveHistory(prompt, allResults);
+  ra.innerHTML = html;
+
+  // AI 스트리밍 시작
+  if (!detectedMode || detectedMode === 'caption' || detectedMode === 'hybrid') {
+    const target = document.getElementById('streamTarget');
+    target.textContent = '';
+    const caption = await generateCaptionWithAI(prompt, ch, fn, tension, isAd, target);
+
+    // 가이드라인 체크
+    const warnings = guidelineCheck(caption.text);
+    if (warnings.length) {
+      target.textContent += '\n\n' + '─'.repeat(30) + '\n⚠️ 가이드라인 체크:\n' + warnings.join('\n');
+    }
+
+    // 메타 태그 + 복사 버튼
+    const meta = document.getElementById('streamMeta');
+    if (meta) {
+      const encoded = encodeURIComponent(caption.text);
+      meta.innerHTML = (caption.tags ? caption.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') : '') +
+        '<button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>';
+    }
+
+    saveHistory(prompt, [...contentResults, { label, content: caption.text }]);
+  } else {
+    saveHistory(prompt, contentResults);
+  }
 };
 
 function generate() {
