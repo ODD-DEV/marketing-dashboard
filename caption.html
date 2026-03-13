@@ -550,11 +550,31 @@ const HOOKS = {
 };
 
 // ── ODD. 캡션 본문 템플릿 ──
+function cleanPromptForCaption(prompt) {
+  // 사용자의 요청 문장을 캡션에 넣지 않고, 핵심 주제만 추출
+  if (!prompt) return 'M-01, the pre-meal ritual that changes everything';
+  // 요청/지시어 제거
+  let cleaned = prompt.replace(/캡션\s*작성해\s*줘?|캡션\s*써\s*줘?|해\s*줘?고?|알려\s*줘?|추천해?\s*줘?|만들어\s*줘?|보여\s*줘?|설명\s*해?\s*줘?|업로드\s*하려고|하려고\s*하는데|그\s*안에\s*들어갈|글귀도/g, '').trim();
+  // 숫자+개 패턴 제거 (10개의, 5장 등)
+  cleaned = cleaned.replace(/\d+\s*개의?\s*/g, '').trim();
+  // 너무 길면 자르기
+  if (cleaned.length > 40) cleaned = cleaned.slice(0, 40);
+  // 한국어면 영어 기본값 사용
+  if (/[가-힣]/.test(cleaned) && cleaned.length > 5) {
+    // 키워드에서 주제 추출
+    if (/원료|성분/.test(cleaned)) return 'M-01\'s 5 research-backed ingredients';
+    if (/캐러셀|carousel/.test(cleaned)) return 'M-01 carousel content';
+    if (/SNS|소셜/.test(cleaned)) return 'M-01 social media content';
+    return 'M-01, the pre-meal ritual that changes everything';
+  }
+  return cleaned || 'M-01, the pre-meal ritual that changes everything';
+}
+
 function oddAdCaption(prompt, ch, fn, tension) {
   const t = parseInt(tension);
   const hookPool = HOOKS[fn][t] || HOOKS[fn][1];
   const hook = hookPool[Math.floor(Math.random() * hookPool.length)];
-  const userContext = prompt || 'M-01, the pre-meal ritual that changes everything';
+  const userContext = cleanPromptForCaption(prompt);
 
   const templates = {
     meta: {
@@ -587,15 +607,15 @@ function oddAdCaption(prompt, ch, fn, tension) {
     },
     google: {
       tof: {
-        text: '[헤드라인 1] ' + (prompt ? prompt.slice(0,28) : 'Not Salad, But Salad') + ' | ODD.\n[헤드라인 2] Pre-Meal Ritual for Metabolic Wellness\n[헤드라인 3] A Simpler Way to Do What Salad Does\n[설명 1] ' + userContext + ' — Twist and drink. No prep, no waste.\n[설명 2] 5 research-backed ingredients. 60-day guarantee. Try M-01 today.',
+        text: '[헤드라인 1] Not Salad, But Salad | ODD.\n[헤드라인 2] Pre-Meal Ritual for Metabolic Wellness\n[헤드라인 3] A Simpler Way to Do What Salad Does\n[설명 1] ' + userContext + ' — Twist and drink. No prep, no waste.\n[설명 2] 5 research-backed ingredients. 60-day guarantee. Try M-01 today.',
         tags: ['TOF', 'Google Ads', 'RSA']
       },
       mof: {
-        text: '[헤드라인 1] Why M-01? 5 Ingredients, One Bottle\n[헤드라인 2] ' + (prompt ? prompt.slice(0,28) : 'Metabolic Health Supplement') + '\n[헤드라인 3] What Salad Does, Without the Bowl\n[설명 1] ' + userContext + '\n[설명 2] 42% less carb impact (Reducose® studies). Free shipping available.',
+        text: '[헤드라인 1] Why M-01? 5 Ingredients, One Bottle\n[헤드라인 2] Metabolic Health Supplement\n[헤드라인 3] What Salad Does, Without the Bowl\n[설명 1] ' + userContext + '\n[설명 2] 42% less carb impact (Reducose® studies). Free shipping available.',
         tags: ['MOF', 'Google Ads', '수치 증거']
       },
       bof: {
-        text: '[헤드라인 1] Up to 40% OFF M-01 — Limited Time\n[헤드라인 2] 60-Day Money-Back Guarantee\n[헤드라인 3] ' + (prompt ? prompt.slice(0,28) : 'Start Your Pre-Meal Ritual') + '\n[설명 1] ' + userContext + ' — Try risk-free.\n[설명 2] Loved by thousands. 4.8★ avg review. Order now with free shipping.',
+        text: '[헤드라인 1] Up to 40% OFF M-01 — Limited Time\n[헤드라인 2] 60-Day Money-Back Guarantee\n[헤드라인 3] Start Your Pre-Meal Ritual\n[설명 1] ' + userContext + ' — Try risk-free.\n[설명 2] Loved by thousands. 4.8★ avg review. Order now with free shipping.',
         tags: ['BOF', 'Google Ads', '전환 최적화']
       }
     }
@@ -605,7 +625,7 @@ function oddAdCaption(prompt, ch, fn, tension) {
 
 function oddOrganicCaption(prompt, ch, tension) {
   const t = parseInt(tension);
-  const userContext = prompt || '';
+  const userContext = cleanPromptForCaption(prompt);
   const patterns = ['A','B','C'];
   const pat = patterns[Math.floor(Math.random() * patterns.length)];
   const hookPool = [...(HOOKS.tof[t] || []), ...(HOOKS.mof[t] || [])];
@@ -1088,13 +1108,14 @@ async function handleMultiIntent(prompt, intents) {
   if (intents.includes('info')) {
     const answer = getBuiltInAnswer(prompt);
     if (answer) {
-      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>제품 정보</div><div class="result-content">' + renderBuiltInMd(answer) + '</div><div class="result-meta"><span class="tag">내장 데이터</span></div></div>';
+      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>제품 정보</div><div class="result-content" style="white-space:normal">' + renderBuiltInMd(answer) + '</div><div class="result-meta"><span class="tag">내장 데이터</span></div></div>';
     }
   }
 
   // Caption section
   if (intents.includes('caption')) {
-    const channels = state.channel === 'all' ? ['meta','tiktok','google'] : [state.channel];
+    // 통합(all)이면 meta 1개로 통합 캡션, 아니면 선택된 채널
+    const channels = state.channel === 'all' ? ['meta'] : [state.channel];
     const detectedMode = detectMode(prompt);
     const allCaptions = [];
     channels.forEach(ch => {
@@ -1106,8 +1127,17 @@ async function handleMultiIntent(prompt, intents) {
       allCaptions.push(...contentRes);
     }
     allCaptions.forEach(r => {
-      html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:' + (r.color || 'var(--t4)') + '"></span>' + esc(r.label) + '</div><div class="result-content">' + esc(r.content) + '</div>';
-      if (r.hashtags) html += '<div class="result-meta"><span class="tag">' + esc(r.hashtags) + '</span></div>';
+      if (r.htmlContent) {
+        html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:' + (r.color || 'var(--t4)') + '"></span>' + esc(r.label) + '</div><div class="result-content" style="white-space:normal">' + r.content + '</div>';
+        if (r.tags) html += '<div class="result-meta">' + r.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('') + '</div>';
+      } else {
+        const encoded = encodeURIComponent(r.content);
+        html += '<div class="result-card"><div class="result-label"><span class="dot" style="background:' + (r.color || 'var(--t4)') + '"></span>' + esc(r.label) + '</div><div class="result-content">' + esc(r.content) + '</div>';
+        html += '<div class="result-meta">';
+        if (r.tags) html += r.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('');
+        html += '<button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>';
+        html += '</div>';
+      }
       html += '</div>';
     });
   }
@@ -1302,7 +1332,7 @@ function buildCaptions(prompt, ch) {
   const tensionLabel = { '1': 'Safe Bold', '2': 'Provocative', '3': 'Max Edge' }[tension];
 
   const caption = isAd ? oddAdCaption(prompt, ch, fn, tension) : oddOrganicCaption(prompt, ch, tension);
-  const prefix = state.channel === 'all' ? chLabel + ' ' : '';
+  const prefix = state.channel === 'all' ? '통합 ' : '';
 
   const warnings = guidelineCheck(caption.text);
   const captionContent = warnings.length
