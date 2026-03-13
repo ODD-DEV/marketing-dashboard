@@ -869,18 +869,22 @@ function removeFile(i) {
 // ── Generate ──
 function isDriveSearchQuery(text) {
   const kw = ['찾아','검색','에셋','보여줘','보여줄래','있는 파일','드라이브','원료','이미지좀','영상좀','파일좀','콘텐츠 찾'];
-  return kw.some(k => text.includes(k)) && driveFilesList.length > 0;
+  return kw.some(k => text.includes(k));
 }
 
+let pendingDriveSearch = '';
 function handleDriveSearch(query) {
+  let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|있는 파일|드라이브에서?|에셋 중에?|좀|우리|이미지|영상|파일|콘텐츠/g, '').trim();
+  pendingDriveSearch = term;
   openDrive();
-  setTimeout(() => {
-    const si = document.getElementById('driveSearchInput');
-    if (si && document.getElementById('driveSearchBar').style.display !== 'none') {
-      let term = query.replace(/찾아줘?|검색해?줘?|보여줘?|보여줄래?|있는 파일|드라이브에서?|에셋 중에?|좀|우리/g, '').trim();
-      if (term) { si.value = term; filterDriveFiles(); }
-    }
-  }, 300);
+  // If files already loaded, search immediately
+  if (driveFilesList.length > 0 && term) {
+    setTimeout(() => {
+      const si = document.getElementById('driveSearchInput');
+      if (si) { si.value = term; filterDriveFiles(); }
+    }, 100);
+  }
+  // Otherwise, loadDriveFiles will check pendingDriveSearch after loading
 }
 
 function generate() {
@@ -1230,6 +1234,12 @@ async function loadDriveFiles() {
     driveFilesList = await fetchAllDriveFiles(DRIVE_FOLDER_ID);
     driveFilesList.sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''));
     renderDriveGrid();
+    // Apply pending search from main input
+    if (pendingDriveSearch) {
+      const si = document.getElementById('driveSearchInput');
+      if (si) { si.value = pendingDriveSearch; filterDriveFiles(); }
+      pendingDriveSearch = '';
+    }
   } catch (e) {
     let hint = '';
     if ((e.message || '').includes('not been used') || (e.message || '').includes('disabled'))
