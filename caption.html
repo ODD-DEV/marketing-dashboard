@@ -429,6 +429,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
       <input type="password" id="settingsNanoKey" placeholder="AIzaSy..." autocomplete="off">
       <div class="hint">AI 이미지 생성 — Google AI Studio에서 발급</div>
     </div>
+    <div class="settings-field">
+      <label>Higgsfield API Key</label>
+      <input type="password" id="settingsHiggsKey" placeholder="KEY_ID:KEY_SECRET" autocomplete="off">
+      <div class="hint">AI 영상 생성 — cloud.higgsfield.ai에서 발급</div>
+    </div>
     <button class="settings-save" onclick="saveSettings()">저장</button>
   </div>
 </div>
@@ -2236,6 +2241,11 @@ function detectIntents(prompt) {
   const imgSubjectKw = ['이미지','사진','비주얼','배너','썸네일','포스터','광고 소재','크리에이티브','image','visual','banner','thumbnail'];
   if (imgGenKw.some(k => lower.includes(k)) && imgSubjectKw.some(k => lower.includes(k))) intents.push('imagegen');
 
+  // Video generation intent (영상 만들어줘, 비디오 생성해줘 등)
+  const vidGenKw = ['만들어','생성해','제작해','generate','create','make'];
+  const vidSubjectKw = ['영상','비디오','동영상','video','릴스','reels','숏폼','short','모션','motion','클립','clip'];
+  if (vidGenKw.some(k => lower.includes(k)) && vidSubjectKw.some(k => lower.includes(k))) intents.push('videogen');
+
   return [...new Set(intents)];
 }
 
@@ -2546,12 +2556,85 @@ async function generateImageWithNano(prompt) {
   }
 }
 
+// ── Higgsfield (AI Video Generation) ──
+async function generateVideoWithHiggs(prompt) {
+  const higgsKey = localStorage.getItem('odd_higgs_key') || '';
+  if (!higgsKey) { showToast('설정(⚙️)에서 Higgsfield API 키를 입력하세요'); return; }
+
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--blue)"></span>AI 영상 생성 중...</div><div class="result-content" id="higgsTarget" style="white-space:normal;min-height:120px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><span style="color:var(--t4);font-size:13px;margin-left:12px">Higgsfield로 영상을 생성하고 있습니다... (최대 2-3분 소요)</span></div></div>';
+
+  const brandContext = 'ODD brand: premium dark aesthetic, minimalist, sleek M-01 supplement bottle, deep red #bf2026 accent on black, cinematic mood, sophisticated.';
+
+  try {
+    // 1) 생성 요청
+    const r = await fetch('https://api.higgsfield.ai/v1/generations', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + higgsKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: prompt + '. ' + brandContext,
+        duration: 5,
+        aspect_ratio: '9:16'
+      })
+    });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || e.message || 'API 오류 (' + r.status + ')'); }
+    const gen = await r.json();
+    const genId = gen.id || gen.generation_id;
+    if (!genId) throw new Error('생성 ID를 받지 못했습니다');
+
+    // 2) 상태 폴링 (최대 3분)
+    const target = document.getElementById('higgsTarget');
+    let videoUrl = null;
+    for (let i = 0; i < 36; i++) {
+      await new Promise(ok => setTimeout(ok, 5000));
+      const sr = await fetch('https://api.higgsfield.ai/v1/generations/' + genId, {
+        headers: { 'Authorization': 'Bearer ' + higgsKey }
+      });
+      if (!sr.ok) continue;
+      const status = await sr.json();
+      const state = status.status || status.state;
+      target.innerHTML = '<span style="color:var(--t4);font-size:13px">영상 생성 중... (' + state + ')</span>';
+
+      if (state === 'completed' || state === 'succeeded') {
+        videoUrl = status.output?.url || status.video_url || status.result?.url || status.output;
+        break;
+      }
+      if (state === 'failed' || state === 'error') {
+        throw new Error(status.error || '영상 생성 실패');
+      }
+    }
+
+    if (!videoUrl) throw new Error('시간 초과 — 나중에 Higgsfield 대시보드에서 확인하세요');
+
+    // 3) 결과 표시
+    target.innerHTML = '<video src="' + videoUrl + '" controls playsinline style="max-width:100%;border-radius:12px;border:1px solid var(--border)"></video>' +
+      '<div style="margin-top:8px"><a href="' + videoUrl + '" download="odd_ai_video.mp4" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--t2);font-size:12px;text-decoration:none;cursor:pointer">⬇ 영상 다운로드</a></div>';
+    ra.querySelector('.result-label').innerHTML = '<span class="dot" style="background:var(--blue)"></span>AI 생성 영상';
+    const meta = document.createElement('div');
+    meta.className = 'result-meta';
+    meta.innerHTML = '<span class="tag">Higgsfield</span><span class="tag">AI Video</span>';
+    target.parentElement.appendChild(meta);
+    saveHistory(prompt, [{ label: 'AI 영상 생성', content: prompt }]);
+  } catch (e) {
+    const target = document.getElementById('higgsTarget');
+    if (target) target.innerHTML = '<div style="color:var(--red)">영상 생성 오류: ' + e.message + '</div>';
+  }
+}
+
 function generate() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
 
   const intents = detectIntents(prompt);
   const lower = prompt.toLowerCase();
+
+  // 영상 생성 요청 → Higgsfield
+  if (intents.includes('videogen')) {
+    generateVideoWithHiggs(prompt);
+    return;
+  }
 
   // 이미지 생성 요청 → Nano Banana
   if (intents.includes('imagegen')) {
@@ -2904,6 +2987,7 @@ function openSettings() {
   document.getElementById('settingsAiKey').value = localStorage.getItem('odd_ai_key') || '';
   document.getElementById('settingsNotionKey').value = localStorage.getItem('odd_notion_key') || '';
   document.getElementById('settingsNanoKey').value = localStorage.getItem('odd_nano_key') || '';
+  document.getElementById('settingsHiggsKey').value = localStorage.getItem('odd_higgs_key') || '';
   document.getElementById('settingsOverlay').classList.add('open');
 }
 function closeSettings() {
@@ -2913,12 +2997,15 @@ function saveSettings() {
   const aiKey = document.getElementById('settingsAiKey').value.trim();
   const notionKey = document.getElementById('settingsNotionKey').value.trim();
   const nanoKey = document.getElementById('settingsNanoKey').value.trim();
+  const higgsKey = document.getElementById('settingsHiggsKey').value.trim();
   if (aiKey) { localStorage.setItem('odd_ai_key', aiKey); aiConfig.key = aiKey; }
   else { localStorage.removeItem('odd_ai_key'); aiConfig.key = ''; }
   if (notionKey) { localStorage.setItem('odd_notion_key', notionKey); NOTION_KEY = notionKey; }
   else { localStorage.removeItem('odd_notion_key'); NOTION_KEY = ''; }
   if (nanoKey) { localStorage.setItem('odd_nano_key', nanoKey); }
   else { localStorage.removeItem('odd_nano_key'); }
+  if (higgsKey) { localStorage.setItem('odd_higgs_key', higgsKey); }
+  else { localStorage.removeItem('odd_higgs_key'); }
   closeSettings();
   showToast('설정이 저장되었습니다');
 }
