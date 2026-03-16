@@ -376,9 +376,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 
     <!-- Tab Bar -->
     <div class="tab-bar" id="tabBar">
-      <button class="tab-btn" data-tab="search" onclick="switchTab('search')"><span class="tab-icon">🔍</span>검색</button>
-      <button class="tab-btn active" data-tab="content" onclick="switchTab('content')"><span class="tab-icon">✏️</span>콘텐츠</button>
-      <button class="tab-btn" data-tab="insights" onclick="switchTab('insights')"><span class="tab-icon">📊</span>인사이트</button>
+      <button class="tab-btn" data-tab="search" onclick="switchTab('search')"><span class="tab-icon">🔍</span>Search</button>
+      <button class="tab-btn active" data-tab="content" onclick="switchTab('content')"><span class="tab-icon">✏️</span>Contents</button>
+      <button class="tab-btn" data-tab="insights" onclick="switchTab('insights')"><span class="tab-icon">📊</span>Insight</button>
     </div>
 
     <!-- Search Tab Options -->
@@ -395,9 +395,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
     <!-- Content Tab Options -->
     <div class="tab-options active" id="contentOptions">
       <div class="opt-group" id="contentSubGroup">
-        <button class="opt-btn active" data-val="caption" onclick="setOpt('contentSub','caption')">캡션/기획</button>
-        <button class="opt-btn" data-val="image" onclick="setOpt('contentSub','image')">이미지</button>
-        <button class="opt-btn" data-val="video" onclick="setOpt('contentSub','video')">영상</button>
+        <button class="opt-btn active" data-val="text" disabled style="opacity:.85;cursor:default">Text</button>
+        <button class="opt-btn" data-val="image" onclick="toggleContentMedia('image')">Image</button>
+        <button class="opt-btn" data-val="video" onclick="toggleContentMedia('video')">Video</button>
       </div>
       <div class="opt-sep" id="contentMainSep"></div>
       <div class="opt-group" id="typeGroup">
@@ -490,7 +490,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 <script src="data.js"></script>
 <script>
 // ── State ──
-const state = { activeTab:'content', contentSub:'caption', searchScope:'all', insightScope:'all', type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1', contentFormat:'feed', detectedMode:null };
+const state = { activeTab:'content', contentMedia:{ image:false, video:false }, searchScope:'all', insightScope:'all', type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1', contentFormat:'feed', detectedMode:null };
 const files = [];
 
 // ══════════════════════════════════════════════════════════
@@ -652,6 +652,11 @@ FUNNEL CONTEXT:
 - TOF: Scroll-stopping hook. Brand philosophy, visual metaphor. "Who has time for salads anymore?"
 - MOF: Educational depth. Ingredients, science, clinical stats, differentiation.
 - BOF: Offer + urgency. 60-day guarantee, pricing ($3.60/day), testimonials, direct CTA.
+
+TENSION LEVELS (follow strictly based on user's 톤 setting):
+- Safe Bold (톤: Safe Bold): Restrained confidence. Minimal, declarative statements. Clean, professional, corporate-safe. Short sentences, breathing room. No provocative questions. Safe for all audiences and platforms. Example: "Prep time: zero." / "Wellness, simplified." / "M-01. Before every meal."
+- Bold (톤: Provocative): Challenge conventions. Ask uncomfortable questions. Subvert expectations. Provocative but not offensive. Push boundaries while staying brand-aligned. Edgy hooks, unexpected metaphors, cultural tension. Example: "Who has time for salads anymore?" / "We optimize everything except what we eat." / "Your $7 smoothie can't do what this does."
+The difference should be CLEARLY NOTICEABLE. Safe = calm, composed, minimal. Bold = provocative, edgy, attention-grabbing.
 
 BANNED: "one bottle salad", "2 second salad", disease claims, guaranteed results, cures
 
@@ -1068,6 +1073,12 @@ function resetToHome() {
   typeLoop();
 }
 
+function toggleContentMedia(type) {
+  state.contentMedia[type] = !state.contentMedia[type];
+  const btn = document.querySelector('#contentSubGroup .opt-btn[data-val="' + type + '"]');
+  if (btn) btn.classList.toggle('active', state.contentMedia[type]);
+}
+
 function setSearchScope(val) {
   state.searchScope = val;
   document.querySelectorAll('#searchOptions .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
@@ -1081,7 +1092,7 @@ function setInsightScope(val) {
 // ── Options ──
 function setOpt(key, val) {
   state[key] = val;
-  const groupMap = { type:'typeGroup', channel:'channelGroup', format:'formatGroup', tension:'tensionGroup', contentSub:'contentSubGroup' };
+  const groupMap = { type:'typeGroup', channel:'channelGroup', format:'formatGroup', tension:'tensionGroup' };
   if (groupMap[key]) {
     document.querySelectorAll('#' + groupMap[key] + ' .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
   }
@@ -1091,18 +1102,7 @@ function setOpt(key, val) {
   if (key === 'funnel') {
     document.querySelectorAll('#funnelGroup .f-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
   }
-  // 콘텐츠 서브탭 전환 시 옵션 그룹 표시/숨김
-  if (key === 'contentSub') {
-    const isCaptionMode = (val === 'caption');
-    ['typeGroup','channelGroup','contentFormatGroup','funnelGroup','tensionGroup'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = isCaptionMode ? '' : 'none';
-    });
-    document.querySelectorAll('#contentOptions .opt-sep').forEach(el => {
-      if (el.id !== 'contentMainSep') el.style.display = isCaptionMode ? '' : 'none';
-    });
-  }
-  const show = state.type === 'ad' && state.contentSub === 'caption';
+  const show = state.type === 'ad';
   document.getElementById('funnelGroup').classList.toggle('hidden', !show);
   document.getElementById('funnelSep').style.display = show ? '' : 'none';
 }
@@ -3415,33 +3415,15 @@ function renderDriveResultsCard(driveRes) {
   return html;
 }
 
-// ── 콘텐츠 탭: 캡션/기획 + 이미지/영상 생성 ──
+// ── 콘텐츠 탭: Text(항상) + Image/Video(토글) ──
 async function generateContent(prompt) {
-  // 서브탭에 따라 직접 라우팅
-  if (state.contentSub === 'image') {
-    generateImageWithNano(prompt);
-    return;
-  }
-  if (state.contentSub === 'video') {
-    generateVideoWithHiggs(prompt);
-    return;
-  }
+  const wantImage = state.contentMedia.image;
+  const wantVideo = state.contentMedia.video;
 
-  // 캡션/기획 모드: 기존 라우팅 로직 유지
+  // Text는 항상 생성 (캡션/기획)
+  // 기존 라우팅 로직으로 AI 캡션 생성
   const intents = detectIntents(prompt);
   const lower = prompt.toLowerCase();
-
-  // 영상 생성 요청 → Higgsfield
-  if (intents.includes('videogen')) {
-    generateVideoWithHiggs(prompt);
-    return;
-  }
-
-  // 이미지 생성 요청 → Nano Banana
-  if (intents.includes('imagegen')) {
-    generateImageWithNano(prompt);
-    return;
-  }
 
   // ODD 내부 자료 요청 → AI 설명 + Drive 검색
   const isOddAssetQuery = ODD_KNOWLEDGE_MAP && Object.values(ODD_KNOWLEDGE_MAP).some(
@@ -3459,9 +3441,23 @@ async function generateContent(prompt) {
     return;
   }
 
-  // 모든 질문 → AI 응답 (캡션/기획 + [IMG_GEN] 자동 생성)
+  // AI 캡션/기획 생성 (Image/Video 선택 시 이미지/영상도 병렬 생성)
   if (aiConfig.key) {
-    generateWithAI(prompt);
+    // Image 또는 Video 토글이 켜져있으면 AI가 [IMG_GEN] 태그도 생성하도록 허용
+    const mediaAppend = [];
+    if (wantImage) mediaAppend.push('\n\n[지시: 이 콘텐츠에 적합한 이미지를 [IMG_GEN: prompt] 태그로 반드시 포함하세요. 슬라이드당 1개, 싱글 포스트 1개.]');
+    if (wantVideo) mediaAppend.push('\n\n[지시: 이 콘텐츠에 적합한 영상 컨셉도 제안하세요. 영상 프롬프트는 [VIDEO_CONCEPT: 설명] 형태로 포함.]');
+
+    if (!wantImage && !wantVideo) {
+      // 텍스트만: [IMG_GEN] 생성하지 않도록 지시
+      await generateWithAI(prompt, { noImageGen: true, systemAppend: '\n\n[CONTENT MODE — TEXT ONLY] 캡션과 기획 텍스트만 작성하세요. [IMG_GEN] 태그를 사용하지 마세요. 이미지 생성 없이 텍스트 콘텐츠만 제공합니다.' });
+    } else {
+      await generateWithAI(prompt + mediaAppend.join(''));
+      // Video 토글이 켜져있으면 AI 응답 후 추가로 영상 생성
+      if (wantVideo) {
+        setTimeout(() => generateVideoWithHiggs(prompt), 500);
+      }
+    }
     return;
   }
 
@@ -3473,21 +3469,39 @@ const INSIGHTS_SYSTEM = `You are ODD AI in RESEARCH MODE — focused on external
 
 Your role: Provide actionable market insights, competitive analysis, and industry trends.
 
-FOCUS AREAS:
-- Global dietary supplement / nutraceutical market trends
-- DTC wellness brand strategies and benchmarks
-- Metabolic health, blood sugar management, GLP-1 supplement trends
-- Competitor analysis (AG1, Seed, Athletic Greens, Ritual, etc.)
-- Content & marketing trends in wellness/health space
-- Regulatory updates (FDA, FTC advertising guidelines)
-- Ingredient trends (prebiotics, postbiotics, adaptogenics)
+=== ODD POSITIONING ===
+- M-01: pre-meal liquid supplement, $3.60/day ($29/5-pack, $129/30-pack, $109/mo subscription)
+- Category: metabolic health / blood sugar support / gut health prebiotics
+- Price tier: premium DTC ($100-150/month range)
+- Target: health-conscious millennials/Gen-Z, US market, DTC-first
 
-OUTPUT STYLE:
-- Data-driven, cite specific numbers/sources when possible
-- Use bullet points and clear headers
-- Korean language preferred, English terms for industry jargon
-- Actionable recommendations tied to ODD's positioning
-- Always note the recency/reliability of information
+=== COMPETITOR FRAMEWORK ===
+Competitors are US-market supplement brands in a similar price range ($80-160/month) in these categories:
+- Blood sugar / metabolic health: Pendulum, Lumen, Zoe, Levels
+- Premium daily supplement (DTC): AG1 (Athletic Greens), Seed, Ritual, Care/of, Rae Wellness
+- Pre/probiotic gut health: Seed (DS-01), Pendulum (Akkermansia), Viome
+- Functional beverage/shot: Kor Shots, Pressed Juicery, Suja, Vive Organic
+- Amazon top sellers in "blood sugar support" and "prebiotic supplement" categories
+
+When analyzing competitors, compare: pricing, ingredients, positioning, content strategy, ad spend, distribution, reviews, subscription model.
+
+=== FOCUS AREAS ===
+- Global dietary supplement / nutraceutical market trends and sizing
+- DTC wellness brand strategies, CAC, LTV benchmarks
+- Metabolic health, blood sugar management, GLP-1 supplement trends
+- Content & marketing trends in wellness/health space (social, paid, influencer)
+- Regulatory updates (FDA, FTC advertising guidelines for supplements)
+- Ingredient trends (prebiotics, postbiotics, adaptogens, nootropics)
+- Amazon supplement category dynamics, BSR trends, review analysis
+- Retail vs DTC channel strategy for premium supplements
+
+=== OUTPUT STYLE ===
+- Data-driven: cite specific numbers, market sizes, growth rates, sources when possible
+- Use bullet points, clear headers, and structured analysis
+- Korean language preferred, English terms for industry jargon and brand names
+- Actionable recommendations tied to ODD's specific positioning and price point
+- Always note information recency and reliability level
+- Include "So What for ODD?" section — what this means for ODD's strategy
 
 NEVER generate [IMG_GEN] tags in this mode. Text insights only.`;
 
@@ -3497,7 +3511,7 @@ async function generateInsights(prompt) {
   // 인사이트 스코프에 따라 프롬프트 보강
   const scopeContext = {
     trends: '시장 동향 및 트렌드에 초점을 맞춰 답변하세요.',
-    competitor: '경쟁사 분석 관점에서 답변하세요. AG1, Seed, Ritual 등 DTC 웰니스 브랜드와 비교.',
+    competitor: '경쟁사 분석 관점에서 답변하세요. ODD M-01과 비슷한 가격대($80-160/월)의 미국 시장 서플리먼트 브랜드를 비교 분석. Pendulum, AG1, Seed, Ritual 등 DTC 브랜드 + Amazon 혈당/프리바이오틱 카테고리 상위 브랜드 포함.',
     reference: '레퍼런스 및 벤치마크 사례를 중심으로 답변하세요.',
     news: '최신 뉴스와 업계 동향을 중심으로 답변하세요.'
   };
