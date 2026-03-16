@@ -71,6 +71,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .input-box.dragover .drop-overlay{opacity:1}
 .drop-overlay span{font-size:13px;color:var(--red);font-weight:600}
 
+/* ── Tab Bar ── */
+.tab-bar{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:24px;margin-bottom:8px}
+.tab-btn{padding:10px 28px;border-radius:100px;border:1.5px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--t4);cursor:pointer;font-size:14px;font-weight:500;font-family:var(--sans);transition:all .25s;letter-spacing:.3px}
+.tab-btn:hover{color:var(--t2);background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)}
+.tab-btn.active{background:rgba(191,32,38,.12);color:var(--red);border-color:rgba(191,32,38,.3);font-weight:700}
+.tab-btn .tab-icon{margin-right:6px;font-size:13px;opacity:.7}
+.tab-options{display:none;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin-top:12px}
+.tab-options.active{display:flex}
+@media(max-width:600px){.tab-bar{gap:4px}.tab-btn{padding:8px 18px;font-size:12px}}
+
 /* ── Options ── */
 .options-bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:28px}
 
@@ -339,8 +349,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 
 <div class="landing" id="landing">
   <div class="logo-area">
-    <img src="odd_logo_white.png" alt="ODD." onclick="openSettings()" style="cursor:pointer" title="클릭하면 설정 열기">
-    <div class="subtitle">Describe your content, get perfect captions and creative concepts.</div>
+    <img src="odd_logo_white.png" alt="ODD." onclick="resetToHome()" style="cursor:pointer" title="홈으로 돌아가기">
+    <div class="subtitle">Brand Intelligence & Content Studio</div>
   </div>
 
   <div class="input-area">
@@ -364,8 +374,32 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
       <div class="file-preview" id="filePreview"></div>
     </div>
 
-    <!-- Options -->
-    <div class="options-bar">
+    <!-- Tab Bar -->
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-btn" data-tab="search" onclick="switchTab('search')"><span class="tab-icon">🔍</span>검색</button>
+      <button class="tab-btn active" data-tab="content" onclick="switchTab('content')"><span class="tab-icon">✏️</span>콘텐츠</button>
+      <button class="tab-btn" data-tab="insights" onclick="switchTab('insights')"><span class="tab-icon">📊</span>인사이트</button>
+    </div>
+
+    <!-- Search Tab Options -->
+    <div class="tab-options" id="searchOptions">
+      <div class="opt-group">
+        <button class="opt-btn active" data-val="all" onclick="setSearchScope('all')">전체</button>
+        <button class="opt-btn" data-val="brand" onclick="setSearchScope('brand')">브랜드</button>
+        <button class="opt-btn" data-val="ingredient" onclick="setSearchScope('ingredient')">원료/성분</button>
+        <button class="opt-btn" data-val="asset" onclick="setSearchScope('asset')">에셋</button>
+        <button class="opt-btn" data-val="data" onclick="setSearchScope('data')">데이터</button>
+      </div>
+    </div>
+
+    <!-- Content Tab Options -->
+    <div class="tab-options active" id="contentOptions">
+      <div class="opt-group" id="contentSubGroup">
+        <button class="opt-btn active" data-val="caption" onclick="setOpt('contentSub','caption')">캡션/기획</button>
+        <button class="opt-btn" data-val="image" onclick="setOpt('contentSub','image')">이미지</button>
+        <button class="opt-btn" data-val="video" onclick="setOpt('contentSub','video')">영상</button>
+      </div>
+      <div class="opt-sep" id="contentMainSep"></div>
       <div class="opt-group" id="typeGroup">
         <button class="opt-btn active" data-val="ad" onclick="setOpt('type','ad')">광고</button>
         <button class="opt-btn" data-val="organic" onclick="setOpt('type','organic')">일반</button>
@@ -378,11 +412,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
         <button class="opt-btn" data-val="google" onclick="setOpt('channel','google')">Google</button>
       </div>
       <div class="opt-sep" id="formatSep"></div>
-      <div class="opt-group" id="formatGroup">
-        <button class="opt-btn active" data-val="image" onclick="setOpt('format','image')">이미지</button>
-        <button class="opt-btn" data-val="video" onclick="setOpt('format','video')">영상</button>
-      </div>
-      <div class="opt-sep" id="contentFormatSep" style="display:none"></div>
       <div class="format-group hidden" id="contentFormatGroup">
         <button class="fmt-btn active" data-val="feed" onclick="setOpt('contentFormat','feed')">피드</button>
         <button class="fmt-btn" data-val="reels" onclick="setOpt('contentFormat','reels')">릴스</button>
@@ -399,6 +428,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
       <div class="opt-group" id="tensionGroup">
         <button class="opt-btn active" data-val="1" onclick="setOpt('tension','1')">Safe</button>
         <button class="opt-btn" data-val="2" onclick="setOpt('tension','2')">Bold</button>
+      </div>
+    </div>
+
+    <!-- Insights Tab Options -->
+    <div class="tab-options" id="insightsOptions">
+      <div class="opt-group">
+        <button class="opt-btn active" data-val="all" onclick="setInsightScope('all')">전체</button>
+        <button class="opt-btn" data-val="trends" onclick="setInsightScope('trends')">시장 동향</button>
+        <button class="opt-btn" data-val="competitor" onclick="setInsightScope('competitor')">경쟁사</button>
+        <button class="opt-btn" data-val="reference" onclick="setInsightScope('reference')">레퍼런스</button>
+        <button class="opt-btn" data-val="news" onclick="setInsightScope('news')">뉴스</button>
       </div>
     </div>
   </div>
@@ -450,7 +490,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 <script src="data.js"></script>
 <script>
 // ── State ──
-const state = { type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1', contentFormat:'feed', detectedMode:null };
+const state = { activeTab:'content', contentSub:'caption', searchScope:'all', insightScope:'all', type:'ad', channel:'all', format:'image', funnel:'tof', tension:'1', contentFormat:'feed', detectedMode:null };
 const files = [];
 
 // ══════════════════════════════════════════════════════════
@@ -940,13 +980,33 @@ function generateStockLinks(keywords) {
 }
 
 // ── Typing placeholder animation ──
-const phrases = [
-  '콘텐츠 주제를 설명해주세요...',
-  '어떤 메시지를 전달하고 싶나요?',
-  '이미지나 영상을 드래그하세요',
-  '예: 식사 전 리추얼 소개 콘텐츠',
-  '예: M-01 성분 교육 캐러셀'
-];
+const tabPhrases = {
+  search: [
+    'M-01 성분 정보 알려줘...',
+    '브랜드 가이드라인 검색...',
+    '원료 사진 찾아줘...',
+    '매출 데이터 조회...',
+    '노션 문서 검색...',
+    'Delphinol 원료 설명...'
+  ],
+  content: [
+    '콘텐츠 주제를 설명해주세요...',
+    '어떤 메시지를 전달하고 싶나요?',
+    '이미지나 영상을 드래그하세요',
+    '예: 식사 전 리추얼 소개 콘텐츠',
+    '예: M-01 성분 교육 캐러셀',
+    '예: Not Salad But Salad 캠페인'
+  ],
+  insights: [
+    '프리바이오틱 시장 트렌드...',
+    '경쟁사 AG1 최근 전략...',
+    '글로벌 건기식 시장 동향...',
+    '미국 GLP-1 서플리먼트 트렌드...',
+    'DTC 건강기능식품 벤치마크...',
+    '2026 웰니스 인더스트리 리포트...'
+  ]
+};
+let phrases = tabPhrases[state.activeTab];
 let phraseIdx = 0, charIdx = 0, isDeleting = false, typingTimer = null;
 const phEl = document.getElementById('typedPlaceholder');
 
@@ -976,10 +1036,52 @@ function typeLoop() {
 }
 typeLoop();
 
+// ── Tab Switching ──
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-options').forEach(el => el.classList.remove('active'));
+  const optPanel = document.getElementById(tab + 'Options');
+  if (optPanel) optPanel.classList.add('active');
+  // 플레이스홀더 업데이트
+  phrases = tabPhrases[tab] || tabPhrases.content;
+  phraseIdx = 0; charIdx = 0; isDeleting = false;
+  clearTimeout(typingTimer);
+  if (!promptInput.value) { phEl.style.opacity = ''; typeLoop(); }
+}
+
+function resetToHome() {
+  document.getElementById('resultsArea').style.display = 'none';
+  document.getElementById('resultsArea').innerHTML = '';
+  document.getElementById('landing').classList.remove('pushed');
+  promptInput.value = '';
+  promptInput.style.height = 'auto';
+  promptInput.classList.remove('has-text');
+  sendBtn.disabled = true;
+  files.length = 0;
+  const fp = document.getElementById('filePreview');
+  fp.innerHTML = ''; fp.classList.remove('show');
+  switchTab('content');
+  phEl.style.opacity = '';
+  clearTimeout(typingTimer);
+  phraseIdx = 0; charIdx = 0; isDeleting = false;
+  typeLoop();
+}
+
+function setSearchScope(val) {
+  state.searchScope = val;
+  document.querySelectorAll('#searchOptions .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+}
+
+function setInsightScope(val) {
+  state.insightScope = val;
+  document.querySelectorAll('#insightsOptions .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+}
+
 // ── Options ──
 function setOpt(key, val) {
   state[key] = val;
-  const groupMap = { type:'typeGroup', channel:'channelGroup', format:'formatGroup', tension:'tensionGroup' };
+  const groupMap = { type:'typeGroup', channel:'channelGroup', format:'formatGroup', tension:'tensionGroup', contentSub:'contentSubGroup' };
   if (groupMap[key]) {
     document.querySelectorAll('#' + groupMap[key] + ' .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
   }
@@ -989,7 +1091,18 @@ function setOpt(key, val) {
   if (key === 'funnel') {
     document.querySelectorAll('#funnelGroup .f-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
   }
-  const show = state.type === 'ad';
+  // 콘텐츠 서브탭 전환 시 옵션 그룹 표시/숨김
+  if (key === 'contentSub') {
+    const isCaptionMode = (val === 'caption');
+    ['typeGroup','channelGroup','contentFormatGroup','funnelGroup','tensionGroup'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = isCaptionMode ? '' : 'none';
+    });
+    document.querySelectorAll('#contentOptions .opt-sep').forEach(el => {
+      if (el.id !== 'contentMainSep') el.style.display = isCaptionMode ? '' : 'none';
+    });
+  }
+  const show = state.type === 'ad' && state.contentSub === 'caption';
   document.getElementById('funnelGroup').classList.toggle('hidden', !show);
   document.getElementById('funnelSep').style.display = show ? '' : 'none';
 }
@@ -2305,7 +2418,8 @@ RULES:
 - ALWAYS include [IMG_GEN] tags for content planning, carousel, visual requests — no exceptions
 - Prioritize editorial realism over AI-art aesthetics. The goal is images that look like they were shot by a professional photographer for a premium brand campaign.`;
 
-async function generateWithAI(prompt) {
+async function generateWithAI(prompt, opts) {
+  opts = opts || {};
   if (!aiConfig.key) { showToast('설정에서 AI API 키를 입력하세요'); return; }
   document.getElementById('landing').classList.add('pushed');
   const ra = document.getElementById('resultsArea');
@@ -2351,7 +2465,7 @@ async function generateWithAI(prompt) {
     const r = await fetch(AI_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key },
-      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, stream: true, system: AI_SYSTEM, messages: [{ role: 'user', content: userMsg }] }),
+      body: JSON.stringify({ model: aiConfig.model, max_tokens: 4096, stream: true, system: opts.systemOverride || (AI_SYSTEM + (opts.systemAppend || '')), messages: [{ role: 'user', content: userMsg }] }),
       signal: window._aiAbort.signal
     });
 
@@ -2454,12 +2568,14 @@ async function generateWithAI(prompt) {
     saveHistory(prompt, [{ label: 'AI 응답', content: finalText }]);
     const currentHistoryId = getHistory()[0]?.id;
 
-    // [IMG_GEN: ...] 태그 파싱 → Higgsfield로 이미지 자동 생성
-    const imgGenMatches = finalText.match(/\[IMG_GEN:\s*(.+?)\]/g);
-    if (imgGenMatches && imgGenMatches.length > 0) {
-      const higgsKey = localStorage.getItem('odd_higgs_key') || '';
-      if (higgsKey) {
-        autoGenerateImages(imgGenMatches, null, target, currentHistoryId);
+    // [IMG_GEN: ...] 태그 파싱 → Higgsfield로 이미지 자동 생성 (noImageGen 모드에서는 스킵)
+    if (!opts.noImageGen) {
+      const imgGenMatches = finalText.match(/\[IMG_GEN:\s*(.+?)\]/g);
+      if (imgGenMatches && imgGenMatches.length > 0) {
+        const higgsKey = localStorage.getItem('odd_higgs_key') || '';
+        if (higgsKey) {
+          autoGenerateImages(imgGenMatches, null, target, currentHistoryId);
+        }
       }
     }
 
@@ -2894,16 +3010,17 @@ async function autoGenerateImages(matches, _unused, targetEl, historyId) {
     targetEl.innerHTML = html;
   }
 
+  // 브랜드 컨텍스트 (자동 생성 이미지에도 적용)
+  const autoBrandCtx = 'Brand: ODD — premium metabolic wellness. Product: M-01, vivid red 25ml glass vial, black "ODD" text, black ribbed grip. Editorial photography: warm golden-hour light, Kodak Portra film, earth tones with red accent, organic textures. Never dark/moody. Aspirational, sophisticated.';
+
   // 병렬로 Higgsfield 이미지 생성 (제품 프롬프트 → Kontext + 레퍼런스, 나머지 → Nano Banana)
   const results = await Promise.allSettled(prompts.map(p => {
     if (isProductImagePrompt(p)) {
-      // 제품 관련: Kontext로 공식 제품 사진 레퍼런스 기반 생성
       const refUrl = getProductReferenceUrl(p);
-      return higgsGenerateWithProductRef(p, refUrl);
+      return higgsGenerateWithProductRef(p + '. ' + autoBrandCtx, refUrl);
     }
-    // 비제품: Nano Banana 텍스트→이미지
     return higgsGenerate('nano-banana-pro', {
-      prompt: p,
+      prompt: p + '. ' + autoBrandCtx,
       aspect_ratio: '9:16'
     });
   }));
@@ -3080,12 +3197,11 @@ async function generateImageWithNano(prompt) {
   const modelLabel = useProduct ? 'Kontext (제품 레퍼런스)' : 'Nano Banana';
   ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>AI 이미지 생성 중...</div><div class="result-content" id="nanoTarget" style="white-space:normal;min-height:120px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><span style="color:var(--t4);font-size:13px;margin-left:12px">Higgsfield ' + modelLabel + '로 이미지를 생성하고 있습니다...</span></div></div>';
 
-  const brandContext = 'ODD brand: bold red premium supplement brand. M-01 is a small red 25ml vial with black ODD text and black ribbed grip band. Photography style: warm editorial like Kinfolk magazine, natural golden light, shot on medium format film. NOT dark/moody, NOT all-black. Warm, confident, aspirational.';
+  const brandContext = 'Brand: ODD — premium metabolic wellness supplement. Product: M-01, a vivid red 25ml glass vial with matte black "ODD" horizontal text and black ribbed silicone grip band. PHOTOGRAPHY DIRECTION: high-end editorial lifestyle photography inspired by Kinfolk, Cereal, and Apartamento magazines. LIGHTING: warm natural golden-hour sunlight, soft diffused shadows, subtle film grain like Kodak Portra 400. PALETTE: warm earth tones (terracotta, sand, cream, olive, warm wood) with bold ODD red as accent — never all-black, never dark moody. COMPOSITION: intentional negative space, asymmetric framing, organic textures (linen, stone, ceramic, marble, raw wood). MOOD: quiet confidence, morning ritual, effortless sophistication — aspirational yet approachable. CAMERA FEEL: medium format film (Hasselblad 500C, Mamiya 7), shallow depth of field, 85mm equivalent. AVOID: clinical sterile look, supplement-industry cliches, neon colors, gym-fitness aesthetic, dark moody tones, AI-generated look.';
 
   try {
     let result;
     if (useProduct) {
-      // 공식 제품 사진 레퍼런스 기반 Kontext 생성
       const refUrl = getProductReferenceUrl(prompt);
       result = await higgsGenerateWithProductRef(prompt + '. ' + brandContext, refUrl);
     } else {
@@ -3123,7 +3239,7 @@ async function generateVideoWithHiggs(prompt) {
   ra.style.display = 'block';
   ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--blue)"></span>AI 영상 생성 중...</div><div class="result-content" id="higgsTarget" style="white-space:normal;min-height:120px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><span style="color:var(--t4);font-size:13px;margin-left:12px">Higgsfield로 영상을 생성하고 있습니다... (최대 2-3분 소요)</span></div></div>';
 
-  const brandContext = 'ODD brand: bold red premium supplement. M-01 is a small vivid red 25ml vial with black ODD text and black ribbed grip. Warm editorial aesthetic, natural golden light, cinematic but warm.';
+  const brandContext = 'Brand: ODD — premium metabolic wellness. M-01: vivid red 25ml glass vial, black "ODD" text, black ribbed grip. Cinematic editorial style: warm golden-hour light, Kodak Portra film tones, earth tones with red accent. Organic textures, shallow depth of field. Never dark/moody, never clinical. Aspirational morning ritual mood.';
 
   try {
     // 1) 생성 요청 (프록시 경로)
@@ -3193,10 +3309,125 @@ async function generate() {
   if (driveAccessToken && aiConfig.key) {
     loadDriveClassifications();
     if (!_driveClassifications || Object.keys(_driveClassifications).length === 0) {
-      indexDriveImages(true); // 백그라운드, 프로그레스 표시
+      indexDriveImages(true);
     }
   }
 
+  // 탭별 라우팅
+  switch (state.activeTab) {
+    case 'search': return generateSearch(prompt);
+    case 'content': return generateContent(prompt);
+    case 'insights': return generateInsights(prompt);
+    default: return generateContent(prompt);
+  }
+}
+
+// ── 검색 탭: 브랜드 지식 / 내부 자료 검색 (이미지 생성 없음) ──
+async function generateSearch(prompt) {
+  document.getElementById('landing').classList.add('pushed');
+  const ra = document.getElementById('resultsArea');
+  ra.style.display = 'block';
+  ra.innerHTML = '';
+
+  const lower = prompt.toLowerCase();
+  const results = [];
+
+  // 1) 내장 지식맵에서 즉시 답변
+  const builtIn = getBuiltInAnswer(prompt);
+  if (builtIn) {
+    results.push('<div class="result-card" style="animation:fadeUp .5s ease both"><div class="result-label"><span class="dot" style="background:var(--green)"></span>브랜드 지식</div><div class="result-content rendered">' + renderBuiltInMd(builtIn) + '</div><div class="result-meta"><span class="tag">내장 데이터</span></div></div>');
+  }
+
+  // 2) 대시보드 데이터
+  if (isDataQuery(prompt) && typeof EMBEDDED_DATA !== 'undefined') {
+    const summary = getDashboardSummary(prompt);
+    if (summary) {
+      results.push('<div class="result-card" style="animation:fadeUp .5s ease both;animation-delay:.1s"><div class="result-label"><span class="dot" style="background:var(--blue)"></span>매출 데이터</div><div class="result-content rendered">' + renderBuiltInMd(summary) + '</div><div class="result-meta"><span class="tag">대시보드</span></div></div>');
+    }
+  }
+
+  // 3) 노션 검색
+  if (NOTION_KEY && isNotionQuery(prompt)) {
+    try {
+      const nr = await searchNotion(prompt);
+      if (nr.withContent.length) {
+        let notionHtml = '<div class="result-card" style="animation:fadeUp .5s ease both;animation-delay:.15s"><div class="result-label"><span class="dot" style="background:var(--orange)"></span>노션 문서</div><div class="result-content rendered">';
+        nr.withContent.slice(0, 5).forEach(p => {
+          notionHtml += '<div style="margin-bottom:12px"><strong>' + esc(p.title) + '</strong><div style="color:var(--t3);font-size:13px;margin-top:4px">' + esc((p.content || '').slice(0, 300)) + '</div></div>';
+        });
+        notionHtml += '</div><div class="result-meta"><span class="tag">Notion</span></div></div>';
+        results.push(notionHtml);
+      }
+    } catch {}
+  }
+
+  // 4) Drive 에셋 검색 (이미지/영상 표시, 생성 없음)
+  const needsDrive = ['사진','이미지','영상','에셋','파일','찾아','보여','검색','drive'].some(k => lower.includes(k));
+  if (needsDrive && driveAccessToken) {
+    try {
+      const driveRes = await searchDriveAPI(prompt);
+      if (driveRes.length) {
+        results.push(renderDriveResultsCard(driveRes));
+      }
+    } catch {}
+  }
+
+  // 5) 결과가 없거나 복잡한 질문이면 AI로 보충 (단, 이미지 생성 제외)
+  if (results.length === 0 && aiConfig.key) {
+    // AI 사용하되 이미지 생성 태그([IMG_GEN])를 생성하지 않도록 지시
+    await generateWithAI(prompt, { noImageGen: true, systemAppend: '\n\n[SEARCH MODE] 사용자가 브랜드 정보를 검색 중입니다. [IMG_GEN] 태그를 절대 사용하지 마세요. 이미지 생성 없이 텍스트 정보만 제공하세요. 내장 지식(브랜드, 제품, 원료, 퍼널 등)과 제공된 노션/데이터를 기반으로 답변하세요.' });
+    // Drive 에셋도 표시
+    if (driveAccessToken) {
+      const assetContainer = document.getElementById('resultsArea');
+      appendAssetRecommendations(prompt, assetContainer);
+    }
+    return;
+  }
+
+  ra.innerHTML = results.join('');
+  // Drive 에셋이 아직 없고 관련 쿼리라면 추가
+  if (!needsDrive && driveAccessToken) {
+    appendAssetRecommendations(prompt, ra);
+  }
+  if (results.length) saveHistory(prompt, [{ label: '검색 결과', content: prompt }]);
+}
+
+// Drive 결과를 카드 HTML로 렌더링하는 헬퍼
+function renderDriveResultsCard(driveRes) {
+  const catLabels = { product:'제품', model:'모델', ingredient:'원료', packaging:'패키지', lifestyle:'라이프', campaign:'광고', graphic:'디자인', other:'기타' };
+  const catColors = { product:'var(--red)', model:'var(--purple)', ingredient:'var(--green)', packaging:'var(--blue)', lifestyle:'var(--orange)', campaign:'#4f8df9', graphic:'#38bdf8', other:'var(--t5)' };
+  let html = '<div class="result-card" data-asset-card style="animation:fadeUp .5s ease both;animation-delay:.2s">';
+  html += '<div class="result-label"><span class="dot" style="background:var(--orange)"></span>Google Drive <span style="font-weight:400;color:var(--t4);font-size:11px;margin-left:6px">(' + driveRes.length + '개)</span></div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px">';
+  driveRes.forEach(f => {
+    let thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
+    if (thumb && driveAccessToken) thumb += (thumb.includes('?') ? '&' : '?') + 'access_token=' + driveAccessToken;
+    const isVideo = f.mimeType && f.mimeType.includes('video');
+    const cls = _driveClassifications && _driveClassifications[f.id];
+    const catBadge = cls ? '<div style="position:absolute;top:6px;left:6px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.65);color:' + (catColors[cls.category] || 'var(--t3)') + ';font-size:8px;font-weight:600;z-index:1;backdrop-filter:blur(4px)">' + (catLabels[cls.category] || cls.category) + '</div>' : '';
+    html += '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised);transition:all .15s;position:relative" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')" onmouseover="this.style.borderColor=\'rgba(255,159,10,.3)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'">' +
+      catBadge +
+      (isVideo ? '<div style="position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21"/></svg></div>' : '') +
+      (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy" onerror="this.outerHTML=\'<div style=\\\'width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px;background:var(--bg-raised)\\\'>미리보기 없음</div>\'">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">미리보기 없음</div>') +
+      '<div style="padding:5px 8px;font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// ── 콘텐츠 탭: 캡션/기획 + 이미지/영상 생성 ──
+async function generateContent(prompt) {
+  // 서브탭에 따라 직접 라우팅
+  if (state.contentSub === 'image') {
+    generateImageWithNano(prompt);
+    return;
+  }
+  if (state.contentSub === 'video') {
+    generateVideoWithHiggs(prompt);
+    return;
+  }
+
+  // 캡션/기획 모드: 기존 라우팅 로직 유지
   const intents = detectIntents(prompt);
   const lower = prompt.toLowerCase();
 
@@ -3212,31 +3443,68 @@ async function generate() {
     return;
   }
 
-  // ODD 내부 자료 요청 ("원료 사진 보여줘", "M-01 이미지 찾아줘") →
-  // AI가 내용 설명 + Drive에서 실제 이미지 검색
+  // ODD 내부 자료 요청 → AI 설명 + Drive 검색
   const isOddAssetQuery = ODD_KNOWLEDGE_MAP && Object.values(ODD_KNOWLEDGE_MAP).some(
     map => map.triggers.some(t => lower.includes(t))
   ) && ['사진','이미지','영상','보여','찾아','에셋','asset','photo','image','video'].some(k => lower.includes(k));
 
   if (isOddAssetQuery && aiConfig.key) {
-    generateWithAI(prompt);  // AI가 설명 + appendAssetRecommendations에서 Drive 검색
+    generateWithAI(prompt);
     return;
   }
 
-  // 일반 에셋 검색 (ODD 지식맵에 없는 외부 검색) → Drive+Unsplash 직행
+  // 일반 에셋 검색 → Drive+Unsplash 직행
   if (intents.includes('drive') || (intents.length === 1 && intents[0] === 'asset')) {
     handleMultiIntent(prompt, intents);
     return;
   }
 
-  // 모든 질문 → AI로 즉시 응답 (노션/대시보드 컨텍스트 자동 포함)
+  // 모든 질문 → AI 응답 (캡션/기획 + [IMG_GEN] 자동 생성)
   if (aiConfig.key) {
     generateWithAI(prompt);
     return;
   }
 
-  // AI 키 없으면 기본 캡션
   _origGenerate();
+}
+
+// ── 인사이트 탭: 외부 리서치 / 시장 동향 / 레퍼런스 ──
+const INSIGHTS_SYSTEM = `You are ODD AI in RESEARCH MODE — focused on external market intelligence for ODD, a premium US metabolic wellness supplement brand.
+
+Your role: Provide actionable market insights, competitive analysis, and industry trends.
+
+FOCUS AREAS:
+- Global dietary supplement / nutraceutical market trends
+- DTC wellness brand strategies and benchmarks
+- Metabolic health, blood sugar management, GLP-1 supplement trends
+- Competitor analysis (AG1, Seed, Athletic Greens, Ritual, etc.)
+- Content & marketing trends in wellness/health space
+- Regulatory updates (FDA, FTC advertising guidelines)
+- Ingredient trends (prebiotics, postbiotics, adaptogenics)
+
+OUTPUT STYLE:
+- Data-driven, cite specific numbers/sources when possible
+- Use bullet points and clear headers
+- Korean language preferred, English terms for industry jargon
+- Actionable recommendations tied to ODD's positioning
+- Always note the recency/reliability of information
+
+NEVER generate [IMG_GEN] tags in this mode. Text insights only.`;
+
+async function generateInsights(prompt) {
+  if (!aiConfig.key) { showToast('인사이트 기능은 AI API 키가 필요합니다'); return; }
+
+  // 인사이트 스코프에 따라 프롬프트 보강
+  const scopeContext = {
+    trends: '시장 동향 및 트렌드에 초점을 맞춰 답변하세요.',
+    competitor: '경쟁사 분석 관점에서 답변하세요. AG1, Seed, Ritual 등 DTC 웰니스 브랜드와 비교.',
+    reference: '레퍼런스 및 벤치마크 사례를 중심으로 답변하세요.',
+    news: '최신 뉴스와 업계 동향을 중심으로 답변하세요.'
+  };
+  const scopeAppend = scopeContext[state.insightScope] || '';
+  const enhancedPrompt = scopeAppend ? prompt + '\n\n[지시: ' + scopeAppend + ']' : prompt;
+
+  await generateWithAI(enhancedPrompt, { systemOverride: INSIGHTS_SYSTEM, noImageGen: true });
 }
 
 function buildContentResults(prompt) {
