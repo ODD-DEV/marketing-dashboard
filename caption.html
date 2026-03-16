@@ -2995,7 +2995,6 @@ fireAuth.onAuthStateChanged(user => {
 function openSettings() {
   document.getElementById('settingsAiKey').value = localStorage.getItem('odd_ai_key') || '';
   document.getElementById('settingsNotionKey').value = localStorage.getItem('odd_notion_key') || '';
-  document.getElementById('settingsNanoKey').value = localStorage.getItem('odd_nano_key') || '';
   document.getElementById('settingsHiggsKey').value = localStorage.getItem('odd_higgs_key') || '';
   document.getElementById('settingsOverlay').classList.add('open');
 }
@@ -3030,14 +3029,11 @@ async function testHiggsKey() {
 function saveSettings() {
   const aiKey = document.getElementById('settingsAiKey').value.trim();
   const notionKey = document.getElementById('settingsNotionKey').value.trim();
-  const nanoKey = document.getElementById('settingsNanoKey').value.trim();
   const higgsKey = document.getElementById('settingsHiggsKey').value.trim();
   if (aiKey) { localStorage.setItem('odd_ai_key', aiKey); aiConfig.key = aiKey; }
   else { localStorage.removeItem('odd_ai_key'); aiConfig.key = ''; }
   if (notionKey) { localStorage.setItem('odd_notion_key', notionKey); NOTION_KEY = notionKey; }
   else { localStorage.removeItem('odd_notion_key'); NOTION_KEY = ''; }
-  if (nanoKey) { localStorage.setItem('odd_nano_key', nanoKey); }
-  else { localStorage.removeItem('odd_nano_key'); }
   if (higgsKey) { localStorage.setItem('odd_higgs_key', higgsKey); }
   else { localStorage.removeItem('odd_higgs_key'); }
   closeSettings();
