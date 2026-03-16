@@ -2453,10 +2453,9 @@ async function autoGenerateImages(matches, _unused, targetEl) {
 
   // 병렬로 Higgsfield 이미지 생성
   const results = await Promise.allSettled(prompts.map(p =>
-    higgsGenerate('flux-pro/kontext/max/text-to-image', {
+    higgsGenerate('reve/text-to-image', {
       prompt: p,
-      aspect_ratio: '9:16',
-      safety_tolerance: 2
+      aspect_ratio: '9:16'
     })
   ));
 
@@ -2485,15 +2484,15 @@ async function autoGenerateImages(matches, _unused, targetEl) {
 // ── Nano Banana via Higgsfield (AI Image Generation) ──
 const HIGGS_PROXY = AI_PROXY + '/higgs';
 
-async function higgsGenerate(endpoint, input) {
+async function higgsGenerate(endpoint, params) {
   const key = localStorage.getItem('odd_higgs_key') || '';
   if (!key) throw new Error('Higgsfield API 키가 없습니다. 설정(⚙️)에서 입력하세요.');
 
-  // 1) 생성 요청 (프록시 경로)
+  // 1) 생성 요청 (프록시 경로, 플랫 JSON)
   const r = await fetch(HIGGS_PROXY + '/' + endpoint, {
     method: 'POST',
     headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ input })
+    body: JSON.stringify(params)
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || e.message || 'API 오류 (' + r.status + ')'); }
   const gen = await r.json();
@@ -2501,9 +2500,9 @@ async function higgsGenerate(endpoint, input) {
   // 동기 응답 (즉시 결과)
   if (gen.output || gen.images || gen.image_url) return gen;
 
-  // 2) 비동기 → 폴링 (프록시 경로)
+  // 2) 비동기 → 폴링 (request_id 기반)
   const pollId = gen.id || gen.request_id;
-  const pollUrl = HIGGS_PROXY + '/' + endpoint + '/' + pollId;
+  const pollUrl = HIGGS_PROXY + '/requests/' + pollId + '/status';
   for (let i = 0; i < 60; i++) {
     await new Promise(ok => setTimeout(ok, 3000));
     const sr = await fetch(pollUrl, { headers: { 'x-higgs-key': key } });
@@ -2536,10 +2535,9 @@ async function generateImageWithNano(prompt) {
   const brandContext = 'ODD brand style: premium, dark tones, minimalist, sophisticated. Product M-01 is a pre-meal supplement in a sleek bottle. Brand color: deep red (#bf2026) on black. Clean typography, modern.';
 
   try {
-    const result = await higgsGenerate('flux-pro/kontext/max/text-to-image', {
+    const result = await higgsGenerate('reve/text-to-image', {
       prompt: prompt + '. ' + brandContext,
-      aspect_ratio: '9:16',
-      safety_tolerance: 2
+      aspect_ratio: '9:16'
     });
 
     const imgUrl = extractImageUrl(result);
