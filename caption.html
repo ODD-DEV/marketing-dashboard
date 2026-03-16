@@ -2078,13 +2078,14 @@ async function generateWithAI(prompt) {
       meta.innerHTML = '<span class="tag">Claude AI</span><button class="copy-btn" onclick="copyText(this,\'' + encoded.replace(/'/g,"\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>복사</button>';
     }
     saveHistory(prompt, [{ label: 'AI 응답', content: finalText }]);
+    const currentHistoryId = getHistory()[0]?.id;
 
     // [IMG_GEN: ...] 태그 파싱 → Higgsfield로 이미지 자동 생성
     const imgGenMatches = finalText.match(/\[IMG_GEN:\s*(.+?)\]/g);
     if (imgGenMatches && imgGenMatches.length > 0) {
       const higgsKey = localStorage.getItem('odd_higgs_key') || '';
       if (higgsKey) {
-        autoGenerateImages(imgGenMatches, null, target);
+        autoGenerateImages(imgGenMatches, null, target, currentHistoryId);
       }
     }
 
@@ -2496,7 +2497,7 @@ const _origGenerate = async function() {
 };
 
 // ── Auto Image Generation (parse [IMG_GEN] from AI response → Higgsfield) ──
-async function autoGenerateImages(matches, _unused, targetEl) {
+async function autoGenerateImages(matches, _unused, targetEl, historyId) {
   const higgsKey = localStorage.getItem('odd_higgs_key') || '';
   if (!higgsKey) return; // Higgsfield 키 없으면 스킵
 
@@ -2522,6 +2523,7 @@ async function autoGenerateImages(matches, _unused, targetEl) {
     })
   ));
 
+  const generatedImages = [];
   for (let i = 0; i < results.length; i++) {
     const el = document.getElementById('imggen_' + i);
     if (!el) continue;
@@ -2529,6 +2531,7 @@ async function autoGenerateImages(matches, _unused, targetEl) {
     if (results[i].status === 'fulfilled') {
       const imgUrl = extractImageUrl(results[i].value);
       if (imgUrl) {
+        generatedImages.push({ url: imgUrl, prompt: prompts[i] });
         el.innerHTML = '<img src="' + imgUrl + '" style="max-width:100%;border-radius:10px;border:1px solid var(--border)" />' +
           '<div style="margin-top:6px"><a href="' + imgUrl + '" download="odd_gen_' + i + '.png" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">⬇ 다운로드</a></div>';
         el.style.textAlign = 'left';
@@ -2541,6 +2544,11 @@ async function autoGenerateImages(matches, _unused, targetEl) {
     } else {
       el.innerHTML = '<div style="font-size:12px;color:var(--t5)">이미지 생성 오류: ' + (results[i].reason?.message || '생성 실패') + '</div>';
     }
+  }
+
+  // 생성된 이미지를 히스토리에 저장
+  if (generatedImages.length && historyId) {
+    appendImagesToHistory(historyId, generatedImages);
   }
 }
 
@@ -2919,7 +2927,7 @@ function copyText(btn, encoded) {
 function getHistory() {
   try { return JSON.parse(localStorage.getItem('odd_caption_history') || '[]'); } catch { return []; }
 }
-function saveHistory(prompt, results) {
+function saveHistory(prompt, results, images) {
   const history = getHistory();
   history.unshift({
     id: Date.now(),
@@ -2927,11 +2935,23 @@ function saveHistory(prompt, results) {
     prompt: prompt,
     files: files.map(f => ({ name: f.name, type: f.type })),
     settings: { ...state },
-    results: results.map(r => ({ label: r.label, content: r.content }))
+    results: results.map(r => ({ label: r.label, content: r.content })),
+    images: images || []
   });
   if (history.length > 100) history.length = 100;
   localStorage.setItem('odd_caption_history', JSON.stringify(history));
   updateBadge();
+}
+
+// 기존 히스토리 항목에 이미지 추가
+function appendImagesToHistory(historyId, imageUrls) {
+  const history = getHistory();
+  const item = history.find(h => h.id === historyId);
+  if (item) {
+    if (!item.images) item.images = [];
+    item.images.push(...imageUrls);
+    localStorage.setItem('odd_caption_history', JSON.stringify(history));
+  }
 }
 
 function updateBadge() {
@@ -2969,8 +2989,10 @@ function renderHistoryList() {
     let tagsHtml = '<span>' + (typeLabel[s.type] || s.type) + '</span><span>' + (chLabel[s.channel] || s.channel) + '</span>';
     if (s.type === 'ad') tagsHtml += '<span>' + (fnLabel[s.funnel] || '') + '</span>';
     const filesHtml = h.files.length ? '<div class="history-item-files">' + h.files.map(f => '<span>' + esc(f.name) + '</span>').join('') + '</div>' : '';
+    const imgCount = (h.images && h.images.length) || 0;
+    const imgBadge = imgCount ? '<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(48,209,88,.08);color:rgba(48,209,88,.8)">🖼 ' + imgCount + '</span>' : '';
     return '<div class="history-item" onclick="showHistoryDetail(' + i + ')">' +
-      '<div class="history-item-header"><div class="history-item-tags">' + tagsHtml + '</div><span class="history-item-time">' + timeStr + '</span></div>' +
+      '<div class="history-item-header"><div class="history-item-tags">' + tagsHtml + imgBadge + '</div><span class="history-item-time">' + timeStr + '</span></div>' +
       '<div class="history-item-prompt">' + esc(h.prompt || '(파일만 첨부)') + '</div>' +
       filesHtml + '</div>';
   }).join('') + '</div>';
@@ -2992,8 +3014,21 @@ function showHistoryDetail(idx) {
   }
   html += '<div class="history-detail-prompt">' + esc(h.prompt || '(파일만 첨부)') + '</div>';
   h.results.forEach(r => {
-    html += '<div class="history-detail-result"><div class="label">' + esc(r.label) + '</div><div class="content">' + esc(r.content) + '</div></div>';
+    html += '<div class="history-detail-result"><div class="label">' + esc(r.label) + '</div><div class="content" style="white-space:normal">' + renderBuiltInMd(r.content) + '</div></div>';
   });
+
+  // 생성된 이미지 표시
+  if (h.images && h.images.length) {
+    html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--t5);margin-bottom:12px">생성된 이미지 (' + h.images.length + ')</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">';
+    h.images.forEach((img, idx) => {
+      const imgUrl = typeof img === 'string' ? img : img.url;
+      html += '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--bg-raised)">' +
+        '<img src="' + esc(imgUrl) + '" style="width:100%;aspect-ratio:9/16;object-fit:cover;display:block" loading="lazy" onerror="this.style.display=\'none\'">' +
+        '<div style="padding:6px 8px;display:flex;gap:6px"><a href="' + esc(imgUrl) + '" download="odd_gen_' + idx + '.png" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none">⬇ 다운로드</a></div></div>';
+    });
+    html += '</div></div>';
+  }
   html += '</div>';
   container.innerHTML = html;
 }
