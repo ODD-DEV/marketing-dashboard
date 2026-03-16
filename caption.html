@@ -2580,13 +2580,16 @@ async function generateWithAI(prompt, opts) {
     }
 
     // 콘텐츠/에셋 관련 요청이면 Drive + Unsplash 이미지 자동 추천
-    const visualKw = ['캡션','caption','콘텐츠','content','소재','creative','카피','copy','기획','plan',
-      '캐러셀','carousel','릴스','reels','피드','feed','광고','ad','이미지','사진','비주얼','visual',
-      '보여','찾아','에셋','asset','원료','성분','ingredient','제품','product',
-      '칼선','인쇄','패키지','최종본','다이컷','package','라벨','박스'];
-    const needsVisual = visualKw.some(k => prompt.toLowerCase().includes(k));
-    if (needsVisual) {
-      appendAssetRecommendations(prompt, ra);
+    // (Insight 모드에서는 Drive 에셋 추천 불필요)
+    if (!opts.noAssetRecommend) {
+      const visualKw = ['캡션','caption','콘텐츠','content','소재','creative','카피','copy','기획','plan',
+        '캐러셀','carousel','릴스','reels','피드','feed','광고','ad','이미지','사진','비주얼','visual',
+        '보여','찾아','에셋','asset','원료','성분','ingredient','제품','product',
+        '칼선','인쇄','패키지','최종본','다이컷','package','라벨','박스'];
+      const needsVisual = visualKw.some(k => prompt.toLowerCase().includes(k));
+      if (needsVisual) {
+        appendAssetRecommendations(prompt, ra);
+      }
     }
   } catch (e) {
     if (e.name === 'AbortError') {
@@ -3419,11 +3422,37 @@ function renderDriveResultsCard(driveRes) {
 async function generateContent(prompt) {
   const wantImage = state.contentMedia.image;
   const wantVideo = state.contentMedia.video;
-
-  // Text는 항상 생성 (캡션/기획)
-  // 기존 라우팅 로직으로 AI 캡션 생성
-  const intents = detectIntents(prompt);
   const lower = prompt.toLowerCase();
+
+  // Video 토글이 켜져있으면 반드시 영상 생성 실행
+  // (텍스트 AI 응답과 병렬로 또는 단독으로)
+  if (wantVideo) {
+    if (aiConfig.key) {
+      // 텍스트(기획) + 영상 병렬 생성
+      const imgOpts = wantImage
+        ? { systemAppend: '\n\n[CONTENT MODE] 이 콘텐츠에 적합한 이미지를 [IMG_GEN: prompt] 태그로 반드시 포함하세요.' }
+        : { noImageGen: true, systemAppend: '\n\n[CONTENT MODE] 캡션/기획 텍스트를 작성하세요. [IMG_GEN] 태그를 사용하지 마세요.' };
+      // AI 텍스트 응답과 영상 생성을 동시에 시작
+      generateWithAI(prompt, imgOpts);
+      generateVideoWithHiggs(prompt);
+    } else {
+      generateVideoWithHiggs(prompt);
+    }
+    return;
+  }
+
+  // Video 꺼져있고, Image만 켜져있는 경우
+  if (wantImage) {
+    if (aiConfig.key) {
+      await generateWithAI(prompt, { systemAppend: '\n\n[CONTENT MODE] 이 콘텐츠에 적합한 이미지를 [IMG_GEN: prompt] 태그로 반드시 포함하세요. 슬라이드당 1개, 싱글 포스트 1개.' });
+    } else {
+      generateImageWithNano(prompt);
+    }
+    return;
+  }
+
+  // Text만 (Image/Video 둘 다 꺼짐)
+  const intents = detectIntents(prompt);
 
   // ODD 내부 자료 요청 → AI 설명 + Drive 검색
   const isOddAssetQuery = ODD_KNOWLEDGE_MAP && Object.values(ODD_KNOWLEDGE_MAP).some(
@@ -3441,23 +3470,9 @@ async function generateContent(prompt) {
     return;
   }
 
-  // AI 캡션/기획 생성 (Image/Video 선택 시 이미지/영상도 병렬 생성)
+  // AI 캡션/기획 생성 (텍스트만)
   if (aiConfig.key) {
-    // Image 또는 Video 토글이 켜져있으면 AI가 [IMG_GEN] 태그도 생성하도록 허용
-    const mediaAppend = [];
-    if (wantImage) mediaAppend.push('\n\n[지시: 이 콘텐츠에 적합한 이미지를 [IMG_GEN: prompt] 태그로 반드시 포함하세요. 슬라이드당 1개, 싱글 포스트 1개.]');
-    if (wantVideo) mediaAppend.push('\n\n[지시: 이 콘텐츠에 적합한 영상 컨셉도 제안하세요. 영상 프롬프트는 [VIDEO_CONCEPT: 설명] 형태로 포함.]');
-
-    if (!wantImage && !wantVideo) {
-      // 텍스트만: [IMG_GEN] 생성하지 않도록 지시
-      await generateWithAI(prompt, { noImageGen: true, systemAppend: '\n\n[CONTENT MODE — TEXT ONLY] 캡션과 기획 텍스트만 작성하세요. [IMG_GEN] 태그를 사용하지 마세요. 이미지 생성 없이 텍스트 콘텐츠만 제공합니다.' });
-    } else {
-      await generateWithAI(prompt + mediaAppend.join(''));
-      // Video 토글이 켜져있으면 AI 응답 후 추가로 영상 생성
-      if (wantVideo) {
-        setTimeout(() => generateVideoWithHiggs(prompt), 500);
-      }
-    }
+    await generateWithAI(prompt, { noImageGen: true, systemAppend: '\n\n[CONTENT MODE — TEXT ONLY] 캡션과 기획 텍스트만 작성하세요. [IMG_GEN] 태그를 사용하지 마세요.' });
     return;
   }
 
@@ -3518,7 +3533,7 @@ async function generateInsights(prompt) {
   const scopeAppend = scopeContext[state.insightScope] || '';
   const enhancedPrompt = scopeAppend ? prompt + '\n\n[지시: ' + scopeAppend + ']' : prompt;
 
-  await generateWithAI(enhancedPrompt, { systemOverride: INSIGHTS_SYSTEM, noImageGen: true });
+  await generateWithAI(enhancedPrompt, { systemOverride: INSIGHTS_SYSTEM, noImageGen: true, noAssetRecommend: true });
 }
 
 function buildContentResults(prompt) {
