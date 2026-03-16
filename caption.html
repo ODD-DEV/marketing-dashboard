@@ -338,7 +338,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 
 <div class="landing" id="landing">
   <div class="logo-area">
-    <img src="odd_logo_white.png" alt="ODD.">
+    <img src="odd_logo_white.png" alt="ODD." onclick="openSettings()" style="cursor:pointer" title="클릭하면 설정 열기">
     <div class="subtitle">Describe your content, get perfect captions and creative concepts.</div>
   </div>
 
@@ -3043,6 +3043,11 @@ function saveSettings() {
   closeSettings();
   showToast('설정이 저장되었습니다');
 }
+
+// 키보드 단축키: Ctrl+, 또는 Cmd+, 로 설정 열기
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); openSettings(); }
+});
 
 // Init
 updateBadge();
