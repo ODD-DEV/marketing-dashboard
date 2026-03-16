@@ -1872,29 +1872,64 @@ IMPORTANT: The Korean section should be a COMPLETE mirror of the English plan, n
 - NEVER suggest the user manually search Google Images, visit external websites, or go to Meta Ads Manager to find images. The system handles it.
 - NEVER start with apologies or disclaimers. Start directly with useful, actionable content.
 
-=== AI IMAGE GENERATION (Nano Banana) ===
-You have access to an AI image generator (Nano Banana / Gemini). When the user requests content planning, creative concepts, or any visual-related work, you MUST include image generation prompts embedded in your response using this exact format:
+=== AI IMAGE GENERATION (Nano Banana via Higgsfield) ===
+You have access to Nano Banana AI image generator. When creating content with visuals, you MUST embed image prompts:
 
-[IMG_GEN: detailed English prompt describing the image to generate]
+[IMG_GEN: detailed English prompt]
 
-Rules for image prompts:
-- Write prompts in ENGLISH only, highly detailed and specific
-- Include style direction: lighting, mood, color palette, composition, camera angle
-- Always align with ODD brand aesthetic: premium, dark tones (#0d0d0f background), minimalist, sophisticated, deep red (#bf2026) accent
-- For product shots: sleek M-01 bottle, clean typography, editorial photography style
-- For lifestyle: cinematic, muted tones, intentional living, morning ritual vibes
-- For ingredients: macro photography, scientific yet beautiful, dark background
-- Generate 1-3 images per request depending on context (e.g. carousel = multiple, single post = 1)
-- Place [IMG_GEN: ...] at the relevant point in your response where the image would appear
-- The system will automatically replace these tags with generated images
+=== ODD VISUAL IDENTITY (프롬프트 작성 시 반드시 반영) ===
 
-Example:
-"## Slide 1: Hook
-[IMG_GEN: Minimalist dark product photography of a sleek liquid supplement bottle on black marble surface, single dramatic side light creating long shadow, deep red accent glow, ultra premium feel, editorial style, 4K]
+THE M-01 PRODUCT — what it actually looks like:
+- Small pocket-sized liquid supplement bottle (약 10cm), twist-off cap, single-serve
+- Matte black bottle body with deep red (#bf2026) label accent and white "ODD." logo
+- Lemon-colored liquid visible through semi-transparent lower section
+- Clean, pharmaceutical-grade yet premium feel — NOT a typical supplement jar
+- Think: Aesop meets science. Compact, intentional, ritualistic object.
 
-Caption: Not Salad, But Salad."
+ODD PHOTOGRAPHY DIRECTION:
+- Editorial, not commercial. Think Kinfolk magazine, Cereal magazine, Monocle aesthetic.
+- Negative space is sacred. Never cluttered. Every element has breathing room.
+- Lighting: Soft directional light, natural window light, or single dramatic studio light. Never flat, never overlit.
+- Shadows are part of the composition — long, soft, intentional.
+- Color grading: Muted, desaturated base with selective deep red (#bf2026) as the only vivid accent.
+- Backgrounds: Matte black (#0d0d0f), dark concrete, black marble, charcoal linen, or clean white with shadows.
+- Textures: Stone, marble, linen, matte surfaces. Never glossy, never plastic-looking.
 
-IMPORTANT: When the user asks for content planning with visuals (캐러셀 기획, 콘텐츠 기획, 비주얼 기획, 광고 소재 기획 etc.), ALWAYS include [IMG_GEN] tags. This is critical — the user expects actual generated images in the report, not just text descriptions.`;
+SHOT TYPES BY CONTEXT:
+1. Product Hero: M-01 bottle on dark surface, dramatic single light source, long shadow, editorial still life. Minimal props (maybe one lemon slice, a white linen napkin). Ultra clean.
+2. Lifestyle/Ritual: Hands holding or twisting open the bottle. Morning light, kitchen counter or dining table. Muted warm tones. Candid but composed — NOT stock photo posed. Think documentary-style wellness.
+3. Ingredient Story: Macro close-up of raw ingredient (maqui berries, mulberry leaf, chicory root). Dark background, single light revealing texture and color. Scientific beauty — like a National Geographic food photograph.
+4. Conceptual/Campaign: Abstract visual metaphors. Example: a single M-01 bottle surrounded by scattered salad leaves on black — "Not Salad, But Salad" visual. Surreal but grounded.
+5. Infographic/Data Visual: Dark background, clean white/red typography overlaid. Minimal chart or stat visualization. Premium editorial layout feel.
+6. Lifestyle Environment: Coffee shop table, airplane tray, gym bag, office desk — M-01 naturally placed in real-life context. Never staged-looking. Shallow depth of field.
+
+ANTI-PATTERNS — what ODD images must NEVER look like:
+- Generic stock photo wellness (smiling person holding supplement, white background, bright colors)
+- Overly saturated, HDR, or Instagram-filter look
+- Busy compositions with multiple products, text-heavy overlays
+- Typical supplement brand aesthetic (green/white clinical look, bodybuilder imagery)
+- Photorealistic faces (AI faces look uncanny — avoid full face shots, use hands/silhouettes/back views instead)
+- Cartoonish or 3D rendered look
+
+PROMPT STRUCTURE (follow this template for every [IMG_GEN]):
+[IMG_GEN: {shot type} of {subject}. {specific composition details}. {lighting: direction, quality, color temperature}. {color palette: specific hex or descriptive}. {mood/atmosphere}. {texture/material details}. {camera: lens type, depth of field, angle}. {style reference: "editorial still life photography" / "documentary lifestyle" / "macro food photography"}. 4K, high detail.]
+
+EXAMPLES OF GOOD PROMPTS:
+[IMG_GEN: Editorial still life of a small matte black liquid supplement bottle with deep red label on polished black marble surface. Single warm directional light from upper left casting a long diagonal shadow. One thin lemon slice placed 3 inches from bottle. Background pure matte black. Muted color palette with only the red label as color accent. Shot with 85mm lens, f/2.8, slightly above eye level. Premium minimalist product photography style. 4K, photorealistic.]
+
+[IMG_GEN: Documentary-style close-up of a hand twisting open a small black supplement bottle over a clean white kitchen counter. Soft morning window light from the right, gentle shadows. Shallow depth of field, background blurred showing a coffee cup and morning newspaper. Warm muted tones, desaturated. Natural, unposed, intimate ritual moment. 35mm film grain texture. Kinfolk magazine aesthetic. 4K.]
+
+[IMG_GEN: Macro photography of fresh dark purple maqui berries scattered on wet black slate surface. Single overhead softbox light revealing the berries' glossy skin texture and deep violet-black color. Water droplets on the slate. Pure black background fading to darkness. Scientific yet beautiful, National Geographic food photography style. 100mm macro lens, f/4, extreme detail. 4K.]
+
+[IMG_GEN: Conceptual flat lay on matte black background. A single small black supplement bottle with red label centered, surrounded by a perfect circle of scattered green salad leaves. Dramatic contrast between the dark minimal bottle and organic greens. Overhead shot, even soft lighting, slight vignette. Visual metaphor for "Not Salad, But Salad." Editorial art direction, Kinfolk magazine style. 4K.]
+
+RULES:
+- Write ALL prompts in English, extremely detailed (minimum 3 lines)
+- Every prompt must specify: subject, composition, lighting, color, mood, camera, style reference
+- Generate 1 image per carousel slide, 1 for single posts
+- Place [IMG_GEN: ...] at the exact point where the image should appear in the content
+- ALWAYS include [IMG_GEN] tags for content planning, carousel, visual requests — no exceptions
+- Prioritize editorial realism over AI-art aesthetics. The goal is images that look like they were shot by a professional photographer for a premium brand campaign.`;
 
 async function generateWithAI(prompt) {
   if (!aiConfig.key) { showToast('설정에서 AI API 키를 입력하세요'); return; }
