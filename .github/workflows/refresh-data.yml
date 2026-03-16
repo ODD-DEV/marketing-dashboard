@@ -34,10 +34,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.js address_cache.json
-          if git diff --cached -- . ':(exclude)' | grep -v '"updated_at"' | grep '^[+-]' | grep -v '^[+-][+-][+-]' | head -1 | grep -q .; then
+          if git diff --cached --stat | grep -q .; then
             git commit -m "Auto-refresh data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           else
-            echo "No meaningful data changes (only timestamp diff)"
-            git reset HEAD -- .
+            echo "No data changes"
           fi
