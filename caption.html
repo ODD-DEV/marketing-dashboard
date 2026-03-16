@@ -426,8 +426,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
     <div class="settings-section">Image / Video</div>
     <div class="settings-field">
       <label>Higgsfield API Key</label>
-      <input type="password" id="settingsHiggsKey" placeholder="KEY_ID:KEY_SECRET" autocomplete="off">
-      <div class="hint">AI 이미지(Nano Banana) + 영상 생성 — cloud.higgsfield.ai에서 발급</div>
+      <input type="password" id="settingsHiggsKey" placeholder="KEY_ID:KEY_SECRET (콜론 포함)" autocomplete="off">
+      <div class="hint">AI 이미지 + 영상 생성 — cloud.higgsfield.ai → API Keys에서 발급. 반드시 KEY_ID:KEY_SECRET 형식으로 입력</div>
+      <button type="button" onclick="testHiggsKey()" style="margin-top:6px;padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--t3);font-size:12px;cursor:pointer">연결 테스트</button>
+      <span id="higgsTestResult" style="font-size:11px;margin-left:8px"></span>
     </div>
     <button class="settings-save" onclick="saveSettings()">저장</button>
   </div>
@@ -2452,10 +2454,10 @@ async function autoGenerateImages(matches, _unused, targetEl) {
 
   // 병렬로 Higgsfield 이미지 생성
   const results = await Promise.allSettled(prompts.map(p =>
-    higgsGenerate('higgsfield-ai/soul/standard', {
+    higgsGenerate('bytedance/seedream/v4/text-to-image', {
       prompt: p,
       aspect_ratio: '9:16',
-      resolution: '720p'
+      resolution: '2K'
     })
   ));
 
@@ -2494,7 +2496,7 @@ async function higgsGenerate(endpoint, params) {
     headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
     body: JSON.stringify(params)
   });
-  if (!r.ok) { const txt = await r.text(); let msg = 'API 오류 (' + r.status + ')'; try { const e = JSON.parse(txt); msg = e.detail || e.message || e.error || msg; } catch(_) { if (txt) msg += ': ' + txt.substring(0, 100); } throw new Error(msg); }
+  if (!r.ok) { const txt = await r.text(); let msg = 'API 오류 (' + r.status + ')'; try { const e = JSON.parse(txt); msg = e.detail || e.message || e.error || msg; } catch(_) { if (txt) msg += ': ' + txt.substring(0, 100); } if (r.status === 500 && txt.includes('Internal Server Error')) msg = '인증 실패 — 설정에서 Higgsfield 키를 KEY_ID:KEY_SECRET 형식으로 확인하세요'; throw new Error(msg); }
   const gen = await r.json();
 
   // 동기 응답 (즉시 결과)
@@ -2535,10 +2537,10 @@ async function generateImageWithNano(prompt) {
   const brandContext = 'ODD brand style: premium, dark tones, minimalist, sophisticated. Product M-01 is a pre-meal supplement in a sleek bottle. Brand color: deep red (#bf2026) on black. Clean typography, modern.';
 
   try {
-    const result = await higgsGenerate('higgsfield-ai/soul/standard', {
+    const result = await higgsGenerate('bytedance/seedream/v4/text-to-image', {
       prompt: prompt + '. ' + brandContext,
       aspect_ratio: '9:16',
-      resolution: '720p'
+      resolution: '2K'
     });
 
     const imgUrl = extractImageUrl(result);
@@ -2999,6 +3001,31 @@ function openSettings() {
 function closeSettings() {
   document.getElementById('settingsOverlay').classList.remove('open');
 }
+async function testHiggsKey() {
+  const key = document.getElementById('settingsHiggsKey').value.trim();
+  const el = document.getElementById('higgsTestResult');
+  if (!key) { el.innerHTML = '<span style="color:var(--red)">키를 입력하세요</span>'; return; }
+  if (!key.includes(':')) { el.innerHTML = '<span style="color:var(--red)">KEY_ID:KEY_SECRET 형식이어야 합니다 (콜론 필수)</span>'; return; }
+  el.innerHTML = '<span style="color:var(--t4)">테스트 중...</span>';
+  try {
+    const r = await fetch(AI_PROXY + '/higgs/bytedance/seedream/v4/text-to-image', {
+      method: 'POST',
+      headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: 'test', resolution: '720p', aspect_ratio: '1:1' })
+    });
+    const txt = await r.text();
+    if (r.ok) {
+      el.innerHTML = '<span style="color:var(--green)">연결 성공! 키가 유효합니다.</span>';
+    } else if (r.status === 422 || txt.includes('credentials') || txt.includes('Unauthorized')) {
+      el.innerHTML = '<span style="color:var(--red)">인증 실패 — 키를 확인하세요. cloud.higgsfield.ai → API Keys</span>';
+    } else {
+      el.innerHTML = '<span style="color:var(--red)">오류 (' + r.status + '): ' + txt.substring(0, 80) + '</span>';
+    }
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--red)">네트워크 오류: ' + e.message + '</span>';
+  }
+}
+
 function saveSettings() {
   const aiKey = document.getElementById('settingsAiKey').value.trim();
   const notionKey = document.getElementById('settingsNotionKey').value.trim();
