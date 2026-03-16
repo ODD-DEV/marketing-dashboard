@@ -378,21 +378,28 @@ def fetch_recharge_subscriptions(config):
                     next_fmt = next_dt[:10]
             else:
                 next_fmt = "-"
-            # 결제 회차: next_charge와 created_at 간격으로 정확 계산
+            # 결제 회차: 월 차이 기반 계산 (charge_interval_frequency=1은 월간 의미)
             charge_count = 1
             try:
                 cr_date = datetime.strptime(s.get("created_at", "")[:10], "%Y-%m-%d")
-                # next_charge 기준으로 역산 (다음 결제일 - 생성일 = 지금까지 결제 횟수)
+                freq = int(s.get("charge_interval_frequency", 1) or 1)
+                unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
                 if next_dt:
                     nxt = datetime.strptime(next_dt[:10], "%Y-%m-%d")
-                    interval = int(s.get("charge_interval_frequency", 30) or 30)
-                    # 다음 결제일까지의 전체 주기 수 = 지금까지 결제 완료 횟수
-                    total_days = (nxt - cr_date).days
-                    charge_count = max(1, total_days // interval)
+                    if "month" in unit:
+                        months_diff = (nxt.year - cr_date.year) * 12 + (nxt.month - cr_date.month)
+                        charge_count = max(1, months_diff // freq)
+                    else:
+                        total_days = (nxt - cr_date).days
+                        charge_count = max(1, total_days // freq)
                 else:
-                    days_active = (datetime.now() - cr_date).days
-                    interval = int(s.get("charge_interval_frequency", 30) or 30)
-                    charge_count = max(1, days_active // interval + 1)
+                    now = datetime.now()
+                    if "month" in unit:
+                        months_diff = (now.year - cr_date.year) * 12 + (now.month - cr_date.month)
+                        charge_count = max(1, months_diff // freq + 1)
+                    else:
+                        days_active = (now - cr_date).days
+                        charge_count = max(1, days_active // freq + 1)
             except:
                 pass
             active.append({"n": cust.get("name", s.get("email", "Unknown")), "email": s.get("email", ""), "amt": s.get("price", 0), "next": next_fmt, "next_raw": next_dt[:10] if next_dt else "", "product": s.get("product_title", ""), "created": s.get("created_at", "")[:10], "sub_id": s.get("id"), "customer_id": s.get("customer_id"), "cc": charge_count})
@@ -417,8 +424,16 @@ def fetch_recharge_subscriptions(config):
             email = s.get("email", "")
             if email in ("test@test.com", "baek@hanah1.com"):
                 continue
-            interval = int(s.get("charge_interval_frequency", 30) or 30)
-            charge_count = max(1, days // interval + 1) if days > 0 else 1
+            freq = int(s.get("charge_interval_frequency", 1) or 1)
+            unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
+            if "month" in unit and days > 0:
+                try:
+                    months_diff = (d2.year - d1.year) * 12 + (d2.month - d1.month)
+                    charge_count = max(1, months_diff // freq + 1)
+                except:
+                    charge_count = max(1, days // 30 + 1)
+            else:
+                charge_count = max(1, days // max(freq, 30) + 1) if days > 0 else 1
             cancelled.append({"n": cust.get("name", email), "email": email, "reason": s.get("cancellation_reason", ""), "created": created, "cancelled": cancelled_at, "days": days, "product": s.get("product_title", ""), "sub_id": s.get("id"), "customer_id": s.get("customer_id"), "cc": charge_count})
         print(f"[RECHARGE] {len(cancelled)} cancelled subscriptions")
     except Exception as e:
@@ -508,7 +523,7 @@ def refresh_data():
             elif "amazon" in origin or "amz" in origin:
                 ch = "amazon"
             else:
-                ch = "shopify"
+                continue
         cname = (o.get("partner_id") or [0, ""])[1]
         g = infer_gender(cname)
         oname = o.get("name", "")

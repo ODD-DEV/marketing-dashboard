@@ -295,14 +295,8 @@ def fetch_shipping_addresses(config, session_id, orders):
 
         if not ch:
             origin = (o.get("origin") or "").lower()
-            if "shopify" in origin:
-                ch = "shopify"
-            elif "tts" in origin or "tiktok" in origin:
-                ch = "tiktok_shop"
-            elif "amazon" in origin or "amz" in origin:
-                ch = "amazon"
-            else:
-                ch = "shopify"
+            if not ("shopify" in origin or "tts" in origin or "tiktok" in origin or "amazon" in origin or "amz" in origin):
+                continue
 
         # 마켓플레이스 데이터가 있으면 사용
         if mp_state and mp_state is not False:
@@ -547,18 +541,28 @@ def fetch_recharge_subscriptions(config):
                     next_fmt = next_dt[:10]
             else:
                 next_fmt = "-"
-            # 결제 회차: next_charge와 created_at 간격으로 정확 계산
+            # 결제 회차: 월 차이 기반 계산
             charge_count = 1
             try:
                 cr_date = datetime.strptime(s.get("created_at", "")[:10], "%Y-%m-%d")
-                interval = int(s.get("charge_interval_frequency", 30) or 30)
+                freq = int(s.get("charge_interval_frequency", 1) or 1)
+                unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
                 if next_dt:
                     nxt = datetime.strptime(next_dt[:10], "%Y-%m-%d")
-                    total_days = (nxt - cr_date).days
-                    charge_count = max(1, total_days // interval)
+                    if "month" in unit:
+                        months_diff = (nxt.year - cr_date.year) * 12 + (nxt.month - cr_date.month)
+                        charge_count = max(1, months_diff // freq)
+                    else:
+                        total_days = (nxt - cr_date).days
+                        charge_count = max(1, total_days // freq)
                 else:
-                    days_active = (datetime.now() - cr_date).days
-                    charge_count = max(1, days_active // interval + 1)
+                    now = datetime.now()
+                    if "month" in unit:
+                        months_diff = (now.year - cr_date.year) * 12 + (now.month - cr_date.month)
+                        charge_count = max(1, months_diff // freq + 1)
+                    else:
+                        days_active = (now - cr_date).days
+                        charge_count = max(1, days_active // freq + 1)
             except:
                 pass
             active.append({
@@ -598,8 +602,16 @@ def fetch_recharge_subscriptions(config):
             if email in ("test@test.com", "baek@hanah1.com"):
                 continue
             # 결제 회차 계산
-            interval = int(s.get("charge_interval_frequency", 30) or 30)
-            charge_count = max(1, days // interval + 1) if days > 0 else 1
+            freq = int(s.get("charge_interval_frequency", 1) or 1)
+            unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
+            if "month" in unit and days > 0:
+                try:
+                    months_diff = (d2.year - d1.year) * 12 + (d2.month - d1.month)
+                    charge_count = max(1, months_diff // freq + 1)
+                except:
+                    charge_count = max(1, days // 30 + 1)
+            else:
+                charge_count = max(1, days // max(freq, 30) + 1) if days > 0 else 1
             cancelled.append({
                 "n": cust.get("name", email),
                 "email": email,
@@ -687,7 +699,7 @@ def refresh_data():
             elif "amazon" in origin or "amz" in origin:
                 ch = "amazon"
             else:
-                ch = "shopify"
+                continue
         cname = (o.get("partner_id") or [0, ""])[1]
         g = infer_gender(cname)
         if g == "U" and cname:
