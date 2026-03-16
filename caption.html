@@ -2453,9 +2453,10 @@ async function autoGenerateImages(matches, _unused, targetEl) {
 
   // 병렬로 Higgsfield 이미지 생성
   const results = await Promise.allSettled(prompts.map(p =>
-    higgsGenerate('reve/text-to-image', {
+    higgsGenerate('higgsfield-ai/soul/standard', {
       prompt: p,
-      aspect_ratio: '9:16'
+      aspect_ratio: '9:16',
+      resolution: '720p'
     })
   ));
 
@@ -2494,7 +2495,7 @@ async function higgsGenerate(endpoint, params) {
     headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
     body: JSON.stringify(params)
   });
-  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || e.message || 'API 오류 (' + r.status + ')'); }
+  if (!r.ok) { const txt = await r.text(); let msg = 'API 오류 (' + r.status + ')'; try { const e = JSON.parse(txt); msg = e.detail || e.message || e.error || msg; } catch(_) { if (txt) msg += ': ' + txt.substring(0, 100); } throw new Error(msg); }
   const gen = await r.json();
 
   // 동기 응답 (즉시 결과)
@@ -2535,9 +2536,10 @@ async function generateImageWithNano(prompt) {
   const brandContext = 'ODD brand style: premium, dark tones, minimalist, sophisticated. Product M-01 is a pre-meal supplement in a sleek bottle. Brand color: deep red (#bf2026) on black. Clean typography, modern.';
 
   try {
-    const result = await higgsGenerate('reve/text-to-image', {
+    const result = await higgsGenerate('higgsfield-ai/soul/standard', {
       prompt: prompt + '. ' + brandContext,
-      aspect_ratio: '9:16'
+      aspect_ratio: '9:16',
+      resolution: '720p'
     });
 
     const imgUrl = extractImageUrl(result);

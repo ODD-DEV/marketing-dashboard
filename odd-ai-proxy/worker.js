@@ -146,10 +146,11 @@ async function handleHiggs(request, url) {
       method: request.method,
       headers: {
         'Authorization': 'Key ' + higgsKey,
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
     };
     if (request.method === 'POST') {
+      opts.headers['Content-Type'] = 'application/json';
       opts.body = await request.text();
     }
 
