@@ -3011,7 +3011,7 @@ async function testHiggsKey() {
     const r = await fetch(AI_PROXY + '/higgs/bytedance/seedream/v4/text-to-image', {
       method: 'POST',
       headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: 'test', resolution: '720p', aspect_ratio: '1:1' })
+      body: JSON.stringify({ prompt: 'test', resolution: '2K', aspect_ratio: '1:1' })
     });
     const txt = await r.text();
     if (r.ok) {
