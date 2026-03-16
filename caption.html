@@ -2455,7 +2455,7 @@ async function autoGenerateImages(matches, _unused, targetEl) {
 
   // 병렬로 Higgsfield 이미지 생성
   const results = await Promise.allSettled(prompts.map(p =>
-    higgsGenerate('higgsfield-ai/soul/standard', {
+    higgsGenerate('nano-banana', {
       prompt: p,
       aspect_ratio: '9:16'
     })
@@ -2537,7 +2537,7 @@ async function generateImageWithNano(prompt) {
   const brandContext = 'ODD brand style: premium, dark tones, minimalist, sophisticated. Product M-01 is a pre-meal supplement in a sleek bottle. Brand color: deep red (#bf2026) on black. Clean typography, modern.';
 
   try {
-    const result = await higgsGenerate('higgsfield-ai/soul/standard', {
+    const result = await higgsGenerate('nano-banana', {
       prompt: prompt + '. ' + brandContext,
       aspect_ratio: '9:16'
     });
@@ -3006,7 +3006,7 @@ async function testHiggsKey() {
   if (!key.includes(':')) { el.innerHTML = '<span style="color:var(--red)">KEY_ID:KEY_SECRET 형식이어야 합니다 (콜론 필수)</span>'; return; }
   el.innerHTML = '<span style="color:var(--t4)">테스트 중...</span>';
   try {
-    const r = await fetch(AI_PROXY + '/higgs/higgsfield-ai/soul/standard', {
+    const r = await fetch(AI_PROXY + '/higgs/nano-banana', {
       method: 'POST',
       headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: 'test', aspect_ratio: '1:1' })
