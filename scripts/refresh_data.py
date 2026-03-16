@@ -228,7 +228,9 @@ def fetch_shipping_addresses(config, session_id, orders):
         mp_state = o.get("mp_recipient_address_state") or ""
         ch = o.get("channel_type") or ""
         if not ch:
-            continue
+            origin = (o.get("origin") or "").lower()
+            if not ("shopify" in origin or "tts" in origin or "tiktok" in origin or "amazon" in origin or "amz" in origin):
+                continue
         if mp_state and mp_state is not False:
             addr_map[name] = {"state": str(mp_state).strip(), "city": str(o.get("mp_recipient_address_city") or "").strip()}
             continue
@@ -498,7 +500,15 @@ def refresh_data():
     for o in orders:
         ch = o.get("channel_type") or ""
         if not ch:
-            continue
+            origin = (o.get("origin") or "").lower()
+            if "shopify" in origin:
+                ch = "shopify"
+            elif "tts" in origin or "tiktok" in origin:
+                ch = "tiktok_shop"
+            elif "amazon" in origin or "amz" in origin:
+                ch = "amazon"
+            else:
+                ch = "shopify"
         cname = (o.get("partner_id") or [0, ""])[1]
         g = infer_gender(cname)
         oname = o.get("name", "")

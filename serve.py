@@ -294,7 +294,15 @@ def fetch_shipping_addresses(config, session_id, orders):
         ch = o.get("channel_type") or ""
 
         if not ch:
-            continue  # 채널 없는 주문 제외
+            origin = (o.get("origin") or "").lower()
+            if "shopify" in origin:
+                ch = "shopify"
+            elif "tts" in origin or "tiktok" in origin:
+                ch = "tiktok_shop"
+            elif "amazon" in origin or "amz" in origin:
+                ch = "amazon"
+            else:
+                ch = "shopify"
 
         # 마켓플레이스 데이터가 있으면 사용
         if mp_state and mp_state is not False:
@@ -671,7 +679,15 @@ def refresh_data():
     for o in orders:
         ch = o.get("channel_type") or ""
         if not ch:
-            continue  # gifting/internal 제외
+            origin = (o.get("origin") or "").lower()
+            if "shopify" in origin:
+                ch = "shopify"
+            elif "tts" in origin or "tiktok" in origin:
+                ch = "tiktok_shop"
+            elif "amazon" in origin or "amz" in origin:
+                ch = "amazon"
+            else:
+                ch = "shopify"
         cname = (o.get("partner_id") or [0, ""])[1]
         g = infer_gender(cname)
         if g == "U" and cname:
