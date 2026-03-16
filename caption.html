@@ -127,6 +127,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
 .result-card:nth-child(2){animation-delay:.08s}
 .result-card:nth-child(3){animation-delay:.16s}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 .result-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .result-label .dot{width:6px;height:6px;border-radius:50%}
@@ -431,6 +432,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100
       <div class="hint">AI 이미지 + 영상 생성 — cloud.higgsfield.ai → API Keys에서 발급. 반드시 KEY_ID:KEY_SECRET 형식으로 입력</div>
       <button type="button" onclick="testHiggsKey()" style="margin-top:6px;padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--t3);font-size:12px;cursor:pointer">연결 테스트</button>
       <span id="higgsTestResult" style="font-size:11px;margin-left:8px"></span>
+    </div>
+    <div class="settings-section">Drive 이미지 분류</div>
+    <div class="settings-field">
+      <label>AI 이미지 분류 캐시</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" onclick="indexDriveImages(true)" style="padding:6px 14px;background:rgba(191,32,38,.1);border:1px solid rgba(191,32,38,.25);border-radius:6px;color:var(--red);font-size:12px;cursor:pointer">전체 재분류</button>
+        <button type="button" onclick="localStorage.removeItem('odd_drive_img_classifications');_driveClassifications=null;showToast('분류 캐시 삭제됨')" style="padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--t3);font-size:12px;cursor:pointer">캐시 삭제</button>
+        <span id="driveClassCount" style="font-size:11px;color:var(--t4)"></span>
+      </div>
+      <div class="hint">Google Drive 이미지를 AI가 시각 분석하여 제품/모델/원료/패키지 등으로 자동 분류합니다. Haiku 모델 사용.</div>
     </div>
     <button class="settings-save" onclick="saveSettings()">저장</button>
   </div>
@@ -1203,6 +1214,323 @@ async function loginGoogle() {
   return driveAccessToken;
 }
 
+// ── 페이지 로드 시 Drive 토큰 복원 (팝업 없이) ──
+(function restoreDriveToken() {
+  const cached = sessionStorage.getItem('odd_drive_token');
+  const cachedExp = sessionStorage.getItem('odd_drive_token_exp');
+  if (cached && cachedExp && Date.now() < parseInt(cachedExp)) {
+    driveAccessToken = cached;
+    console.log('[Drive] 캐시된 토큰 복원 완료');
+  }
+})();
+
+// ── Drive 이미지 AI 분류 시스템 ──
+// 모든 Drive 이미지를 Claude API로 시각 분석 → 카테고리 분류 → localStorage 캐시
+const DRIVE_IMG_CACHE_KEY = 'odd_drive_img_classifications';
+const DRIVE_IMG_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7일
+let _driveClassifications = null; // { [fileId]: { category, tags, desc, cachedAt } }
+let _classifyInProgress = false;
+
+// 캐시 로드
+function loadDriveClassifications() {
+  if (_driveClassifications) return _driveClassifications;
+  try {
+    const raw = localStorage.getItem(DRIVE_IMG_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed._ts && Date.now() - parsed._ts < DRIVE_IMG_CACHE_TTL) {
+        _driveClassifications = parsed.data || {};
+        console.log('[DriveAI] 캐시 로드:', Object.keys(_driveClassifications).length, '개 파일');
+        return _driveClassifications;
+      }
+    }
+  } catch {}
+  _driveClassifications = {};
+  return _driveClassifications;
+}
+
+function saveDriveClassifications() {
+  try {
+    localStorage.setItem(DRIVE_IMG_CACHE_KEY, JSON.stringify({ _ts: Date.now(), data: _driveClassifications }));
+  } catch {}
+}
+
+// 모든 Drive 폴더에서 이미지/영상 목록 수집
+async function fetchAllDriveMedia() {
+  if (!driveAccessToken) return [];
+  const allMedia = [];
+  const seen = new Set();
+
+  // listFolderAll은 searchDriveAPI 내부에 정의되어 있으므로 여기서 재구현
+  async function listFolder(folderId, depth) {
+    try {
+      const q = encodeURIComponent("'" + folderId + "' in parents and trashed = false");
+      let url = 'https://www.googleapis.com/drive/v3/files?q=' + q +
+        '&fields=nextPageToken,files(id,name,mimeType,thumbnailLink,webViewLink)&pageSize=200' +
+        '&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives';
+      let allF = [];
+      let pageToken = '';
+      for (let i = 0; i < 10; i++) {
+        let pUrl = url + (pageToken ? '&pageToken=' + pageToken : '');
+        let r = await fetch(pUrl, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+        if (!r.ok) {
+          pUrl = pUrl.replace('&corpora=allDrives', '');
+          r = await fetch(pUrl, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } });
+          if (!r.ok) break;
+        }
+        const d = await r.json();
+        allF.push(...(d.files || []));
+        pageToken = d.nextPageToken || '';
+        if (!pageToken) break;
+      }
+      for (const f of allF) {
+        const m = (f.mimeType || '').toLowerCase();
+        if ((m.includes('image/') || m.includes('video/')) && !seen.has(f.id)) {
+          seen.add(f.id);
+          allMedia.push(f);
+        }
+        if (m === 'application/vnd.google-apps.folder' && depth > 0) {
+          await listFolder(f.id, depth - 1);
+        }
+      }
+    } catch (e) { console.warn('[DriveAI] folder fetch error:', folderId, e); }
+  }
+
+  // 모든 주요 폴더 탐색
+  const folders = [...DRIVE_FOLDER_IDS, DRIVE_AD_CREATIVE_FOLDER, DRIVE_PACKAGING_FOLDER];
+  await Promise.all(folders.map(fid => listFolder(fid, 2)));
+  console.log('[DriveAI] 전체 미디어 수집:', allMedia.length, '개');
+  return allMedia;
+}
+
+// 썸네일을 base64로 변환
+async function thumbnailToBase64(thumbnailUrl) {
+  try {
+    const url = thumbnailUrl.replace('=s220', '=s200') +
+      (thumbnailUrl.includes('?') ? '&' : '?') + 'access_token=' + driveAccessToken;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const blob = await r.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
+// Claude API로 이미지 배치 분류
+async function classifyImageBatch(filesWithBase64) {
+  if (!aiConfig.key || !filesWithBase64.length) return {};
+
+  // Claude API에 보낼 content 블록 구성
+  const content = [];
+  const fileMap = {};
+  filesWithBase64.forEach((f, i) => {
+    fileMap[i] = f.id;
+    if (f.base64) {
+      const match = f.base64.match(/^data:(image\/[^;]+);base64,(.+)$/);
+      if (match) {
+        content.push({
+          type: 'image',
+          source: { type: 'base64', media_type: match[1], data: match[2] }
+        });
+        content.push({
+          type: 'text',
+          text: '[IMAGE ' + i + '] filename: ' + (f.name || 'unknown')
+        });
+      } else {
+        content.push({
+          type: 'text',
+          text: '[IMAGE ' + i + '] filename: ' + (f.name || 'unknown') + ' (썸네일 로드 실패 — 파일명으로 판단)'
+        });
+      }
+    } else {
+      content.push({
+        type: 'text',
+        text: '[IMAGE ' + i + '] filename: ' + (f.name || 'unknown') + ' (썸네일 없음 — 파일명으로 판단)'
+      });
+    }
+  });
+
+  content.push({
+    type: 'text',
+    text: `위 이미지들을 분류해주세요. 각 이미지에 대해 JSON 배열로 답변:
+[{"i":0,"cat":"카테고리","tags":["태그1","태그2"],"desc":"한줄설명"}]
+
+카테고리(cat) 종류:
+- product: M-01 제품 사진 (빨간 바이알 병, 패키지 박스 등 제품 자체만)
+- model: 인물/모델 사진 (제품과 함께든 아니든 사람이 주인공)
+- ingredient: 원료/성분 사진 (마키베리, 뽕잎, 치커리 등 원재료)
+- packaging: 패키지 디자인/칼선/인쇄용 파일
+- lifestyle: 라이프스타일 컷 (음식, 카페, 운동 등 분위기 사진)
+- campaign: 광고/캠페인 소재 (배너, 썸네일, SNS 포스트)
+- graphic: 그래픽 디자인/일러스트/인포그래픽
+- other: 위에 해당하지 않는 기타
+
+tags는 세부 특징 (예: ["빨간병","클로즈업"], ["마키베리","보라색열매"])
+desc는 10자 내외 한줄 설명.
+
+JSON 배열만 출력. 다른 텍스트 없이.`
+  });
+
+  try {
+    const r = await fetch(AI_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': aiConfig.key },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content }]
+      })
+    });
+    if (!r.ok) { console.warn('[DriveAI] classify API error:', r.status); return {}; }
+    const data = await r.json();
+    const text = (data.content && data.content[0] && data.content[0].text) || '';
+
+    // JSON 파싱
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return {};
+    const results = JSON.parse(jsonMatch[0]);
+    const classifications = {};
+    results.forEach(r => {
+      const fileId = fileMap[r.i];
+      if (fileId) {
+        classifications[fileId] = { category: r.cat, tags: r.tags || [], desc: r.desc || '' };
+      }
+    });
+    return classifications;
+  } catch (e) { console.warn('[DriveAI] classify error:', e); return {}; }
+}
+
+// 전체 Drive 이미지 인덱싱 + 분류 실행
+async function indexDriveImages(showProgress) {
+  if (_classifyInProgress) return;
+  if (!driveAccessToken) {
+    try { await loginGoogle(); } catch { return; }
+  }
+  if (!driveAccessToken || !aiConfig.key) return;
+
+  _classifyInProgress = true;
+  loadDriveClassifications();
+
+  let statusEl = null;
+  if (showProgress) {
+    statusEl = document.createElement('div');
+    statusEl.id = 'driveIndexStatus';
+    statusEl.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--bg-raised);border:1px solid var(--red-border);border-radius:12px;color:var(--t2);font-size:13px;font-family:var(--sans);z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)';
+    statusEl.innerHTML = '<div style="width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1s infinite"></div><span>Drive 이미지 분석 중...</span>';
+    document.body.appendChild(statusEl);
+  }
+
+  try {
+    // 1) 전체 미디어 수집
+    const allMedia = await fetchAllDriveMedia();
+    if (!allMedia.length) { _classifyInProgress = false; return; }
+
+    // 2) 아직 분류되지 않은 파일만 필터
+    const unclassified = allMedia.filter(f => !_driveClassifications[f.id]);
+    console.log('[DriveAI] 미분류:', unclassified.length, '/', allMedia.length);
+
+    if (statusEl) {
+      statusEl.querySelector('span').textContent = 'Drive 이미지 분석 중... (' + unclassified.length + '개 남음)';
+    }
+
+    if (unclassified.length === 0) {
+      if (statusEl) { statusEl.querySelector('span').textContent = '분류 완료! (' + allMedia.length + '개)'; setTimeout(() => statusEl.remove(), 2000); }
+      _classifyInProgress = false;
+      return;
+    }
+
+    // 3) 배치 단위로 썸네일 가져와서 분류 (10개씩)
+    const BATCH_SIZE = 10;
+    let done = 0;
+    for (let i = 0; i < unclassified.length; i += BATCH_SIZE) {
+      const batch = unclassified.slice(i, i + BATCH_SIZE);
+
+      // 썸네일 base64 변환 (병렬)
+      const filesWithB64 = await Promise.all(batch.map(async f => {
+        const b64 = f.thumbnailLink ? await thumbnailToBase64(f.thumbnailLink) : null;
+        return { id: f.id, name: f.name, base64: b64 };
+      }));
+
+      // Claude로 분류
+      const results = await classifyImageBatch(filesWithB64);
+      Object.assign(_driveClassifications, results);
+
+      // 썸네일 없어서 분류 못 한 파일도 기본값 저장 (재시도 방지)
+      batch.forEach(f => {
+        if (!_driveClassifications[f.id]) {
+          _driveClassifications[f.id] = { category: 'other', tags: [], desc: '분류 불가' };
+        }
+      });
+
+      done += batch.length;
+      if (statusEl) {
+        statusEl.querySelector('span').textContent = 'Drive 이미지 분석 중... (' + done + '/' + unclassified.length + ')';
+      }
+
+      // 중간 저장
+      saveDriveClassifications();
+    }
+
+    console.log('[DriveAI] 분류 완료:', Object.keys(_driveClassifications).length, '개');
+    if (statusEl) {
+      statusEl.querySelector('span').textContent = '분류 완료! (' + Object.keys(_driveClassifications).length + '개)';
+      setTimeout(() => statusEl.remove(), 2500);
+    }
+  } catch (e) {
+    console.error('[DriveAI] index error:', e);
+    if (statusEl) { statusEl.querySelector('span').textContent = '분류 오류: ' + e.message; setTimeout(() => statusEl.remove(), 3000); }
+  } finally {
+    _classifyInProgress = false;
+  }
+}
+
+// 분류 기반 필터링 — searchDriveAPI 결과에 적용
+function filterByClassification(files, query) {
+  loadDriveClassifications();
+  if (!_driveClassifications || Object.keys(_driveClassifications).length === 0) return files;
+
+  const lower = query.toLowerCase();
+
+  // 쿼리 의도 감지
+  const wantProduct = ['제품','product','보틀','bottle','병','바이알','vial','m-01','m01'].some(k => lower.includes(k))
+    && !['모델','model','인물','원료','성분','ingredient'].some(k => lower.includes(k));
+  const wantModel = ['모델','model','인물','촬영','사람','portrait'].some(k => lower.includes(k));
+  const wantIngredient = ['원료','성분','ingredient','마키베리','델피놀','delphinol','뽕잎','백상엽','reducose',
+    '리듀코스','치커리','chicory','gofos','고포스','orafti','크롬','lalmin'].some(k => lower.includes(k));
+  const wantPackaging = ['패키지','칼선','인쇄','packaging','박스','box','라벨','label'].some(k => lower.includes(k));
+  const wantCampaign = ['광고','캠페인','소재','campaign','ad','creative','배너','banner'].some(k => lower.includes(k));
+  const wantLifestyle = ['라이프스타일','lifestyle','분위기','컨셉','concept'].some(k => lower.includes(k));
+  const wantGraphic = ['그래픽','디자인','graphic','design','인포그래픽'].some(k => lower.includes(k));
+
+  // 특정 카테고리 요청이 없으면 필터링 안 함
+  if (!wantProduct && !wantModel && !wantIngredient && !wantPackaging && !wantCampaign && !wantLifestyle && !wantGraphic) {
+    return files;
+  }
+
+  // 원하는 카테고리 목록
+  const wantedCats = [];
+  if (wantProduct) wantedCats.push('product');
+  if (wantModel) wantedCats.push('model');
+  if (wantIngredient) wantedCats.push('ingredient');
+  if (wantPackaging) wantedCats.push('packaging');
+  if (wantCampaign) wantedCats.push('campaign');
+  if (wantLifestyle) wantedCats.push('lifestyle');
+  if (wantGraphic) wantedCats.push('graphic');
+
+  const filtered = files.filter(f => {
+    const cls = _driveClassifications[f.id];
+    if (!cls) return true; // 미분류 파일은 일단 포함
+    return wantedCats.includes(cls.category);
+  });
+
+  console.log('[DriveAI] 분류 필터:', wantedCats.join(','), '→', filtered.length, '/', files.length);
+  return filtered.length > 0 ? filtered : files;
+}
+
 // ── Meta Ads Integration ──
 const META_AD_ACCOUNT = 'act_1197533755808441';
 let META_TOKEN = localStorage.getItem('odd_meta_token') || 'EAALgkRR07voBQ9oGO2IZCqTUCYsWRzI7VKj248tAxkQ7MHqpXZCDL3gz9L5ZCvZBzGkb7PH22XfD5LvC3bj50Kow6ZBBqFfzcyMQPwz9b33J4kpVEF5gVL7UV3rvImf8dbsLq6uZBHcqZAyJAu1pkSVLYDvJWVznSJRHW3GQ6dJtfJZCWvsqk7VG51RcdQbRuh5fJKwPIHwEwCt2cPlHMMqo89CXXRBVAxaSKBLaQEtbOCaJRVBxCacZD';
@@ -1276,7 +1604,7 @@ function renderMetaAdsCard(ads) {
 const ODD_KNOWLEDGE_MAP = {
   ingredients: {
     triggers: ['원료','성분','ingredient','재료','원재료'],
-    terms: ['Delphinol','Reducose','GOFOS','Orafti','Lalmin','Maqui','Mulberry','Chicory','Chromium','M-01']
+    terms: ['Delphinol','Reducose','GOFOS','Orafti','Lalmin','Maqui','Mulberry','Chicory','Chromium','ingredient']
   },
   delphinol: { triggers: ['delphinol','델피놀','마키베리','maqui'], terms: ['Delphinol','Maqui','maqui berry'] },
   reducose: { triggers: ['reducose','리듀코스','뽕잎','백상엽','mulberry'], terms: ['Reducose','Mulberry','mulberry leaf'] },
@@ -1322,7 +1650,9 @@ async function searchDriveAPI(query) {
   // 쿼리 유형 감지
   const isAdQuery = ['광고','소재','creative','ad','캠페인','campaign'].some(k => lower.includes(k));
   const isPackagingQuery = ['패키지','칼선','인쇄','최종본','다이컷','die cut','package','label','라벨','박스'].some(k => lower.includes(k));
-  const isOddBroadQuery = ['odd','m-01','m01','제품','보여줘','에셋','전체','모두','다'].some(k => lower.includes(k));
+  const isIngredientQuery = ['원료','성분','ingredient','delphinol','델피놀','마키베리','reducose','리듀코스',
+    '백상엽','뽕잎','gofos','고포스','orafti','오라프티','치커리','chicory','lalmin','랄민','크롬'].some(k => lower.includes(k));
+  const isOddBroadQuery = ['odd','m-01','m01','에셋','전체','모두'].some(k => lower.includes(k)) && !isIngredientQuery;
 
   // 단일 폴더 파일 가져오기 (allDrives → user fallback)
   async function listFolderDirect(folderId, pageSize) {
@@ -1427,13 +1757,15 @@ async function searchDriveAPI(query) {
     searches.push(listFolderAll(DRIVE_AD_CREATIVE_FOLDER, 1));
   }
 
-  // 5) 기본 ODD / M-01 검색어 항상 추가 (놓치는 파일 방지)
-  const mimeAll = "(mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/pdf')";
-  ['ODD', 'M-01', 'M01'].forEach(baseT => {
-    if (!terms.includes(baseT)) {
-      searches.push(driveSearch(mimeAll + " and name contains '" + baseT + "'"));
-    }
-  });
+  // 5) 기본 ODD / M-01 검색어 추가 (원료 특정 검색이 아닌 경우만)
+  if (!isIngredientQuery) {
+    const mimeAll = "(mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/pdf')";
+    ['ODD', 'M-01', 'M01'].forEach(baseT => {
+      if (!terms.includes(baseT)) {
+        searches.push(driveSearch(mimeAll + " and name contains '" + baseT + "'"));
+      }
+    });
+  }
 
   const results = await Promise.all(searches);
   results.forEach(files => {
@@ -1442,7 +1774,8 @@ async function searchDriveAPI(query) {
     });
   });
 
-  return allFiles;
+  // 6) AI 분류 기반 필터링 (분류 캐시 있으면 사용, 없으면 파일명 폴백)
+  return filterByClassification(allFiles, query);
 }
 
 // ── Dashboard Data (매출/주문 from data.js) ──
@@ -1862,66 +2195,107 @@ This Korean section is for INTERNAL team reference so they can quickly review th
 
 IMPORTANT: The Korean section should be a COMPLETE mirror of the English plan, not a summary. Every slide's text overlay and caption must be included.
 
-=== IMAGE & VISUAL REQUESTS ===
-- NEVER say "I cannot display images", "I don't have image search capability", "접근할 수 없어서", "불러올 수 없습니다" or apologize about ANY limitations regarding images, ad creatives, campaign data, or file access.
-- The system AUTOMATICALLY searches Google Drive (including ODD's ad creative archive) and Unsplash for relevant images and displays them below your response. You DO have access to ODD's assets.
-- When user asks for ad creatives ("광고 소재 보여줘", "2월 소재"), the system fetches real data from Meta Ads Manager API AND Google Drive. Respond with a brief analysis/summary, then state creatives are displayed below. Example: "아래에서 ODD의 실제 집행 중인 광고 소재를 확인하실 수 있습니다."
-- You have LIVE access to Meta Ads Manager (campaigns, ads, creatives, performance metrics). When asked about ad performance, campaigns, or creatives, provide analysis based on the actual data shown.
-- When user asks for ingredient/product images, provide a concise informational summary then mention images are shown below.
-- When user asks about packaging die-cut lines ("칼선", "인쇄", "패키지 데이터", "패키지 최종본"), the system searches the dedicated packaging folder in Google Drive. Respond that packaging files are displayed below.
-- NEVER suggest the user manually search Google Images, visit external websites, or go to Meta Ads Manager to find images. The system handles it.
-- NEVER start with apologies or disclaimers. Start directly with useful, actionable content.
+=== IMAGE & VISUAL REQUESTS — 조회 vs 생성 구분 (매우 중요) ===
 
-=== AI IMAGE GENERATION (Nano Banana via Higgsfield) ===
-You have access to Nano Banana AI image generator. When creating content with visuals, you MUST embed image prompts:
+**[조회 요청] — 기존 자료 보여달라는 경우 → [IMG_GEN] 절대 쓰지 마라**
+다음과 같은 요청은 Google Drive에 있는 기존 자료를 검색해서 보여주는 것이다. 이미지 생성(IMG_GEN)을 하면 안 된다:
+- "제품 사진 보여줘", "M-01 사진", "제품 이미지", "보여줘", "찾아줘"
+- "광고 소재 보여줘", "2월 소재", "집행 중인 소재"
+- "칼선", "인쇄", "패키지 데이터", "패키지 최종본"
+- "원료 사진", "성분 사진"
+- 기존에 만든/촬영한 자료를 보고 싶다는 모든 요청
 
+이런 경우 응답은 짧게: "아래에서 ODD M-01 제품 사진을 확인하실 수 있습니다."
+→ 시스템이 자동으로 Google Drive를 검색해서 아래에 표시함. 너는 [IMG_GEN] 태그를 넣으면 안 된다.
+
+**[생성 요청] — 새로운 콘텐츠를 기획/제작하는 경우 → [IMG_GEN] 사용**
+다음과 같은 요청만 이미지 생성을 한다:
+- "캐러셀 기획해줘", "콘텐츠 만들어줘", "슬라이드 만들어줘"
+- "이미지 생성해줘", "새로운 비주얼 만들어줘"
+- "광고 소재 기획", "새 크리에이티브"
+→ 이때만 [IMG_GEN: prompt] 태그를 사용하여 Higgsfield로 이미지 생성
+
+**판단 기준: "보여줘/찾아줘" = 조회, "만들어줘/기획해줘/생성해줘" = 생성**
+
+기타 규칙:
+- NEVER say "I cannot display images", "접근할 수 없어서", "불러올 수 없습니다"
+- The system AUTOMATICALLY searches Google Drive and displays results below your response.
+- You have LIVE access to Meta Ads Manager. When asked about ad performance/creatives, provide analysis.
+- NEVER suggest the user manually search elsewhere. The system handles it.
+- NEVER start with apologies or disclaimers.
+
+=== AI IMAGE GENERATION (Higgsfield Nano Banana Pro) ===
+ONLY use [IMG_GEN] when creating NEW content (기획/제작 요청). NEVER for viewing existing assets.
+
+The system automatically detects product-related prompts and uploads the REAL M-01 product photo as reference to Nano Banana Pro. This ensures the generated image uses the actual product design.
+
+When creating NEW content with visuals, embed:
 [IMG_GEN: detailed English prompt]
+
+For product shots, ALWAYS mention "M-01 bottle" or "product" in the prompt so the system auto-uploads the real product photo as reference.
 
 === ODD VISUAL IDENTITY (프롬프트 작성 시 반드시 반영) ===
 
-THE M-01 PRODUCT — what it actually looks like:
-- Small pocket-sized liquid supplement bottle (약 10cm), twist-off cap, single-serve
-- Matte black bottle body with deep red (#bf2026) label accent and white "ODD." logo
-- Lemon-colored liquid visible through semi-transparent lower section
-- Clean, pharmaceutical-grade yet premium feel — NOT a typical supplement jar
-- Think: Aesop meets science. Compact, intentional, ritualistic object.
+THE M-01 PRODUCT — EXACT APPEARANCE (틀리면 안됨):
+- Small 25ml (0.85 fl oz) single-serve liquid supplement vial, pocket-sized
+- Body: VIVID RED / bold red color — the entire bottle is RED, NOT black
+- Cap: Translucent red-brown twist-off cap, slightly wider than the body
+- Middle section: BLACK ribbed/fluted grip band wrapping around the center
+- Label: RED background with large BLACK "ODD" text printed HORIZONTALLY in bold sans-serif
+- Below logo: "ODD. M-01™" and "Supports Healthy Blood Sugar" in smaller black text
+- Dark liquid visible through the semi-transparent red body
+- The PACKAGING (boxes) is also BOLD RED with black "ODD." text
+- Overall: Bold, confident, modern — like a premium beauty/skincare product, NOT a supplement jar
+- NEVER describe as "matte black bottle" — the bottle is RED
+- NEVER use hex codes in prompts — they get rendered as literal text on the image
+
+ODD BRAND COLOR IDENTITY:
+- PRIMARY: Bold, vivid red (the red you see on the bottle and all packaging)
+- SECONDARY: Black (text, accents, grip band)
+- TERTIARY: White (backgrounds, clean contrast)
+- The brand is NOT dark/moody/goth. It is BOLD, CONFIDENT, WARM.
 
 ODD PHOTOGRAPHY DIRECTION:
-- Editorial, not commercial. Think Kinfolk magazine, Cereal magazine, Monocle aesthetic.
-- Negative space is sacred. Never cluttered. Every element has breathing room.
-- Lighting: Soft directional light, natural window light, or single dramatic studio light. Never flat, never overlit.
-- Shadows are part of the composition — long, soft, intentional.
-- Color grading: Muted, desaturated base with selective deep red (#bf2026) as the only vivid accent.
-- Backgrounds: Matte black (#0d0d0f), dark concrete, black marble, charcoal linen, or clean white with shadows.
-- Textures: Stone, marble, linen, matte surfaces. Never glossy, never plastic-looking.
+- Think: high-end fashion photographer shooting a beauty product. NOT supplement marketing.
+- Reference photographers: soft-focus editorial (Petra Collins vibe for warmth), clean product (Apple-level precision), lifestyle (Kinfolk natural intimacy)
+- Lighting: Natural, warm, golden-hour feel. Soft wrapping light. Beautiful shadows that add depth, not drama. Backlit edges. Rim light on the bottle.
+- Color grading: Warm tones, rich reds, creamy whites, soft earth tones. NOT desaturated. NOT all-black. Think warm film stock (Kodak Portra 400, Fuji Pro 400H).
+- Backgrounds: VARIED — warm concrete, natural linen, light wood, white marble, sunlit table, kitchen counter, restaurant table, outdoor café, morning light bedroom. NOT always dark/black.
+- Textures: Natural materials — linen, wood, ceramic, stone, fresh ingredients. Organic, tactile, inviting.
+- Composition: Intentional negative space, rule of thirds, slightly off-center product placement. Breathing room. NOT centered-and-symmetrical stock photo.
+- Depth of field: Shallow (f/1.8-2.8) for lifestyle, moderate (f/4-5.6) for product hero. Beautiful bokeh.
+- The images should feel like they belong in a curated Instagram feed of someone with excellent taste — not in a supplement catalog.
 
 SHOT TYPES BY CONTEXT:
-1. Product Hero: M-01 bottle on dark surface, dramatic single light source, long shadow, editorial still life. Minimal props (maybe one lemon slice, a white linen napkin). Ultra clean.
-2. Lifestyle/Ritual: Hands holding or twisting open the bottle. Morning light, kitchen counter or dining table. Muted warm tones. Candid but composed — NOT stock photo posed. Think documentary-style wellness.
-3. Ingredient Story: Macro close-up of raw ingredient (maqui berries, mulberry leaf, chicory root). Dark background, single light revealing texture and color. Scientific beauty — like a National Geographic food photograph.
-4. Conceptual/Campaign: Abstract visual metaphors. Example: a single M-01 bottle surrounded by scattered salad leaves on black — "Not Salad, But Salad" visual. Surreal but grounded.
-5. Infographic/Data Visual: Dark background, clean white/red typography overlaid. Minimal chart or stat visualization. Premium editorial layout feel.
-6. Lifestyle Environment: Coffee shop table, airplane tray, gym bag, office desk — M-01 naturally placed in real-life context. Never staged-looking. Shallow depth of field.
+1. Product Hero: M-01 red bottle on warm natural surface (light stone, linen, wood). Soft directional golden light. Maybe one fresh lemon or citrus slice nearby. Clean but warm, not cold/clinical. Shot like a perfume ad.
+2. Lifestyle/Ritual: Someone's hand naturally reaching for or holding the red bottle. Morning table setting, brunch scene, pre-dinner moment. Warm natural light, candid feel. Think "captured moment" not "posed ad."
+3. Ingredient Story: Beautiful macro of raw ingredients (maqui berries, mulberry leaf, chicory root, lemon). Wet, fresh, textured. On natural surfaces — wet stone, wooden cutting board. Warm side light. Think food magazine editorial.
+4. Conceptual: Creative visual metaphors for the brand. Fresh salad ingredients arranged artfully with M-01 bottle. Color play with reds and greens. Artistic but approachable.
+5. Lifestyle Environment: Café table, kitchen island, gym bag, office desk, airplane tray — M-01 naturally present in an aspirational daily scene. Shallow depth of field, warm ambient light. Documentary feel.
+6. Flat Lay: Overhead shot on clean surface. M-01 bottle with complementary objects (fresh fruit, clean napkin, morning coffee). Styled but not over-styled. Natural, editorial.
 
-ANTI-PATTERNS — what ODD images must NEVER look like:
-- Generic stock photo wellness (smiling person holding supplement, white background, bright colors)
-- Overly saturated, HDR, or Instagram-filter look
-- Busy compositions with multiple products, text-heavy overlays
-- Typical supplement brand aesthetic (green/white clinical look, bodybuilder imagery)
-- Photorealistic faces (AI faces look uncanny — avoid full face shots, use hands/silhouettes/back views instead)
-- Cartoonish or 3D rendered look
+ANTI-PATTERNS — NEVER DO THIS:
+- All-black/dark moody everything — this is NOT the brand (the brand is RED and warm)
+- Generic AI aesthetic: over-smooth textures, plastic-looking surfaces, uncanny lighting
+- Hex codes or color codes in prompts (they render as literal text)
+- Stock photo poses (smiling person holding product at camera)
+- Overly dramatic single-light-source on black — makes everything look like cheap Amazon listing
+- 3D rendered or CGI look — must look like a real photograph
+- Describing the bottle as "black" — IT IS RED
+- Too many props or cluttered composition
+- Photorealistic human faces (AI faces are uncanny)
 
-PROMPT STRUCTURE (follow this template for every [IMG_GEN]):
-[IMG_GEN: {shot type} of {subject}. {specific composition details}. {lighting: direction, quality, color temperature}. {color palette: specific hex or descriptive}. {mood/atmosphere}. {texture/material details}. {camera: lens type, depth of field, angle}. {style reference: "editorial still life photography" / "documentary lifestyle" / "macro food photography"}. 4K, high detail.]
+PROMPT STRUCTURE (follow this for every [IMG_GEN]):
+[IMG_GEN: {shot type}. {subject with accurate product description: small red supplement vial with black ODD text}. {scene/setting}. {lighting: warm, natural, specific direction}. {color palette in words, NO hex codes}. {mood}. {texture/materials}. {camera: lens, aperture, angle}. {style reference}. Photographic, not AI-looking, shot on medium format film.]
 
 EXAMPLES OF GOOD PROMPTS:
-[IMG_GEN: Editorial still life of a small matte black liquid supplement bottle with deep red label on polished black marble surface. Single warm directional light from upper left casting a long diagonal shadow. One thin lemon slice placed 3 inches from bottle. Background pure matte black. Muted color palette with only the red label as color accent. Shot with 85mm lens, f/2.8, slightly above eye level. Premium minimalist product photography style. 4K, photorealistic.]
+[IMG_GEN: Editorial product photography of a small red liquid supplement vial with black "ODD" text and black ribbed grip band, placed on a warm beige linen tablecloth. Soft golden morning light streaming from the left, creating gentle shadows. A halved lemon and scattered lemon zest nearby. Warm cream and red color palette. Calm, intentional, ritualistic mood. Shot with Hasselblad, 80mm lens, f/2.8, slightly above eye level. Style reference: Kinfolk magazine product editorial. Photographic, shot on Kodak Portra 400 film. 4K.]
 
-[IMG_GEN: Documentary-style close-up of a hand twisting open a small black supplement bottle over a clean white kitchen counter. Soft morning window light from the right, gentle shadows. Shallow depth of field, background blurred showing a coffee cup and morning newspaper. Warm muted tones, desaturated. Natural, unposed, intimate ritual moment. 35mm film grain texture. Kinfolk magazine aesthetic. 4K.]
+[IMG_GEN: Lifestyle photography of a hand naturally picking up a small red supplement bottle from a sunlit breakfast table. Soft backlit morning window light, warm golden tones. Table has a ceramic coffee cup, fresh orange slices, and a folded newspaper. Shallow depth of field with creamy bokeh background. Candid, unposed, intimate morning ritual moment. Shot on 35mm lens, f/1.8. Natural warmth, Fuji Pro 400H color science. Documentary lifestyle photography style. 4K.]
 
-[IMG_GEN: Macro photography of fresh dark purple maqui berries scattered on wet black slate surface. Single overhead softbox light revealing the berries' glossy skin texture and deep violet-black color. Water droplets on the slate. Pure black background fading to darkness. Scientific yet beautiful, National Geographic food photography style. 100mm macro lens, f/4, extreme detail. 4K.]
+[IMG_GEN: Macro close-up of fresh dark purple maqui berries on a wet light stone surface. Soft overhead natural light with gentle shadows. Water droplets catching light. Rich purple, deep green leaves, and warm stone tones. Scientific beauty meets food magazine editorial. 100mm macro lens, f/4, extreme detail on berry skin texture. National Geographic meets Bon Appetit aesthetic. 4K.]
 
-[IMG_GEN: Conceptual flat lay on matte black background. A single small black supplement bottle with red label centered, surrounded by a perfect circle of scattered green salad leaves. Dramatic contrast between the dark minimal bottle and organic greens. Overhead shot, even soft lighting, slight vignette. Visual metaphor for "Not Salad, But Salad." Editorial art direction, Kinfolk magazine style. 4K.]
+[IMG_GEN: Creative flat lay on warm white marble surface. A small red supplement vial with black text centered, surrounded by an artful arrangement of fresh green salad leaves, cherry tomatoes, and lemon slices forming a loose circle. Soft even overhead light, slight warm cast. Visual metaphor for "Not Salad, But Salad." Bold red bottle contrasts with fresh greens. Shot overhead with 50mm lens, f/4. Clean editorial art direction, Apartamento magazine style. 4K.]
 
 RULES:
 - Write ALL prompts in English, extremely detailed (minimum 3 lines)
@@ -2156,14 +2530,8 @@ async function appendAssetRecommendations(prompt, container) {
   const isAdQuery = ['광고','소재','creative','ad','캠페인','campaign'].some(k => lower.includes(k));
 
   try {
-    // Google 로그인 안 되어있으면 자동 시도
-    if (!driveAccessToken && fireAuth.currentUser) {
-      try {
-        const cred = await fireAuth.currentUser.getIdToken(true);
-        // re-auth to get Drive token
-      } catch {}
-    }
-    if (!driveAccessToken && !fireAuth.currentUser) {
+    // Google Drive 토큰 없으면 자동 로그인 시도
+    if (!driveAccessToken) {
       try { await loginGoogle(); } catch {}
     }
 
@@ -2190,11 +2558,16 @@ async function appendAssetRecommendations(prompt, container) {
     if (driveRes.length) {
       html += '<div style="font-size:12px;color:var(--t3);margin-bottom:10px;font-weight:600">📁 Google Drive <span style="font-weight:400;color:var(--t4);font-size:11px">(' + driveRes.length + '개 발견)</span></div>';
       html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px">';
+      const catLabels = { product:'제품', model:'모델', ingredient:'원료', packaging:'패키지', lifestyle:'라이프', campaign:'광고', graphic:'디자인', other:'기타' };
+      const catColors = { product:'var(--red)', model:'var(--purple)', ingredient:'var(--green)', packaging:'var(--blue)', lifestyle:'var(--orange)', campaign:'#4f8df9', graphic:'#38bdf8', other:'var(--t5)' };
       driveRes.forEach(f => {
         let thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220', '=s400') : '';
         if (thumb && driveAccessToken) thumb += (thumb.includes('?') ? '&' : '?') + 'access_token=' + driveAccessToken;
         const isVideo = f.mimeType && f.mimeType.includes('video');
+        const cls = _driveClassifications && _driveClassifications[f.id];
+        const catBadge = cls ? '<div style="position:absolute;top:6px;left:6px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.65);color:' + (catColors[cls.category] || 'var(--t3)') + ';font-size:8px;font-weight:600;z-index:1;backdrop-filter:blur(4px)">' + (catLabels[cls.category] || cls.category) + '</div>' : '';
         html += '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--bg-raised);transition:all .15s;position:relative" onclick="window.open(\'https://drive.google.com/file/d/' + f.id + '/view\',\'_blank\')" onmouseover="this.style.borderColor=\'rgba(255,159,10,.3)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'\';this.style.transform=\'\'">' +
+          catBadge +
           (isVideo ? '<div style="position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21"/></svg></div>' : '') +
           (thumb ? '<img src="' + thumb + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy" onerror="this.outerHTML=\'<div style=\\\'width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px;background:var(--bg-raised)\\\'>미리보기 없음</div>\'">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">미리보기 없음</div>') +
           '<div style="padding:5px 8px;font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.name) + '</div></div>';
@@ -2502,12 +2875,18 @@ async function autoGenerateImages(matches, _unused, targetEl, historyId) {
   if (!higgsKey) return; // Higgsfield 키 없으면 스킵
 
   const prompts = matches.map(m => m.replace(/^\[IMG_GEN:\s*/, '').replace(/\]$/, '').trim());
+
+  // M-01 제품 사진 레퍼런스 (공개 URL — Higgsfield 서버에서 접근 가능)
+  const hasProductPrompt = prompts.some(p => isProductImagePrompt(p));
+
   let html = targetEl.innerHTML;
 
   for (let i = 0; i < prompts.length; i++) {
     const imgPrompt = prompts[i];
     const placeholderId = 'imggen_' + i;
-    const placeholder = '<div id="' + placeholderId + '" style="margin:12px 0;padding:20px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;text-align:center"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><div style="font-size:11px;color:var(--t5);margin-top:8px">이미지 생성 중... (' + (i+1) + '/' + prompts.length + ')</div></div>';
+    const isProduct = isProductImagePrompt(imgPrompt) && hasProductPrompt;
+    const genLabel = isProduct ? '제품 레퍼런스 기반 이미지 생성 중... (Kontext)' : '이미지 생성 중... (Nano Banana)';
+    const placeholder = '<div id="' + placeholderId + '" style="margin:12px 0;padding:20px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;text-align:center"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><div style="font-size:11px;color:var(--t5);margin-top:8px">' + genLabel + ' (' + (i+1) + '/' + prompts.length + ')</div></div>';
 
     const escapedPrompt = imgPrompt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const tagPattern = '\\[IMG_GEN:\\s*' + escapedPrompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\]';
@@ -2515,13 +2894,19 @@ async function autoGenerateImages(matches, _unused, targetEl, historyId) {
     targetEl.innerHTML = html;
   }
 
-  // 병렬로 Higgsfield 이미지 생성
-  const results = await Promise.allSettled(prompts.map(p =>
-    higgsGenerate('nano-banana', {
+  // 병렬로 Higgsfield 이미지 생성 (제품 프롬프트 → Kontext + 레퍼런스, 나머지 → Nano Banana)
+  const results = await Promise.allSettled(prompts.map(p => {
+    if (isProductImagePrompt(p)) {
+      // 제품 관련: Kontext로 공식 제품 사진 레퍼런스 기반 생성
+      const refUrl = getProductReferenceUrl(p);
+      return higgsGenerateWithProductRef(p, refUrl);
+    }
+    // 비제품: Nano Banana 텍스트→이미지
+    return higgsGenerate('nano-banana-pro', {
       prompt: p,
       aspect_ratio: '9:16'
-    })
-  ));
+    });
+  }));
 
   const generatedImages = [];
   for (let i = 0; i < results.length; i++) {
@@ -2550,6 +2935,33 @@ async function autoGenerateImages(matches, _unused, targetEl, historyId) {
   if (generatedImages.length && historyId) {
     appendImagesToHistory(historyId, generatedImages);
   }
+}
+
+// ── M-01 제품 사진 레퍼런스 (공개 접근 가능 URL) ──
+// m-01.odd.us의 공식 제품 사진 — Higgsfield 서버에서 직접 접근 가능
+const M01_PRODUCT_PHOTOS = [
+  { name: 'hero-packaging', url: 'https://m-01.odd.us/landing/hero/hero.png', desc: '제품 + 패키지 박스 (메인)' },
+  { name: 'bottle-closeup', url: 'https://m-01.odd.us/landing/slide/1.jpg', desc: '병 클로즈업 (레퍼런스 최적)' },
+  { name: 'bottle-cutout', url: 'https://odd.us/_image?href=%2F_astro%2Fbottle.DjktAnC3.webp&w=519&h=2229&f=png', desc: '병 누끼 (배경없음)' }
+];
+
+function getProductReferenceUrl(prompt) {
+  // 프롬프트 내용에 따라 최적의 레퍼런스 사진 선택
+  const lower = prompt.toLowerCase();
+  if (lower.includes('cutout') || lower.includes('isolated') || lower.includes('flat lay') || lower.includes('overhead'))
+    return M01_PRODUCT_PHOTOS[2].url; // 누끼
+  if (lower.includes('packaging') || lower.includes('box') || lower.includes('package'))
+    return M01_PRODUCT_PHOTOS[0].url; // 패키지
+  return M01_PRODUCT_PHOTOS[1].url; // 기본: 병 클로즈업
+}
+
+// 제품 관련 프롬프트 감지
+function isProductImagePrompt(prompt) {
+  const lower = prompt.toLowerCase();
+  const productKeywords = ['m-01', 'm01', 'bottle', 'product', 'supplement bottle', 'red bottle',
+    'red vial', 'odd bottle', 'odd vial', 'twist-off', 'liquid supplement', 'pre-meal',
+    'product hero', 'product shot', 'supplement vial', 'package', 'packaging'];
+  return productKeywords.some(k => lower.includes(k));
 }
 
 // ── Nano Banana via Higgsfield (AI Image Generation) ──
@@ -2594,6 +3006,69 @@ function extractImageUrl(result) {
   return null;
 }
 
+// ── 제품 사진 레퍼런스 기반 이미지 생성 (Nano Banana Pro + input_images) ──
+async function higgsGenerateWithProductRef(prompt, referenceImageUrl) {
+  const key = localStorage.getItem('odd_higgs_key') || '';
+  if (!key) throw new Error('Higgsfield API 키가 없습니다.');
+
+  // 제품 레퍼런스를 프롬프트에 명시
+  const enhancedPrompt = 'Use the provided reference image as the EXACT product. Keep the product bottle design IDENTICAL to the reference image — small red bottle, black "ODD" text, black ribbed grip band, red-brown cap. Place this exact product in the scene described below. Warm editorial photography, natural light, shot on film. ' + prompt;
+
+  // Nano Banana Pro에 input_images로 실제 제품 사진 전달
+  const r = await fetch(HIGGS_PROXY + '/nano-banana-pro', {
+    method: 'POST',
+    headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt: enhancedPrompt,
+      input_images: [referenceImageUrl],
+      aspect_ratio: '9:16'
+    })
+  });
+
+  if (!r.ok) {
+    const errText = await r.text().catch(() => '');
+    console.warn('Nano Banana Pro with ref failed (' + r.status + '): ' + errText.substring(0, 200));
+    // input_images 형식 다를 수 있으므로 object 형태로 재시도
+    const r2 = await fetch(HIGGS_PROXY + '/nano-banana-pro', {
+      method: 'POST',
+      headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: enhancedPrompt,
+        input_images: [{ type: 'image_url', image_url: referenceImageUrl }],
+        aspect_ratio: '9:16'
+      })
+    });
+    if (!r2.ok) {
+      console.warn('Retry with object format also failed, falling back to text-only');
+      const fallbackPrompt = prompt + '. The product is a small 25ml VIVID RED supplement vial with large black "ODD" text on the red label, black ribbed grip band in the middle, translucent red-brown cap. Warm editorial photography, natural golden light, NOT dark. Shot on medium format film.';
+      return await higgsGenerate('nano-banana-pro', { prompt: fallbackPrompt, aspect_ratio: '9:16' });
+    }
+    const gen2 = await r2.json();
+    if (gen2.output || gen2.images || gen2.image_url) return gen2;
+    return await pollHiggsResult(gen2, key);
+  }
+
+  const gen = await r.json();
+  if (gen.output || gen.images || gen.image_url) return gen;
+  return await pollHiggsResult(gen, key);
+}
+
+// 폴링 헬퍼
+async function pollHiggsResult(gen, key) {
+  const pollId = gen.id || gen.request_id;
+  if (!pollId) return gen;
+  const pollUrl = HIGGS_PROXY + '/requests/' + pollId + '/status';
+  for (let i = 0; i < 60; i++) {
+    await new Promise(ok => setTimeout(ok, 3000));
+    const sr = await fetch(pollUrl, { headers: { 'x-higgs-key': key } });
+    if (!sr.ok) continue;
+    const status = await sr.json();
+    if (status.status === 'completed' || status.status === 'succeeded' || status.output) return status;
+    if (status.status === 'failed') throw new Error(status.error || '생성 실패');
+  }
+  throw new Error('시간 초과');
+}
+
 async function generateImageWithNano(prompt) {
   const higgsKey = localStorage.getItem('odd_higgs_key') || '';
   if (!higgsKey) { showToast('설정(⚙️)에서 Higgsfield API 키를 입력하세요'); return; }
@@ -2601,15 +3076,21 @@ async function generateImageWithNano(prompt) {
   document.getElementById('landing').classList.add('pushed');
   const ra = document.getElementById('resultsArea');
   ra.style.display = 'block';
-  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>AI 이미지 생성 중...</div><div class="result-content" id="nanoTarget" style="white-space:normal;min-height:120px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><span style="color:var(--t4);font-size:13px;margin-left:12px">Higgsfield Nano Banana로 이미지를 생성하고 있습니다...</span></div></div>';
+  const useProduct = isProductImagePrompt(prompt);
+  const modelLabel = useProduct ? 'Kontext (제품 레퍼런스)' : 'Nano Banana';
+  ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--green)"></span>AI 이미지 생성 중...</div><div class="result-content" id="nanoTarget" style="white-space:normal;min-height:120px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><span style="color:var(--t4);font-size:13px;margin-left:12px">Higgsfield ' + modelLabel + '로 이미지를 생성하고 있습니다...</span></div></div>';
 
-  const brandContext = 'ODD brand style: premium, dark tones, minimalist, sophisticated. Product M-01 is a pre-meal supplement in a sleek bottle. Brand color: deep red (#bf2026) on black. Clean typography, modern.';
+  const brandContext = 'ODD brand: bold red premium supplement brand. M-01 is a small red 25ml vial with black ODD text and black ribbed grip band. Photography style: warm editorial like Kinfolk magazine, natural golden light, shot on medium format film. NOT dark/moody, NOT all-black. Warm, confident, aspirational.';
 
   try {
-    const result = await higgsGenerate('nano-banana', {
-      prompt: prompt + '. ' + brandContext,
-      aspect_ratio: '9:16'
-    });
+    let result;
+    if (useProduct) {
+      // 공식 제품 사진 레퍼런스 기반 Kontext 생성
+      const refUrl = getProductReferenceUrl(prompt);
+      result = await higgsGenerateWithProductRef(prompt + '. ' + brandContext, refUrl);
+    } else {
+      result = await higgsGenerate('nano-banana-pro', { prompt: prompt + '. ' + brandContext, aspect_ratio: '9:16' });
+    }
 
     const imgUrl = extractImageUrl(result);
     const target = document.getElementById('nanoTarget');
@@ -2623,7 +3104,7 @@ async function generateImageWithNano(prompt) {
     ra.querySelector('.result-label').innerHTML = '<span class="dot" style="background:var(--green)"></span>AI 생성 이미지';
     const meta = document.createElement('div');
     meta.className = 'result-meta';
-    meta.innerHTML = '<span class="tag">Higgsfield</span><span class="tag">Nano Banana</span>';
+    meta.innerHTML = '<span class="tag">Higgsfield</span><span class="tag">' + modelLabel + '</span>' + (useProduct ? '<span class="tag" style="background:rgba(191,32,38,.15);color:var(--red)">제품 레퍼런스 적용</span>' : '');
     target.parentElement.appendChild(meta);
 
     saveHistory(prompt, [{ label: 'AI 이미지 생성', content: prompt }]);
@@ -2642,7 +3123,7 @@ async function generateVideoWithHiggs(prompt) {
   ra.style.display = 'block';
   ra.innerHTML = '<div class="result-card"><div class="result-label"><span class="dot" style="background:var(--blue)"></span>AI 영상 생성 중...</div><div class="result-content" id="higgsTarget" style="white-space:normal;min-height:120px"><span class="loading-dots" style="display:inline-flex"><span></span><span></span><span></span></span><span style="color:var(--t4);font-size:13px;margin-left:12px">Higgsfield로 영상을 생성하고 있습니다... (최대 2-3분 소요)</span></div></div>';
 
-  const brandContext = 'ODD brand: premium dark aesthetic, minimalist, sleek M-01 supplement bottle, deep red #bf2026 accent on black, cinematic mood, sophisticated.';
+  const brandContext = 'ODD brand: bold red premium supplement. M-01 is a small vivid red 25ml vial with black ODD text and black ribbed grip. Warm editorial aesthetic, natural golden light, cinematic but warm.';
 
   try {
     // 1) 생성 요청 (프록시 경로)
@@ -2699,9 +3180,22 @@ async function generateVideoWithHiggs(prompt) {
   }
 }
 
-function generate() {
+async function generate() {
   const prompt = promptInput.value.trim();
   if (!prompt && files.length === 0) return;
+
+  // Drive 토큰 없으면 사용자 클릭 시점에 로그인 (팝업 차단 방지, 캐시 있으면 즉시 반환)
+  if (!driveAccessToken) {
+    try { await loginGoogle(); } catch {}
+  }
+
+  // Drive 이미지 AI 분류 캐시가 없으면 백그라운드로 인덱싱 시작
+  if (driveAccessToken && aiConfig.key) {
+    loadDriveClassifications();
+    if (!_driveClassifications || Object.keys(_driveClassifications).length === 0) {
+      indexDriveImages(true); // 백그라운드, 프로그레스 표시
+    }
+  }
 
   const intents = detectIntents(prompt);
   const lower = prompt.toLowerCase();
@@ -3090,6 +3584,13 @@ function openSettings() {
   document.getElementById('settingsAiKey').value = localStorage.getItem('odd_ai_key') || '';
   document.getElementById('settingsNotionKey').value = localStorage.getItem('odd_notion_key') || '';
   document.getElementById('settingsHiggsKey').value = localStorage.getItem('odd_higgs_key') || '';
+  // Drive 분류 캐시 카운트 표시
+  loadDriveClassifications();
+  const countEl = document.getElementById('driveClassCount');
+  if (countEl) {
+    const n = _driveClassifications ? Object.keys(_driveClassifications).length : 0;
+    countEl.textContent = n > 0 ? n + '개 파일 분류됨' : '분류 데이터 없음';
+  }
   document.getElementById('settingsOverlay').classList.add('open');
 }
 function closeSettings() {
@@ -3102,7 +3603,7 @@ async function testHiggsKey() {
   if (!key.includes(':')) { el.innerHTML = '<span style="color:var(--red)">KEY_ID:KEY_SECRET 형식이어야 합니다 (콜론 필수)</span>'; return; }
   el.innerHTML = '<span style="color:var(--t4)">테스트 중...</span>';
   try {
-    const r = await fetch(AI_PROXY + '/higgs/nano-banana', {
+    const r = await fetch(AI_PROXY + '/higgs/nano-banana-pro', {
       method: 'POST',
       headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: 'test', aspect_ratio: '1:1' })
