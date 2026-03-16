@@ -2455,10 +2455,9 @@ async function autoGenerateImages(matches, _unused, targetEl) {
 
   // 병렬로 Higgsfield 이미지 생성
   const results = await Promise.allSettled(prompts.map(p =>
-    higgsGenerate('bytedance/seedream/v4/text-to-image', {
+    higgsGenerate('higgsfield-ai/soul/standard', {
       prompt: p,
-      aspect_ratio: '9:16',
-      resolution: '2K'
+      aspect_ratio: '9:16'
     })
   ));
 
@@ -2538,10 +2537,9 @@ async function generateImageWithNano(prompt) {
   const brandContext = 'ODD brand style: premium, dark tones, minimalist, sophisticated. Product M-01 is a pre-meal supplement in a sleek bottle. Brand color: deep red (#bf2026) on black. Clean typography, modern.';
 
   try {
-    const result = await higgsGenerate('bytedance/seedream/v4/text-to-image', {
+    const result = await higgsGenerate('higgsfield-ai/soul/standard', {
       prompt: prompt + '. ' + brandContext,
-      aspect_ratio: '9:16',
-      resolution: '2K'
+      aspect_ratio: '9:16'
     });
 
     const imgUrl = extractImageUrl(result);
@@ -3008,10 +3006,10 @@ async function testHiggsKey() {
   if (!key.includes(':')) { el.innerHTML = '<span style="color:var(--red)">KEY_ID:KEY_SECRET 형식이어야 합니다 (콜론 필수)</span>'; return; }
   el.innerHTML = '<span style="color:var(--t4)">테스트 중...</span>';
   try {
-    const r = await fetch(AI_PROXY + '/higgs/bytedance/seedream/v4/text-to-image', {
+    const r = await fetch(AI_PROXY + '/higgs/higgsfield-ai/soul/standard', {
       method: 'POST',
       headers: { 'x-higgs-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: 'test', resolution: '2K', aspect_ratio: '1:1' })
+      body: JSON.stringify({ prompt: 'test', aspect_ratio: '1:1' })
     });
     const txt = await r.text();
     if (r.ok) {
