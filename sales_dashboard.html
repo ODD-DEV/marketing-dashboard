@@ -509,7 +509,7 @@ var monthlyViewMode='chart';
 function toggleMonthlyView(){var ch=document.getElementById('monthlyChart'),tb=document.getElementById('monthlyTableWrap'),btn=document.getElementById('monthlyViewBtn');if(monthlyViewMode==='chart'){monthlyViewMode='table';ch.style.display='none';tb.style.display='';btn.textContent='Chart';btn.classList.add('active')}else{monthlyViewMode='chart';ch.style.display='';tb.style.display='none';btn.textContent='Table';btn.classList.remove('active')}}
 function toggleReview(){var e=document.getElementById('reviewWrap'),t=document.getElementById('reviewToggle');if(e.style.display==='none'){e.style.display='';t.innerHTML='▾ 접기'}else{e.style.display='none';t.innerHTML='▸ 펼치기'}}
 var isAllMode=true;
-function initMonths(){var m={};DATA.orders.forEach(o=>{if(o.d)m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort().forEach(v=>ALL_MONTHS.push(v));isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
+function initMonths(){var m={};DATA.orders.forEach(o=>{if(o.d)m[getMonth(o.d)]=true});ALL_MONTHS.length=0;Object.keys(m).sort(function(a,b){return a<b?-1:a>b?1:0}).forEach(v=>ALL_MONTHS.push(v));isAllMode=true;selectedMonths=new Set(ALL_MONTHS);selectedWeek=null;renderMonthTabs();renderWeekTabs()}
 function renderMonthTabs(){var c=document.getElementById('monthTabs'),h='<button class="month-tab all-tab '+(isAllMode?'active':'')+'" data-m="all">전체</button>';ALL_MONTHS.forEach(m=>{var a=!isAllMode&&selectedMonths.has(m);h+='<button class="month-tab '+(a?'active':'')+'" data-m="'+m+'">'+fmtMon(m)+'</button>'});c.innerHTML=h;c.querySelectorAll('.month-tab').forEach(b=>{b.addEventListener('click',()=>{var m=b.dataset.m;if(m==='all'){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}else{if(isAllMode){isAllMode=false;selectedMonths=new Set([m])}else{if(selectedMonths.has(m)){selectedMonths.delete(m);if(!selectedMonths.size){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}}else selectedMonths.add(m)}}selectedWeek=null;renderMonthTabs();renderWeekTabs();render()})})}
 function getWeeksInMonth(ym){var w={};DATA.orders.forEach(o=>{if(o.d&&isValid(o)&&getMonth(o.d)===ym){var s=getWeekSunday(o.d);w[s]=(w[s]||0)+1}});return Object.keys(w).sort()}
 function renderWeekTabs(){var c=document.getElementById('weekTabs');if(selectedMonths.size!==1){c.innerHTML='';selectedWeek=null;return}var mo=Array.from(selectedMonths)[0],wk=getWeeksInMonth(mo);if(!wk.length){c.innerHTML='';return}var h='<span style="font-size:11px;color:var(--t4);letter-spacing:.5px;font-weight:600;margin-right:4px">주간:</span><button class="week-tab '+(!selectedWeek?'active':'')+'" data-w="all">전체</button>';wk.forEach(w=>{h+='<button class="week-tab '+(selectedWeek===w?'active':'')+'" data-w="'+w+'">'+fmtWeek(w)+'</button>'});c.innerHTML=h;c.querySelectorAll('.week-tab').forEach(b=>{b.addEventListener('click',()=>{var w=b.dataset.w;selectedWeek=(w==='all'||selectedWeek===w)?null:w;renderWeekTabs();render()})})}
@@ -763,16 +763,17 @@ function renderWeeklyChart(f){
 /* ═══ Monthly Curve Chart ═══ */
 function renderMonthlyChart(){
   var a=DATA.orders.filter(isValid),m={};
-  ALL_MONTHS.forEach(function(v){m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,net:0}});
+  var sorted=ALL_MONTHS.slice().sort(function(a,b){return a<b?-1:a>b?1:0});
+  sorted.forEach(function(v){m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,net:0}});
   a.forEach(function(o){var v=getMonth(o.d);if(!m[v])return;m[v][o.ch]=(m[v][o.ch]||0)+o.t;m[v].total+=o.t;if(isReview(o.c,o.ch))m[v].net-=o.t});
-  ALL_MONTHS.forEach(function(v){m[v].net=m[v].total+m[v].net});
-  if(ALL_MONTHS.length<2){document.getElementById('monthlyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">월간 데이터 부족</div>';return}
-  var labels=ALL_MONTHS.map(function(v){return fmtMon(v)});
+  sorted.forEach(function(v){m[v].net=m[v].total+m[v].net});
+  if(sorted.length<2){document.getElementById('monthlyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">월간 데이터 부족</div>';return}
+  var labels=sorted.map(function(v){return fmtMon(v)});
   var datasets=[
-    {id:'mo_total',label:'Total',color:'#f5f5f7',data:ALL_MONTHS.map(function(v){return m[v].total})},
-    {id:'mo_shopify',label:'Shopify',color:'#30d158',data:ALL_MONTHS.map(function(v){return m[v].shopify})},
-    {id:'mo_amazon',label:'Amazon',color:'#ff9f0a',data:ALL_MONTHS.map(function(v){return m[v].amazon})},
-    {id:'mo_tiktok',label:'TikTok',color:'#ff375f',data:ALL_MONTHS.map(function(v){return m[v].tiktok_shop})}
+    {id:'mo_total',label:'Total',color:'#f5f5f7',data:sorted.map(function(v){return m[v].total})},
+    {id:'mo_shopify',label:'Shopify',color:'#30d158',data:sorted.map(function(v){return m[v].shopify})},
+    {id:'mo_amazon',label:'Amazon',color:'#ff9f0a',data:sorted.map(function(v){return m[v].amazon})},
+    {id:'mo_tiktok',label:'TikTok',color:'#ff375f',data:sorted.map(function(v){return m[v].tiktok_shop})}
   ];
   document.getElementById('monthlyChart').innerHTML=buildLineChart(labels,datasets);
 }
