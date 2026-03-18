@@ -763,7 +763,8 @@ function renderWeeklyChart(f){
 /* ═══ Monthly Curve Chart ═══ */
 function renderMonthlyChart(){
   var a=DATA.orders.filter(isValid),m={};
-  var sorted=ALL_MONTHS.slice().sort(function(a,b){return a<b?-1:a>b?1:0});
+  var sorted=ALL_MONTHS.slice().sort(function(x,y){var px=x.split('-'),py=y.split('-');var yx=parseInt(px[0]),yy=parseInt(py[0]);if(yx!==yy)return yx-yy;return parseInt(px[1])-parseInt(py[1])});
+  console.log('[MONTHLY] sorted=',sorted.join(','));
   sorted.forEach(function(v){m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,net:0}});
   a.forEach(function(o){var v=getMonth(o.d);if(!m[v])return;m[v][o.ch]=(m[v][o.ch]||0)+o.t;m[v].total+=o.t;if(isReview(o.c,o.ch))m[v].net-=o.t});
   sorted.forEach(function(v){m[v].net=m[v].total+m[v].net});
