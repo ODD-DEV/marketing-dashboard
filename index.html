@@ -950,16 +950,17 @@ function renderWeeklyChart(f){
 /* ═══ Monthly Curve Chart ═══ */
 function renderMonthlyChart(){
   var a=DATA.orders.filter(isValid),m={};
-  ALL_MONTHS.forEach(function(v){m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,net:0}});
+  var chrono=ALL_MONTHS.slice().sort();
+  chrono.forEach(function(v){m[v]={shopify:0,tiktok_shop:0,amazon:0,total:0,net:0}});
   a.forEach(function(o){var v=getMonth(o.d);if(!m[v])return;m[v][o.ch]=(m[v][o.ch]||0)+o.t;m[v].total+=o.t;if(isReview(o.c,o.ch))m[v].net-=o.t});
-  ALL_MONTHS.forEach(function(v){m[v].net=m[v].total+m[v].net});
-  if(ALL_MONTHS.length<2){document.getElementById('monthlyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">월간 데이터 부족</div>';return}
-  var labels=ALL_MONTHS.map(function(v){return fmtMon(v)});
+  chrono.forEach(function(v){m[v].net=m[v].total+m[v].net});
+  if(chrono.length<2){document.getElementById('monthlyChart').innerHTML='<div style="color:var(--t4);text-align:center;padding:30px">월간 데이터 부족</div>';return}
+  var labels=chrono.map(function(v){return fmtMon(v)});
   var datasets=[
-    {id:'mo_total',label:'Total',color:'#f5f5f7',data:ALL_MONTHS.map(function(v){return m[v].total})},
-    {id:'mo_shopify',label:'Shopify',color:'#30d158',data:ALL_MONTHS.map(function(v){return m[v].shopify})},
-    {id:'mo_amazon',label:'Amazon',color:'#ff9f0a',data:ALL_MONTHS.map(function(v){return m[v].amazon})},
-    {id:'mo_tiktok',label:'TikTok',color:'#ff375f',data:ALL_MONTHS.map(function(v){return m[v].tiktok_shop})}
+    {id:'mo_total',label:'Total',color:'#f5f5f7',data:chrono.map(function(v){return m[v].total})},
+    {id:'mo_shopify',label:'Shopify',color:'#30d158',data:chrono.map(function(v){return m[v].shopify})},
+    {id:'mo_amazon',label:'Amazon',color:'#ff9f0a',data:chrono.map(function(v){return m[v].amazon})},
+    {id:'mo_tiktok',label:'TikTok',color:'#ff375f',data:chrono.map(function(v){return m[v].tiktok_shop})}
   ];
   document.getElementById('monthlyChart').innerHTML=buildLineChart(labels,datasets);
 }
