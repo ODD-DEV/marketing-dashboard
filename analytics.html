@@ -234,7 +234,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
 
 <div id="auth-gate" style="display:none"></div>
 
-<div class="loading-overlay" id="loadingOverlay"><div style="position:relative;user-select:none;display:inline-block"><img src="odd_logo_white.png" alt="ODD." style="height:48px;opacity:.12"><div style="position:absolute;left:0;top:0;width:100%;height:100%;background:#0a84ff;-webkit-mask-image:url(odd_logo_white.png);mask-image:url(odd_logo_white.png);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards"></div></div><div style="width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:40%;background:var(--accent);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite"></div></div></div>
+<div class="loading-overlay" id="loadingOverlay"><div style="position:relative;user-select:none;display:inline-block"><img src="odd_logo_white.png" alt="ODD." style="height:48px;opacity:.12"><div style="position:absolute;left:0;top:0;width:100%;height:100%;background:#bf2026;-webkit-mask-image:url(odd_logo_white.png);mask-image:url(odd_logo_white.png);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards"></div></div><div style="width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:40%;background:var(--accent);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite"></div></div></div>
 
 <div id="dashboard-content" style="display:none">
 <nav class="nav">
@@ -621,6 +621,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     renderNewVsReturning();
     renderPagesTable();
     renderAttributionTable();
+    animateCountUp();
   }
 
   /* ── ERP 매출을 선택된 기간으로 필터 (전체 채널) ── */
@@ -1013,11 +1014,38 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     }
   }
 
+  /* ── Count-Up Animation (same as index.html) ── */
+  function animateCountUp(){
+    var els=document.querySelectorAll('.hero-kpi-value,.m-tile-value');
+    els.forEach(function(el){
+      var text=el.textContent.trim();
+      var match=text.match(/^\$?([\d,]+)/);
+      if(!match)return;
+      var target=parseInt(match[1].replace(/,/g,''));
+      if(isNaN(target)||target===0)return;
+      var prefix=text.startsWith('$')?'$':'';
+      var suffix=text.replace(/^\$?[\d,]+/,'');
+      var duration=900;
+      var startTime=null;
+      function easeOut(t){return 1-Math.pow(1-t,3)}
+      function step(ts){
+        if(!startTime)startTime=ts;
+        var p=Math.min((ts-startTime)/duration,1);
+        var val=Math.round(easeOut(p)*target);
+        el.textContent=prefix+val.toLocaleString()+suffix;
+        if(p<1)requestAnimationFrame(step);
+      }
+      el.textContent=prefix+'0'+suffix;
+      requestAnimationFrame(step);
+    });
+  }
+
   /* ── Init ── */
   function init(){
     initMonths();
     showDataStatus();
     renderAll();
+    animateCountUp();
 
     setTimeout(function(){
       var lo=document.getElementById('loadingOverlay');
