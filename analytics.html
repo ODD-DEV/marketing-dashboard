@@ -348,12 +348,11 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
   var DATA = window.GA4_DATA || {};
   var ERP = window.EMBEDDED_DATA || {};
 
-  /* ── ERP 매출 데이터를 날짜별로 집계 (Shopify only = odd.us) ── */
+  /* ── ERP 매출 데이터를 날짜별로 집계 (전체 채널) ── */
   var erpByDate = {};
   var erpTotal = {orders:0, rev:0};
   (ERP.orders||[]).forEach(function(o){
     if(o.s!=='sale' && o.s!=='done') return;
-    if(o.ch!=='shopify') return;
     if(!erpByDate[o.d]) erpByDate[o.d]={orders:0,rev:0};
     erpByDate[o.d].orders++;
     erpByDate[o.d].rev+=o.t;
@@ -624,12 +623,11 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     renderAttributionTable();
   }
 
-  /* ── ERP 매출을 선택된 기간으로 필터 ── */
+  /* ── ERP 매출을 선택된 기간으로 필터 (전체 채널) ── */
   function getFilteredERP(){
-    var result={orders:0,rev:0,byChannel:{}};
+    var result={orders:0,rev:0};
     (ERP.orders||[]).forEach(function(o){
       if(o.s!=='sale'&&o.s!=='done') return;
-      if(o.ch!=='shopify') return;
       var mo=getMonth(o.d);
       if(!isAllMode && !selectedMonths.has(mo)) return;
       if(selectedWeek){var ws=getWeekSunday(o.d);if(ws!==selectedWeek) return;}
@@ -662,12 +660,12 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var h='<div class="hero-kpi">';
     h+='<div class="hero-kpi-tag">Web Analytics · odd.us</div>';
     h+='<div class="hero-kpi-value">'+dollar(erp.rev)+'</div>';
-    h+='<div class="hero-kpi-sub">Shopify 매출 (ERP 기준) &middot; '+erp.orders+'건 &middot; 전환율 '+pct(convRate)+'</div>';
+    h+='<div class="hero-kpi-sub">전체 매출 (ERP 기준) &middot; '+erp.orders+'건 &middot; odd.us 전환율 '+pct(convRate)+'</div>';
     h+='</div>';
 
     h+='<div class="metric-tiles">';
-    h+='<div class="m-tile"><div class="m-tile-label">매출</div><div class="m-tile-value" style="color:var(--green)">'+dollar(erp.rev)+'</div><div class="m-tile-sub">ERP Shopify 실매출</div></div>';
-    h+='<div class="m-tile"><div class="m-tile-label">주문</div><div class="m-tile-value" style="color:var(--accent)">'+erp.orders+'건</div><div class="m-tile-sub">ERP 주문 건수</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label">매출</div><div class="m-tile-value" style="color:var(--green)">'+dollar(erp.rev)+'</div><div class="m-tile-sub">ERP 전체 채널</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label">주문</div><div class="m-tile-value" style="color:var(--accent)">'+erp.orders+'건</div><div class="m-tile-sub">전체 주문 건수</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">전환율</div><div class="m-tile-value" style="color:var(--orange)">'+pct(convRate)+'</div><div class="m-tile-sub">주문 ÷ 세션</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">세션</div><div class="m-tile-value" style="color:var(--t1)">'+num(totSessions)+'</div><div class="m-tile-sub">GA4 총 세션</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">사용자</div><div class="m-tile-value" style="color:var(--purple)">'+num(totUsers)+'</div><div class="m-tile-sub">신규 '+num(totNewUsers)+'</div></div>';
