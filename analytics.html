@@ -377,7 +377,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
 
   var ALL_MONTHS=[];
   var selectedMonths=new Set();
-  var selectedWeek=null;
+  var selectedWeeks=new Set();
+  var isAllWeeks=true;
   var isAllMode=true;
 
   /* ── Collect months from GA4 traffic_daily ── */
@@ -391,7 +392,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     ALL_MONTHS=Object.keys(m).sort().reverse();
     isAllMode=true;
     selectedMonths=new Set(ALL_MONTHS);
-    selectedWeek=null;
+    selectedWeeks=new Set();
+    isAllWeeks=true;
     renderMonthTabs();
     renderWeekTabs();
   }
@@ -419,7 +421,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
           else{if(isAllMode){isAllMode=false;selectedMonths=new Set([m])}
           else{if(selectedMonths.has(m)){selectedMonths.delete(m);if(!selectedMonths.size){isAllMode=true;selectedMonths=new Set(ALL_MONTHS)}}else selectedMonths.add(m)}}
         }
-        selectedWeek=null;renderMonthTabs();renderWeekTabs();renderAll();
+        selectedWeeks=new Set();isAllWeeks=true;renderMonthTabs();renderWeekTabs();renderAll();
       });
     });
     var act=c.querySelector('.month-tab.active');
@@ -440,19 +442,28 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
 
   function renderWeekTabs(){
     var c=document.getElementById('weekTabs');
-    if(selectedMonths.size!==1){c.innerHTML='';selectedWeek=null;return}
+    if(selectedMonths.size!==1){c.innerHTML='';selectedWeeks=new Set();isAllWeeks=true;return}
     var mo=Array.from(selectedMonths)[0], wk=getWeeksInMonth(mo);
     if(!wk.length){c.innerHTML='';return}
+    if(isAllWeeks) selectedWeeks=new Set(wk);
     var h='<span style="font-size:11px;color:var(--t4);letter-spacing:.5px;font-weight:600;margin-right:4px">주간:</span>';
-    h+='<button class="week-tab '+(!selectedWeek?'active':'')+'" data-w="all">전체</button>';
+    h+='<button class="week-tab '+(isAllWeeks?'active':'')+'" data-w="all">전체</button>';
     wk.forEach(function(w){
-      h+='<button class="week-tab '+(selectedWeek===w?'active':'')+'" data-w="'+w+'">'+fmtWeek(w)+'</button>';
+      var a=!isAllWeeks&&selectedWeeks.has(w);
+      h+='<button class="week-tab '+(a?'active':'')+'" data-w="'+w+'">'+fmtWeek(w)+'</button>';
     });
     c.innerHTML=h;
     c.querySelectorAll('.week-tab').forEach(function(b){
       b.addEventListener('click',function(){
         var w=b.dataset.w;
-        selectedWeek=(w==='all'||selectedWeek===w)?null:w;
+        if(w==='all'){isAllWeeks=true;selectedWeeks=new Set(wk)}
+        else{
+          if(isAllWeeks){isAllWeeks=false;selectedWeeks=new Set([w])}
+          else{
+            if(selectedWeeks.has(w)){selectedWeeks.delete(w);if(!selectedWeeks.size){isAllWeeks=true;selectedWeeks=new Set(wk)}}
+            else selectedWeeks.add(w);
+          }
+        }
         renderWeekTabs();renderAll();
       });
     });
@@ -465,7 +476,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
       var iso=ga4ToISO(r.date);
       var mo=getMonth(iso);
       if(!selectedMonths.has(mo)) return false;
-      if(selectedWeek && getWeekSunday(iso)!==selectedWeek) return false;
+      if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws)) return false;}
       return true;
     });
   }
@@ -631,7 +642,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
       if(o.s!=='sale'&&o.s!=='done') return;
       var mo=getMonth(o.d);
       if(!isAllMode && !selectedMonths.has(mo)) return;
-      if(selectedWeek){var ws=getWeekSunday(o.d);if(ws!==selectedWeek) return;}
+      if(!isAllWeeks){var ws=getWeekSunday(o.d);if(!selectedWeeks.has(ws)) return;}
       result.orders++;
       result.rev+=o.t;
     });
