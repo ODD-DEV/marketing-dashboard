@@ -483,8 +483,8 @@ tr:hover td{background:rgba(255,255,255,.03)}
 <script>
 let DATA=null,selectedMonths=new Set(),selectedWeek=null;
 const ALL_MONTHS=[];
-const CH_LABELS={shopify:"Shopify (D2C)",tiktok_shop:"TikTok",amazon:"Amazon"};
-const CH_COLORS={shopify:"#30d158",tiktok_shop:"#ff375f",amazon:"#ff9f0a"};
+const CH_LABELS={shopify:"Shopify (ERP)",shopify_direct:"Shopify (D2C)",tiktok_shop:"TikTok",amazon:"Amazon"};
+const CH_COLORS={shopify:"#30d158",shopify_direct:"#4ade80",tiktok_shop:"#ff375f",amazon:"#ff9f0a"};
 var activeSubs=[],cancelledSubs=[],subNameList=[],subCcMap={};
 
 function loadSubscriptionData(){if(!DATA)return;var rawActive=(DATA.recharge_active||[]).map(s=>({n:s.n,amt:s.amt,next:s.next,email:s.email||'',next_raw:s.next_raw||'',created:s.created||'',cc:s.cc||1}));cancelledSubs=(DATA.recharge_cancelled||[]).map(s=>({n:s.n,email:s.email||'',reason:s.reason||'',created:s.created||'',cancelled:s.cancelled||'',days:s.days||0,cc:s.cc||1}));activeSubs=[];rawActive.forEach(s=>{if(!s.next||s.next==='-'||s.next===''){cancelledSubs.push({n:s.n,email:s.email,reason:'다음 결제일 없음',created:s.created,cancelled:'',days:0,cc:s.cc})}else{activeSubs.push(s)}});subNameList=[];subCcMap={};[...activeSubs,...cancelledSubs].forEach(s=>{var k=s.n.toLowerCase().trim();subNameList.push(k);subCcMap[k]=s.cc})}
@@ -518,7 +518,7 @@ function getFiltered(){return DATA.orders.filter(o=>isValid(o)&&selectedMonths.h
 function render(){
   if(!DATA)return;loadSubscriptionData();
   var f=getFiltered();f.forEach(o=>{o._rev=isReview(o.c,o.ch);o._kit=getKit(o.t);o._sub=isSub(o);o._subCc=o._sub?getSubCc(o):0});
-  var chs=['shopify','tiktok_shop','amazon'],st={};
+  var chs=['shopify','shopify_direct','tiktok_shop','amazon'],st={};
   chs.forEach(c=>{st[c]={rev:0,cnt:0,k5:{cnt:0,rev:0,subCnt:0,subRev:0,subFirstCnt:0,subFirstRev:0,subRenewCnt:0,subRenewRev:0,revCnt:0,revRev:0},k30:{cnt:0,rev:0,subCnt:0,subRev:0,subFirstCnt:0,subFirstRev:0,subRenewCnt:0,subRenewRev:0,revCnt:0,revRev:0}}});
   f.forEach(o=>{var s=st[o.ch];if(!s)return;s.rev+=o.t;s.cnt++;var k=o._kit==='5day'?s.k5:s.k30;k.cnt++;k.rev+=o.t;if(o._sub){k.subCnt++;k.subRev+=o.t;if(o._subCc<=1){k.subFirstCnt++;k.subFirstRev+=o.t}else{k.subRenewCnt++;k.subRenewRev+=o.t}}else if(o._rev){k.revCnt++;k.revRev+=o.t}});
   var gT=0,gC=0,tRR=0,tRC=0,tSC=0,t5={cnt:0,rev:0},t30={cnt:0,rev:0};
@@ -546,7 +546,7 @@ function renderSummary(st,gT,gC,tRR,tRC,rT,t5,t30,tSC){
 }
 
 function renderWeekly(f){
-  var w={};f.forEach(o=>{var s=getWeekSunday(o.d);if(!w[s])w[s]={shopify:0,tiktok_shop:0,amazon:0,total:0,review:0,reviewCnt:0,count:0,k5:0,k30:0,k5r:0,k30r:0,subFirst:0,subRenew:0};var x=w[s];x[o.ch]=(x[o.ch]||0)+o.t;x.total+=o.t;x.count++;if(o._kit==='5day')x.k5++;else x.k30++;if(o._rev){x.review+=o.t;x.reviewCnt++;if(o._kit==='5day')x.k5r++;else x.k30r++}if(o._sub){if(o._subCc<=1)x.subFirst++;else x.subRenew++}});
+  var w={};f.forEach(o=>{var s=getWeekSunday(o.d);if(!w[s])w[s]={shopify:0,shopify_direct:0,tiktok_shop:0,amazon:0,total:0,review:0,reviewCnt:0,count:0,k5:0,k30:0,k5r:0,k30r:0,subFirst:0,subRenew:0};var x=w[s];x[o.ch]=(x[o.ch]||0)+o.t;x.total+=o.t;x.count++;if(o._kit==='5day')x.k5++;else x.k30++;if(o._rev){x.review+=o.t;x.reviewCnt++;if(o._kit==='5day')x.k5r++;else x.k30r++}if(o._sub){if(o._subCc<=1)x.subFirst++;else x.subRenew++}});
   var s=Object.entries(w).sort((a,b)=>b[0].localeCompare(a[0]));
   var h='<table style="min-width:800px"><thead><tr><th>주차</th><th class="text-right">Shopify</th><th class="text-right">Amazon</th><th class="text-right">TikTok</th><th class="text-right">합계</th><th class="text-center" style="font-size:9px">5d</th><th class="text-center" style="font-size:9px">30d</th><th class="text-center" style="font-size:9px;color:var(--green)">첫구독</th><th class="text-center" style="font-size:9px;color:var(--purple)">기존구독</th><th class="text-center" style="color:var(--yellow);font-size:9px">리뷰</th><th class="text-right">실매출</th><th class="text-center">건수</th></tr></thead><tbody>';
   var T={sh:0,am:0,tt:0,total:0,rev:0,revCnt:0,cnt:0,k5:0,k30:0,k5r:0,k30r:0,subFirst:0,subRenew:0};
@@ -589,7 +589,7 @@ function renderDemographics(f){
 }
 
 function renderChannel(st,gT,rT){
-  var chs=['shopify','tiktok_shop','amazon'];
+  var chs=['shopify','shopify_direct','tiktok_shop','amazon'];
   var h='<div class="card-title">채널별 제품 현황 <span class="ct-sub">선택 기간</span></div><div class="table-wrap" style="max-height:none"><table class="compact-tbl"><thead><tr><th>채널</th><th>제품</th><th class="text-center">전체</th><th class="text-center">일반</th><th class="text-center" style="color:var(--green)">첫구독</th><th class="text-center" style="color:var(--purple)">기존구독</th><th class="text-center" style="color:var(--orange)">리뷰</th><th class="text-right">총매출</th><th class="text-right">실매출</th></tr></thead><tbody>';
   var gC2=0,gR2=0,gSF=0,gSR=0,gRC=0,gRA=0,gRl=0;
   chs.forEach(c=>{var s=st[c];[{l:'5-day',k:s.k5},{l:'30-day',k:s.k30}].forEach((it,i)=>{var k=it.k,rc=k.cnt-k.subCnt-k.revCnt,nr=k.rev-k.revRev;var sf=k.subFirstCnt?'<span style="color:var(--green)">'+k.subFirstCnt+'</span><div style="font-size:10px;color:var(--green)">'+$(k.subFirstRev)+'</div>':'<span style="color:var(--t5)">-</span>';var sr=k.subRenewCnt?'<span style="color:var(--purple)">'+k.subRenewCnt+'</span><div style="font-size:10px;color:var(--purple)">'+$(k.subRenewRev)+'</div>':'<span style="color:var(--t5)">-</span>';var rv=k.revCnt?'<span style="color:var(--orange)">'+k.revCnt+'</span><div style="font-size:10px;color:var(--orange)">'+$(k.revRev)+'</div>':'<span style="color:var(--t5)">-</span>';h+='<tr>';if(!i)h+='<td rowspan="2" style="color:'+CH_COLORS[c]+';font-weight:600;vertical-align:middle;border-right:1px solid var(--border)">'+CH_LABELS[c]+'</td>';h+='<td style="color:var(--t3)">'+it.l+'</td><td class="text-center">'+k.cnt+'</td><td class="text-center">'+rc+'</td><td class="text-center">'+sf+'</td><td class="text-center">'+sr+'</td><td class="text-center">'+rv+'</td><td class="text-right" style="color:var(--t2)">'+$(k.rev)+'</td><td class="text-right green">'+$(nr)+'</td></tr>';gC2+=k.cnt;gR2+=rc;gSF+=k.subFirstCnt;gSR+=k.subRenewCnt;gRC+=k.revCnt;gRA+=k.rev;gRl+=nr})});

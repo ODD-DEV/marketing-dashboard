@@ -663,6 +663,188 @@ def infer_gender(name):
     return "U"
 
 
+def fetch_shopify_orders(config):
+    """Shopify Admin API에서 전체 주문 + 매출 분석 지표 가져오기"""
+    token = config.get("shopify_access_token", "")
+    store = config.get("shopify_store", "")
+    if not token or not store:
+        print("[SHOPIFY] No access token or store configured, skipping")
+        return [], {}
+
+    ctx = ssl.create_default_context()
+    base = f"https://{store}.myshopify.com/admin/api/2025-01"
+    headers = {"X-Shopify-Access-Token": token}
+
+    all_orders = []
+    url = (f"{base}/orders.json?status=any&limit=250"
+           f"&fields=name,created_at,total_price,subtotal_price,total_tax,total_discounts,"
+           f"total_shipping_price_set,financial_status,fulfillment_status,cancelled_at,"
+           f"refunds,line_items,discount_codes,source_name,landing_site,referring_site,"
+           f"tags,customer,shipping_address")
+
+    while url:
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            resp = urllib.request.urlopen(req, context=ctx)
+            link_header = resp.headers.get("Link", "")
+            next_url = None
+            if 'rel="next"' in link_header:
+                for part in link_header.split(","):
+                    if 'rel="next"' in part:
+                        next_url = part.split("<")[1].split(">")[0]
+                        break
+            data = json.loads(resp.read())
+            all_orders.extend(data.get("orders", []))
+            print(f"[SHOPIFY] Fetched {len(all_orders)} orders...")
+            url = next_url
+        except Exception as e:
+            print(f"[SHOPIFY] Error: {e}")
+            break
+
+    # ── 주문 데이터 변환 + 매출 지표 계산 ──
+    shopify_orders = []
+    analytics = {
+        "total_revenue": 0, "total_orders": 0, "total_units": 0,
+        "total_tax": 0, "total_discounts": 0, "total_shipping": 0,
+        "refund_count": 0, "cancel_count": 0,
+        "product_mix": {},       # SKU/상품별 판매량
+        "discount_usage": {},    # 할인코드별 사용 횟수
+        "daily_revenue": {},     # 일별 매출
+        "monthly_revenue": {},   # 월별 매출
+        "new_vs_returning": {"new": 0, "returning": 0},
+        "fulfillment": {"fulfilled": 0, "unfulfilled": 0, "partial": 0},
+        "traffic_sources": {},   # 유입 소스별
+        "state_revenue": {},     # 주별 매출
+        "aov_data": [],          # AOV 계산용
+    }
+
+    for o in all_orders:
+        addr = o.get("shipping_address") or {}
+        state = addr.get("province_code", "") or addr.get("province", "")
+        city = addr.get("city", "")
+        state = normalize_state_name(state) if state else ""
+
+        cname = ""
+        cust = o.get("customer") or {}
+        if cust:
+            cname = f"{cust.get('first_name', '')} {cust.get('last_name', '')}".strip()
+
+        total = float(o.get("total_price", 0))
+        subtotal = float(o.get("subtotal_price", 0))
+        tax = float(o.get("total_tax", 0))
+        discounts = float(o.get("total_discounts", 0))
+        shipping_set = o.get("total_shipping_price_set") or {}
+        shipping = float((shipping_set.get("shop_money") or {}).get("amount", 0))
+        date_str = (o.get("created_at") or "")[:10]
+        month_str = date_str[:7]  # YYYY-MM
+        is_cancelled = o.get("cancelled_at") is not None
+        is_refunded = len(o.get("refunds", [])) > 0
+        fin_status = o.get("financial_status", "")
+        ful_status = o.get("fulfillment_status") or "unfulfilled"
+
+        # 라인 아이템
+        items = o.get("line_items", [])
+        units = sum(li.get("quantity", 0) for li in items)
+
+        # 상품 믹스
+        for li in items:
+            title = li.get("title", "Unknown")
+            variant = li.get("variant_title", "")
+            key = f"{title} ({variant})" if variant else title
+            qty = li.get("quantity", 0)
+            price = float(li.get("price", 0))
+            if key not in analytics["product_mix"]:
+                analytics["product_mix"][key] = {"units": 0, "revenue": 0}
+            analytics["product_mix"][key]["units"] += qty
+            analytics["product_mix"][key]["revenue"] += price * qty
+
+        # 할인코드
+        for dc in o.get("discount_codes", []):
+            code = dc.get("code", "").upper()
+            if code:
+                analytics["discount_usage"][code] = analytics["discount_usage"].get(code, 0) + 1
+
+        # 매출 집계 (취소/환불 제외)
+        if fin_status == "paid" and not is_cancelled:
+            analytics["total_revenue"] += total
+            analytics["total_orders"] += 1
+            analytics["total_units"] += units
+            analytics["total_tax"] += tax
+            analytics["total_discounts"] += discounts
+            analytics["total_shipping"] += shipping
+            analytics["aov_data"].append(total)
+            analytics["daily_revenue"][date_str] = analytics["daily_revenue"].get(date_str, 0) + total
+            analytics["monthly_revenue"][month_str] = analytics["monthly_revenue"].get(month_str, 0) + total
+            if state:
+                analytics["state_revenue"][state] = analytics["state_revenue"].get(state, 0) + total
+
+        if is_refunded:
+            analytics["refund_count"] += 1
+        if is_cancelled:
+            analytics["cancel_count"] += 1
+
+        # 신규 vs 재구매
+        cust_orders = cust.get("orders_count")
+        if cust_orders is not None:
+            if cust_orders <= 1:
+                analytics["new_vs_returning"]["new"] += 1
+            else:
+                analytics["new_vs_returning"]["returning"] += 1
+
+        # 배송 상태
+        if ful_status == "fulfilled":
+            analytics["fulfillment"]["fulfilled"] += 1
+        elif ful_status == "partial":
+            analytics["fulfillment"]["partial"] += 1
+        else:
+            analytics["fulfillment"]["unfulfilled"] += 1
+
+        # 유입 소스
+        src = o.get("source_name") or "direct"
+        analytics["traffic_sources"][src] = analytics["traffic_sources"].get(src, 0) + 1
+
+        shopify_orders.append({
+            "d": date_str,
+            "t": total,
+            "sub": subtotal,
+            "tax": tax,
+            "disc": discounts,
+            "ship": shipping,
+            "s": "cancel" if is_cancelled else ("refund" if is_refunded else ("sale" if fin_status == "paid" else fin_status)),
+            "c": cname,
+            "ch": "shopify_direct",
+            "src": src,
+            "st": state,
+            "ct": city,
+            "g": infer_gender(cname),
+            "items": [{"t": li.get("title",""), "q": li.get("quantity",0), "p": li.get("price",""), "sku": li.get("sku","")} for li in items],
+            "ful": ful_status,
+            "disc_codes": [dc.get("code","") for dc in o.get("discount_codes", [])],
+        })
+
+    # AOV 계산
+    if analytics["aov_data"]:
+        analytics["aov"] = round(analytics["total_revenue"] / len(analytics["aov_data"]), 2)
+    else:
+        analytics["aov"] = 0
+    del analytics["aov_data"]  # raw 데이터 제거
+
+    # 정렬
+    analytics["product_mix"] = dict(sorted(analytics["product_mix"].items(), key=lambda x: -x[1]["revenue"]))
+    analytics["state_revenue"] = dict(sorted(analytics["state_revenue"].items(), key=lambda x: -x[1]))
+    analytics["daily_revenue"] = dict(sorted(analytics["daily_revenue"].items()))
+    analytics["monthly_revenue"] = dict(sorted(analytics["monthly_revenue"].items()))
+
+    # 요약 출력
+    print(f"[SHOPIFY] Total: {len(shopify_orders)} orders, ${analytics['total_revenue']:,.2f} revenue")
+    print(f"[SHOPIFY] AOV: ${analytics['aov']}, Units: {analytics['total_units']}, Refunds: {analytics['refund_count']}, Cancels: {analytics['cancel_count']}")
+    top_products = list(analytics["product_mix"].items())[:3]
+    for name, v in top_products:
+        print(f"  {name}: {v['units']} units, ${v['revenue']:,.2f}")
+
+    return shopify_orders, analytics
+
+
 def refresh_data():
     """전체 데이터 갱신 → data.json 저장"""
     config = load_config()
@@ -742,6 +924,22 @@ def refresh_data():
         print(f"[GENDER] Unknown first names: {sorted(gender_unknown)}")
     print(f"[ADDR] Address stats: {addr_found} with address, {addr_missing} missing")
 
+    # Shopify D2C 주문 + 매출 분석 지표 (ERP에 없는 것만 추가 — 중복 방지)
+    shopify_direct, shopify_analytics = fetch_shopify_orders(config)
+    erp_shopify_keys = set()
+    for o in sales_orders:
+        if o.get("ch") == "shopify":
+            erp_shopify_keys.add((o["d"], round(o["t"], 2)))
+    new_shopify = []
+    for o in shopify_direct:
+        key = (o["d"], round(o["t"], 2))
+        if key not in erp_shopify_keys:
+            new_shopify.append(o)
+        else:
+            erp_shopify_keys.discard(key)
+    sales_orders.extend(new_shopify)
+    print(f"[SHOPIFY] {len(shopify_direct)} API orders, {len(new_shopify)} new (not in ERP), {len(shopify_direct) - len(new_shopify)} duplicates skipped")
+
     # 재고 데이터
     inventory = fetch_inventory(config, session_id)
 
@@ -764,7 +962,8 @@ def refresh_data():
         "tiktok_review_entries": review_data["tiktok_entries"],
         "inventory": inventory,
         "recharge_active": recharge["active"],
-        "recharge_cancelled": recharge["cancelled"]
+        "recharge_cancelled": recharge["cancelled"],
+        "shopify_analytics": shopify_analytics
     }
     with open(DATA_PATH, "w") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)

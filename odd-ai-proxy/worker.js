@@ -13,7 +13,7 @@
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, x-api-key, anthropic-version, x-notion-key, x-meta-token, x-higgs-key',
+  'Access-Control-Allow-Headers': 'Content-Type, x-api-key, anthropic-version, x-notion-key, x-meta-token, x-higgs-key, x-shopify-token',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -24,6 +24,16 @@ export default {
     // CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    // ── Shopify OAuth Callback ──
+    if (url.pathname === '/shopify/callback') {
+      return handleShopifyCallback(request, url);
+    }
+
+    // ── Shopify Admin API Proxy ──
+    if (url.pathname.startsWith('/shopify/')) {
+      return handleShopify(request, url);
     }
 
     // ── Meta Graph API Proxy ──
@@ -163,6 +173,91 @@ async function handleHiggs(request, url) {
     });
   } catch (err) {
     return corsJson({ error: 'Higgsfield proxy error: ' + err.message }, 500);
+  }
+}
+
+// ── Shopify OAuth callback handler ──
+// OAuth flow: user authorizes → Shopify redirects here with ?code=xxx → we exchange for access_token
+async function handleShopifyCallback(request, url) {
+  const code = url.searchParams.get('code');
+  const shop = url.searchParams.get('shop') || 'shop-odd-us.myshopify.com';
+  const state = url.searchParams.get('state');
+
+  if (!code) return corsJson({ error: 'Missing authorization code' }, 400);
+
+  // Exchange code for permanent access token
+  const CLIENT_ID = 'ff7ae470a227c011d81fbefdfb45f7df';
+  const CLIENT_SECRET = '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';
+
+  try {
+    const resp = await fetch(`https://${shop}/admin/oauth/access_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        code,
+      }),
+    });
+
+    const data = await resp.json();
+
+    if (data.access_token) {
+      // 성공 — 토큰을 화면에 표시 (1회용, 사용자가 복사해서 config에 저장)
+      return new Response(
+        `<html><body style="font-family:monospace;background:#111;color:#0f0;padding:40px">` +
+        `<h2>Shopify OAuth 성공!</h2>` +
+        `<p>Access Token:</p>` +
+        `<pre style="background:#222;padding:20px;border-radius:8px;font-size:18px;color:#4ade80">${data.access_token}</pre>` +
+        `<p>Scope: ${data.scope || 'N/A'}</p>` +
+        `<p style="color:#f59e0b">이 토큰을 erp_config.json의 "shopify_access_token"에 저장하세요.</p>` +
+        `</body></html>`,
+        { status: 200, headers: { 'Content-Type': 'text/html' } }
+      );
+    } else {
+      return new Response(
+        `<html><body style="font-family:monospace;background:#111;color:#f00;padding:40px">` +
+        `<h2>OAuth 실패</h2><pre>${JSON.stringify(data, null, 2)}</pre></body></html>`,
+        { status: 400, headers: { 'Content-Type': 'text/html' } }
+      );
+    }
+  } catch (err) {
+    return corsJson({ error: 'Shopify OAuth error: ' + err.message }, 500);
+  }
+}
+
+// ── Shopify Admin API proxy handler ──
+async function handleShopify(request, url) {
+  const shopifyToken = request.headers.get('x-shopify-token');
+  if (!shopifyToken) return corsJson({ error: 'Missing Shopify access token' }, 401);
+
+  const shop = 'shop-odd-us.myshopify.com';
+  const shopifyPath = url.pathname.replace('/shopify/', '');
+  const shopifyUrl = `https://${shop}/admin/api/2025-01/${shopifyPath}${url.search}`;
+
+  try {
+    const opts = {
+      method: request.method,
+      headers: {
+        'X-Shopify-Access-Token': shopifyToken,
+        'Content-Type': 'application/json',
+      },
+    };
+    if (request.method === 'POST' || request.method === 'PUT') {
+      opts.body = await request.text();
+    }
+
+    const resp = await fetch(shopifyUrl, opts);
+    const data = await resp.text();
+
+    const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+    // Forward pagination Link header
+    const link = resp.headers.get('Link');
+    if (link) headers['X-Shopify-Link'] = link;
+
+    return new Response(data, { status: resp.status, headers });
+  } catch (err) {
+    return corsJson({ error: 'Shopify proxy error: ' + err.message }, 500);
   }
 }
 
