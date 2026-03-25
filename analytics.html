@@ -161,6 +161,11 @@ tr:hover td{background:rgba(255,255,255,.03)}
 /* Loading */
 .loading-overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:24px;transition:opacity .5s ease}
 .loading-overlay.fade-out{opacity:0;pointer-events:none}
+.loading-overlay .loader-logo{position:relative;user-select:none;display:inline-block}
+.loading-overlay .loader-logo img{opacity:.12}
+.loading-overlay .loader-logo::after{content:'';position:absolute;left:0;top:0;width:100%;height:100%;background:#bf2026;-webkit-mask-image:url(odd_logo_white.png);mask-image:url(odd_logo_white.png);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards}
+.loading-overlay .loader-bar{width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.loading-overlay .loader-bar::after{content:'';display:block;height:100%;width:40%;background:var(--red);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite}
 @keyframes logoFill{0%{clip-path:inset(100% 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
 @keyframes loaderSlide{0%{transform:translateX(-100%)}50%{transform:translateX(200%)}100%{transform:translateX(-100%)}}
 .hidden{display:none}
@@ -234,7 +239,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
 
 <div id="auth-gate" style="display:none"></div>
 
-<div class="loading-overlay" id="loadingOverlay"><div style="position:relative;user-select:none;display:inline-block"><img src="odd_logo_white.png" alt="ODD." style="height:48px;opacity:.12"><div style="position:absolute;left:0;top:0;width:100%;height:100%;background:#bf2026;-webkit-mask-image:url(odd_logo_white.png);mask-image:url(odd_logo_white.png);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards"></div></div><div style="width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:40%;background:var(--accent);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite"></div></div></div>
+<div class="loading-overlay" id="loadingOverlay"><div class="loader-logo"><img src="odd_logo_white.png" alt="ODD." style="height:48px"></div><div class="loader-bar"></div></div>
 
 <div id="dashboard-content" style="display:none">
 <nav class="nav">
@@ -1056,12 +1061,11 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     initMonths();
     showDataStatus();
     renderAll();
-    animateCountUp();
 
     setTimeout(function(){
       var lo=document.getElementById('loadingOverlay');
       lo.classList.add('fade-out');
-      setTimeout(function(){lo.style.display='none'},500);
+      setTimeout(function(){lo.style.display='none';animateCountUp()},500);
     },800);
   }
 
