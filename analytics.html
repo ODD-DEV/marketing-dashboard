@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ODD. Analytics Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a84ff'/><text x='16' y='23' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='20' fill='white'>A</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/57868cb6368acd8f.woff2') format('woff2');font-weight:300;font-display:swap}
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/77de016475a91854.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'EditorsNote';src:url('https://odd.us/_astro/fonts/9387036ea37689ec.woff2') format('woff2');font-weight:600;font-display:swap}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+:root{
+  --bg:#000;--bg-raised:#1d1d1f;--bg-card:#1d1d1f;
+  --border:rgba(255,255,255,.12);--border-h:rgba(255,255,255,.2);
+  --t1:#f5f5f7;--t2:#d1d1d6;--t3:#a1a1a6;--t4:#86868b;--t5:#6e6e73;
+  --red:#bf2026;--red-light:#d4343a;--red-dim:rgba(191,32,38,.1);--red-glow:rgba(191,32,38,.25);--red-border:rgba(191,32,38,.25);
+  --green:#30d158;--orange:#ff9f0a;--pink:#ff375f;--purple:#bf5af2;--yellow:#ffd60a;--blue:#0a84ff;
+  --accent:#0a84ff;--accent-dim:rgba(10,132,255,.12);--accent-border:rgba(10,132,255,.25);--accent-glow:rgba(10,132,255,.25);
+  --serif:'EditorsNote','Georgia','Times New Roman',serif;
+  --sans:'Pretendard',-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  --ease:cubic-bezier(.25,.46,.45,.94);--r:16px;--r-s:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:#000}
+body{font-family:var(--sans);background:#000;color:var(--t2);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+/* Nav */
+.nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08);margin-top:16px}
+.nav-inner{max-width:1120px;margin:0 auto;padding:0 28px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.nav-left{display:flex;align-items:center;gap:14px}
+.logo-img{height:18px;width:auto;object-fit:contain;display:block}
+.nav-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4);white-space:nowrap;overflow:hidden;flex-shrink:1;min-width:0}
+.nav-live-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
+.nav-live-status .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.nav-live-status .live-time{color:var(--t4)}
+.dash-switcher{display:flex;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:100px;padding:3px;margin-left:16px;border:1px solid rgba(255,255,255,.1);position:relative;touch-action:pan-x}
+.dash-switch{padding:7px 20px;border-radius:100px;font-size:13px;font-weight:600;color:var(--t4);text-decoration:none;transition:all .2s;letter-spacing:.3px;-webkit-user-select:none;user-select:none}
+.dash-switch:hover{color:var(--t2)}
+.dash-switch.active{background:var(--accent-dim);color:var(--accent)}
+
+/* Main */
+main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
+
+/* Tabs */
+.tabs-area{padding:28px 0 0}
+.month-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.month-tab{padding:10px 22px;border-radius:100px;border:none;background:transparent;color:var(--t4);cursor:pointer;font-size:15px;font-weight:500;transition:all .2s;font-family:var(--sans)}
+.month-tab:hover{color:var(--t2);background:rgba(255,255,255,.06)}
+.month-tab.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
+.month-tab.all-tab{color:var(--t3)}
+.month-tab.all-tab:hover{color:var(--t2)}
+.month-tab.all-tab.active{background:var(--accent-dim);color:var(--accent)}
+
+/* Hero KPI */
+.summary-sticky{position:sticky;top:48px;z-index:90;background:#000;padding-bottom:8px;transition:all .3s ease}
+.summary-sticky::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:24px;background:linear-gradient(to bottom,#000,transparent);pointer-events:none;z-index:89}
+.hero-kpi{text-align:center;padding:56px 40px 48px;margin:0;position:relative;animation:fadeUp .7s var(--ease) both;transition:padding .3s ease}
+.hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.hero-kpi-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t3);letter-spacing:.5px;margin-bottom:20px}
+.hero-kpi-tag::before{content:'';width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block}
+.hero-kpi-value{font-family:var(--sans);font-size:clamp(64px,10vw,120px);color:var(--t1);line-height:1;letter-spacing:-2px;font-weight:700;transform:scaleX(.97);transform-origin:center;transition:font-size .3s ease}
+.hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400;transition:all .3s ease}
+
+/* Metric Tiles */
+.metric-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden;transition:gap .3s ease}
+.m-tile{background:var(--bg-raised);padding:32px 24px;transition:all .35s var(--ease);position:relative;cursor:default}
+.m-tile::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(10,132,255,.08) 0%,transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
+.m-tile:hover{background:#2c2c2e}
+.m-tile:hover::after{opacity:1}
+.m-tile:hover .m-tile-value{color:var(--t1) !important}
+.m-tile-label{font-size:12px;color:var(--t4);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:12px}
+.m-tile-value{font-family:var(--sans);font-size:36px;line-height:1;letter-spacing:-1px;font-weight:700;transition:color .3s;animation:countUp .5s var(--ease) both}
+.m-tile-sub{font-size:13px;color:var(--t4);margin-top:10px;line-height:1.5}
+.m-tile-sub b{color:var(--t3);font-weight:600}
+
+/* Content Sections */
+.content-section{padding:56px 0 0;animation:fadeUp .5s var(--ease) both;position:relative;z-index:1;background:#000}
+.section-tag{font-size:14px;font-weight:600;color:var(--accent);letter-spacing:.5px;margin-bottom:8px}
+.section-heading{font-family:var(--sans);font-size:32px;color:var(--t1);font-weight:500;letter-spacing:-.5px;margin-bottom:32px;line-height:1.2}
+.section-head-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+.section-head-row .section-heading{margin-bottom:0}
+
+/* Cards */
+.card{background:var(--bg-raised);border-radius:var(--r);padding:28px;border:none;transition:background .2s}
+.card:hover{background:#242426}
+.card-title{font-size:12px;font-weight:600;color:var(--t4);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-transform:uppercase;letter-spacing:1px}
+.card-title .ct-sub{font-size:13px;color:var(--t4);font-weight:400;text-transform:none;letter-spacing:0}
+
+/* Layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.two-col>.card{display:flex;flex-direction:column}
+.two-col>.card .donut-wrap{flex:1;display:flex;align-items:center;justify-content:center;gap:28px;margin:12px 0}
+
+/* Tables */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:12px 14px;font-size:11px;color:var(--t4);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:600;background:rgba(255,255,255,.03)}
+td{padding:12px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t2);transition:background .15s}
+tr:hover td{background:rgba(255,255,255,.03)}
+.text-right{text-align:right}.text-center{text-align:center}
+.table-wrap{max-height:500px;overflow-y:auto;overflow-x:auto;border-radius:var(--r);background:var(--bg-raised)}
+.table-wrap th{position:sticky;top:0;z-index:1;background:var(--bg-raised);backdrop-filter:blur(12px)}
+
+/* Badges */
+.badge{background:rgba(255,255,255,.06);padding:4px 12px;border-radius:100px;font-size:12px;color:var(--t3);font-weight:500;border:none}
+
+/* Bar Charts */
+.region-bar-row{display:flex;align-items:center;gap:10px;margin:5px 0;transition:transform .15s}
+.region-bar-row:hover{transform:translateX(3px)}
+.region-bar-label{min-width:110px;font-size:13px;color:var(--t3);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.region-bar-fill{height:30px;border-radius:8px;display:flex;align-items:center;padding-left:10px;font-size:12px;color:#fff;font-weight:600;min-width:2px;transition:width 1.4s cubic-bezier(.16,1,.3,1),filter .2s;position:relative;overflow:hidden}
+.region-bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,transparent 50%);pointer-events:none}
+.region-bar-fill:hover{filter:brightness(1.1)}
+.region-bar-count{font-size:12px;color:var(--t4);min-width:36px;text-align:right}
+.region-bar-pct{font-size:12px;color:var(--t2);min-width:42px;text-align:right;font-weight:600}
+
+/* Colors */
+.green{color:var(--green)}.blue{color:var(--blue)}.purple{color:var(--purple)}.orange{color:var(--orange)}.red{color:var(--red)}.pink{color:var(--pink)}
+
+/* Stat rows */
+.stat-row{display:flex;justify-content:space-between;padding:11px 0;font-size:14px}
+.stat-row+.stat-row{border-top:1px solid rgba(255,255,255,.05)}
+.stat-row .label{color:var(--t3)}.stat-row .val{font-weight:600;letter-spacing:-.2px;color:var(--t2)}
+
+/* Line Chart */
+.line-chart-container{position:relative;width:100%}
+.line-chart-svg{width:100%;display:block}
+.line-chart-legend{display:flex;gap:18px;justify-content:flex-end;margin-top:0;padding:10px 4px 0;flex-wrap:wrap}
+.line-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t3);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.line-chart-legend-dot{width:16px;height:1.5px;border-radius:1px;opacity:.7}
+
+/* Donut */
+.donut-wrap{display:flex;align-items:center;gap:36px;justify-content:center;margin:20px 0;padding:16px 0}
+.donut-svg{flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:14px}
+.donut-legend-item{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:400;color:var(--t2)}
+.donut-legend-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+
+/* Compare cards */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.compare-card{background:var(--bg-raised);border-radius:var(--r);padding:28px;text-align:center}
+.compare-card-title{font-size:12px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+.compare-card-value{font-size:36px;font-weight:700;color:var(--t1);letter-spacing:-1px;margin-bottom:8px}
+.compare-card-sub{font-size:13px;color:var(--t4)}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:24px;transition:opacity .5s ease}
+.loading-overlay.fade-out{opacity:0;pointer-events:none}
+@keyframes logoFill{0%{clip-path:inset(100% 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
+@keyframes loaderSlide{0%{transform:translateX(-100%)}50%{transform:translateX(200%)}100%{transform:translateX(-100%)}}
+.hidden{display:none}
+
+/* Footer */
+.footer-text{text-align:center;padding:48px 0 32px;color:var(--t5);font-size:12px;letter-spacing:.3px}
+
+/* No data */
+.no-data{color:var(--t4);text-align:center;padding:40px;font-size:15px}
+
+/* Channel color dots */
+.ch-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+
+/* Purchase highlight */
+tr.has-purchase td{background:rgba(10,132,255,.04)}
+tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
+
+@media(max-width:900px){
+  .two-col{grid-template-columns:1fr}
+  .compare-grid{grid-template-columns:1fr 1fr}
+  .metric-tiles{grid-template-columns:repeat(3,1fr)}
+  .hero-kpi-value{font-size:64px !important}
+  .hero-kpi{padding:24px 16px 20px}
+  .hero-kpi-sub{font-size:13px !important}
+  main,.nav-inner{padding-left:16px;padding-right:16px}
+  .section-heading{font-size:24px}
+  .m-tile-value{font-size:24px !important}
+  .m-tile-sub{font-size:10px !important}
+  .m-tile-label{font-size:10px !important}
+  .dash-switcher{margin-left:10px}
+  .dash-switch{padding:4px 12px;font-size:11px}
+}
+@media(max-width:600px){
+  .metric-tiles{grid-template-columns:repeat(3,1fr)}
+  .hero-kpi-value{font-size:48px !important}
+  .hero-kpi{padding:24px 12px 20px}
+  .hero-kpi-tag{display:none}
+  .hero-kpi::after{display:none}
+  .hero-kpi-sub{font-size:12px !important;margin-top:4px}
+  .m-tile{padding:12px !important}
+  .m-tile-label{font-size:8px !important;margin-bottom:6px !important;letter-spacing:1.2px}
+  .m-tile-value{font-size:16px !important;letter-spacing:.1px}
+  .m-tile-sub{font-size:8px !important;margin-top:5px;line-height:1.3}
+  main,.nav-inner{padding-left:12px;padding-right:12px}
+  .nav-inner{height:44px}
+  .content-section{padding-top:28px}
+  .section-heading{font-size:20px;margin-bottom:16px}
+  .section-tag{font-size:12px;margin-bottom:4px}
+  .tabs-area{padding-top:10px}
+  .month-tabs{gap:0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:100px;border:1px solid rgba(255,255,255,.08);padding:3px;scroll-snap-type:x mandatory}
+  .month-tabs::-webkit-scrollbar{display:none}
+  .month-tab{padding:7px 14px;font-size:12px;flex-shrink:0;scroll-snap-align:center;border-radius:100px;white-space:nowrap}
+  .donut-wrap{flex-direction:column;gap:16px;padding:8px 0}
+  .donut-svg{width:120px !important;height:120px !important}
+  .donut-legend{gap:8px}
+  .donut-legend-item{font-size:13px}
+  .compare-grid{grid-template-columns:1fr}
+  .region-bar-label{min-width:60px !important;max-width:60px !important;font-size:11px !important}
+  table{font-size:11px}
+  th,td{padding:8px 10px}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div id="auth-gate" style="display:none"></div>
+
+<div class="loading-overlay" id="loadingOverlay"><div style="position:relative;user-select:none;display:inline-block"><img src="odd_logo_white.png" alt="ODD." style="height:48px;opacity:.12"><div style="position:absolute;left:0;top:0;width:100%;height:100%;background:#0a84ff;-webkit-mask-image:url(odd_logo_white.png);mask-image:url(odd_logo_white.png);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;clip-path:inset(100% 0 0 0);animation:logoFill 1.8s cubic-bezier(.4,0,.2,1) forwards"></div></div><div style="width:120px;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:40%;background:var(--accent);border-radius:4px;animation:loaderSlide 1.2s ease-in-out infinite"></div></div></div>
+
+<div id="dashboard-content" style="display:none">
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <img src="odd_logo_white.png" class="logo-img" alt="ODD.">
+      <div class="dash-switcher">
+        <a href="index.html" class="dash-switch">Sales</a>
+        <a href="performance.html" class="dash-switch">Performance</a>
+        <a href="analytics.html" class="dash-switch active">Analytics</a>
+      </div>
+    </div>
+    <div class="nav-right">
+      <span id="dataStatus" class="nav-live-status"></span>
+      <div id="user-bar" style="display:none;align-items:center;gap:8px">
+        <img id="user-photo" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.1)" src="">
+        <span id="user-email" style="display:none"></span>
+        <button onclick="signOut()" style="padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#86868b;font-size:10px;cursor:pointer;font-family:Pretendard,sans-serif">로그아웃</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="tabs-area">
+    <div class="month-tabs" id="monthTabs"></div>
+  </div>
+
+  <div class="summary-sticky" id="summaryCards"></div>
+
+  <!-- Section 3: Traffic Acquisition -->
+  <section class="content-section">
+    <div class="section-tag">Acquisition</div>
+    <h2 class="section-heading">트래픽 채널 분석</h2>
+    <div class="card">
+      <div class="table-wrap" id="trafficTable"></div>
+    </div>
+  </section>
+
+  <!-- Section 4: Purchase Attribution -->
+  <section class="content-section">
+    <div class="section-tag">Attribution</div>
+    <h2 class="section-heading">구매 소스 분석</h2>
+    <div class="card">
+      <div class="table-wrap" id="attributionTable"></div>
+    </div>
+  </section>
+
+  <!-- Section 5: Daily Trend -->
+  <section class="content-section">
+    <div class="section-tag">Daily Trend</div>
+    <h2 class="section-heading">일별 추이</h2>
+    <div class="card" id="dailyChart" style="padding:28px 28px 20px"></div>
+  </section>
+
+  <!-- Section 6: Landing Pages -->
+  <section class="content-section">
+    <div class="section-tag">Landing Pages</div>
+    <h2 class="section-heading">랜딩 페이지 성과</h2>
+    <div class="card">
+      <div class="table-wrap" id="landingTable"></div>
+    </div>
+  </section>
+
+  <!-- Section 7 & 8: Device + Geo -->
+  <section class="content-section">
+    <div class="section-tag">Segments</div>
+    <h2 class="section-heading">디바이스 & 지역 분석</h2>
+    <div class="two-col">
+      <div class="card" id="deviceChart"></div>
+      <div class="card" id="geoChart"></div>
+    </div>
+  </section>
+
+  <!-- Section 9: New vs Returning -->
+  <section class="content-section">
+    <div class="section-tag">User Type</div>
+    <h2 class="section-heading">신규 vs 재방문</h2>
+    <div class="compare-grid" id="nvrCards"></div>
+  </section>
+
+  <!-- Section 10: Top Pages -->
+  <section class="content-section">
+    <div class="section-tag">Content</div>
+    <h2 class="section-heading">페이지별 조회수</h2>
+    <div class="card">
+      <div class="table-wrap" id="pagesTable"></div>
+    </div>
+  </section>
+
+  <div class="footer-text">ODD. Analytics Dashboard &copy; 2026</div>
+</main>
+</div>
+
+<script src="ga4_data.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var DATA = window.GA4_DATA || {};
+
+  /* ── Utility ── */
+  function num(n){ return (n||0).toLocaleString(); }
+  function $(v){ return '$'+(v||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0}); }
+  function pct(v){ return (v||0).toFixed(1)+'%'; }
+  function fmtDur(s){ if(!s) return '0s'; var m=Math.floor(s/60),sec=Math.round(s%60); return m>0?m+'m '+sec+'s':sec+'s'; }
+
+  /* ── Month helpers ── */
+  function getMonthKey(dateStr){ return dateStr ? dateStr.substring(0,7) : ''; }
+  function fmtMon(k){ var p=k.split('-'); return p[0].slice(2)+'.'+p[1]; }
+
+  var ALL_MONTHS = [];
+  var selectedMonths = new Set();
+  var isAllMode = true;
+
+  function collectMonths(){
+    var ms = new Set();
+    if(DATA.traffic_daily) DATA.traffic_daily.forEach(function(r){ var m=getMonthKey(r.date); if(m) ms.add(m); });
+    if(DATA.ecommerce_daily) DATA.ecommerce_daily.forEach(function(r){ var m=getMonthKey(r.date); if(m) ms.add(m); });
+    ALL_MONTHS = Array.from(ms).sort();
+  }
+
+  function buildMonthTabs(){
+    var el = document.getElementById('monthTabs');
+    if(!ALL_MONTHS.length){ el.innerHTML=''; return; }
+    var h = '<button class="month-tab all-tab'+(isAllMode?' active':'')+'" onclick="window._setMonth(\'all\')">전체</button>';
+    ALL_MONTHS.forEach(function(m){
+      h += '<button class="month-tab'+(selectedMonths.has(m)?' active':'')+'" onclick="window._setMonth(\''+m+'\')">'+fmtMon(m)+'</button>';
+    });
+    el.innerHTML = h;
+  }
+
+  window._setMonth = function(m){
+    if(m==='all'){
+      isAllMode = true;
+      selectedMonths.clear();
+    } else {
+      isAllMode = false;
+      selectedMonths.clear();
+      selectedMonths.add(m);
+    }
+    buildMonthTabs();
+    renderAll();
+  };
+
+  /* ── Filter helpers ── */
+  function filterByMonth(arr, dateField){
+    if(isAllMode || !selectedMonths.size) return arr || [];
+    return (arr||[]).filter(function(r){ return selectedMonths.has(getMonthKey(r[dateField||'date'])); });
+  }
+
+  /* ── Build Line Chart (from index.html) ── */
+  function buildLineChart(labels,datasets,opts){
+    opts=opts||{};
+    var W=opts.width||900,H=opts.height||300,padL=48,padR=16,padT=24,padB=40;
+    var cW=W-padL-padR,cH=H-padT-padB;
+    var allVals=[];datasets.forEach(function(ds){ds.data.forEach(function(v){allVals.push(v)})});
+    var maxV=Math.max.apply(null,allVals)||1;
+    var mag=Math.pow(10,Math.floor(Math.log10(maxV)));
+    maxV=Math.ceil(maxV/mag*1.2)*mag;
+    var n=labels.length;if(n<2)return'<div style="color:var(--t4);text-align:center;padding:30px">데이터 부족</div>';
+    function getX(i){return padL+(i/(n-1))*cW}
+    function getY(v){return padT+cH-(v/maxV)*cH}
+    function monotonePath(pts){
+      if(pts.length<2)return'M'+pts[0].x+','+pts[0].y;
+      var N=pts.length,dx=[],dy=[],m=[],tk=[];
+      for(var i=0;i<N-1;i++){dx[i]=pts[i+1].x-pts[i].x;dy[i]=pts[i+1].y-pts[i].y;m[i]=dx[i]?dy[i]/dx[i]:0}
+      tk[0]=m[0];
+      for(var i=1;i<N-1;i++){if(m[i-1]*m[i]<=0)tk[i]=0;else{var a=dx[i-1]+dx[i];tk[i]=3*a/((a+dx[i])/m[i-1]+(a+dx[i-1])/m[i])}}
+      tk[N-1]=m[N-2];
+      var d='M'+pts[0].x.toFixed(1)+','+pts[0].y.toFixed(1);
+      for(var i=0;i<N-1;i++){
+        var h=dx[i]/3;
+        d+=' C'+(pts[i].x+h).toFixed(1)+','+(pts[i].y+tk[i]*h).toFixed(1)+' '+(pts[i+1].x-h).toFixed(1)+','+(pts[i+1].y-tk[i+1]*h).toFixed(1)+' '+pts[i+1].x.toFixed(1)+','+pts[i+1].y.toFixed(1);
+      }
+      return d;
+    }
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">';
+    svg+='<defs>';
+    datasets.forEach(function(ds,di){
+      svg+='<filter id="glow_'+ds.id+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="'+(di===0?4:3)+'" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+    });
+    svg+='</defs>';
+    var gs=4,baseY=padT+cH;
+    for(var g=1;g<=gs;g++){
+      var gv=Math.round(maxV/gs*g),gy=getY(gv);
+      svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(255,255,255,.07)" stroke-width="0.5" stroke-dasharray="3,4"/>';
+      var lbl = opts.yPrefix ? opts.yPrefix+(gv>=1000?(gv/1000).toFixed(1)+'k':gv) : (gv>=1000?(gv/1000).toFixed(1)+'k':gv);
+      svg+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" fill="rgba(255,255,255,.32)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">'+lbl+'</text>';
+    }
+    svg+='<line x1="'+padL+'" y1="'+baseY+'" x2="'+(W-padR)+'" y2="'+baseY+'" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>';
+    var ls=Math.max(1,Math.floor(n/9));
+    for(var i=0;i<n;i++){if(i%ls===0||i===n-1)svg+='<text x="'+getX(i)+'" y="'+(H-8)+'" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="9" font-weight="500" font-family="Pretendard,sans-serif">'+labels[i]+'</text>'}
+    var fillCfg=[{top:.20,mid:.06,bot:0},{top:.15,mid:.04,bot:0},{top:.12,mid:.03,bot:0}];
+    for(var di=datasets.length-1;di>=0;di--){
+      var ds=datasets[di],fc=fillCfg[Math.min(di,fillCfg.length-1)];
+      var pts=[];for(var i=0;i<n;i++)pts.push({x:getX(i),y:getY(ds.data[i])});
+      var d=monotonePath(pts);
+      var areaD=d+' L'+pts[n-1].x+','+baseY+' L'+pts[0].x+','+baseY+' Z';
+      svg+='<defs><linearGradient id="ag_'+ds.id+'" x1="0" y1="0" x2="0" y2="1">';
+      svg+='<stop offset="0%" stop-color="'+ds.color+'" stop-opacity="'+fc.top+'"/>';
+      svg+='<stop offset="50%" stop-color="'+ds.color+'" stop-opacity="'+fc.mid+'"/>';
+      svg+='<stop offset="100%" stop-color="'+ds.color+'" stop-opacity="'+fc.bot+'"/>';
+      svg+='</linearGradient></defs>';
+      svg+='<path d="'+areaD+'" fill="url(#ag_'+ds.id+')" />';
+    }
+    for(var di=datasets.length-1;di>=0;di--){
+      var ds=datasets[di];
+      var pts=[];for(var i=0;i<n;i++)pts.push({x:getX(i),y:getY(ds.data[i])});
+      var d=monotonePath(pts);
+      var sw=di===0?1.5:1;
+      var lo=di===0?'.85':'.6';
+      svg+='<path d="'+d+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(sw+2)+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+(parseFloat(lo)*.3).toFixed(2)+'" filter="url(#glow_'+ds.id+')"/>';
+      svg+='<path d="'+d+'" fill="none" stroke="'+ds.color+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+lo+'"/>';
+    }
+    var ds0=datasets[0], pts0=[];
+    for(var i=0;i<n;i++) pts0.push({x:getX(i),y:getY(ds0.data[i])});
+    for(var i=0;i<n;i++){
+      var vals='';
+      datasets.forEach(function(ds){ vals+=ds.label+': '+ds.data[i].toLocaleString()+'\\n'; });
+      svg+='<circle cx="'+pts0[i].x.toFixed(1)+'" cy="'+pts0[i].y.toFixed(1)+'" r="12" fill="transparent" style="cursor:pointer" class="chart-hover-dot" data-idx="'+i+'" data-labels="'+labels[i]+'" data-vals="'+encodeURIComponent(vals)+'"/>';
+      svg+='<circle cx="'+pts0[i].x.toFixed(1)+'" cy="'+pts0[i].y.toFixed(1)+'" r="3" fill="'+ds0.color+'" opacity="0" class="chart-dot-visible" data-idx="'+i+'"/>';
+    }
+    svg+='<line x1="0" y1="'+padT+'" x2="0" y2="'+baseY+'" stroke="rgba(255,255,255,.15)" stroke-width="0.5" stroke-dasharray="3,3" class="chart-hover-line" style="display:none"/>';
+    svg+='</svg>';
+    var leg='<div class="line-chart-legend">';
+    datasets.forEach(function(ds){
+      leg+='<div class="line-chart-legend-item"><span class="line-chart-legend-dot" style="background:'+ds.color+'"></span>'+ds.label+'</div>';
+    });
+    leg+='</div>';
+    return '<div class="line-chart-container" style="position:relative">'+svg+leg+'<div class="chart-tooltip" style="display:none;position:absolute;background:rgba(28,28,30,.95);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;font-size:11px;color:#f5f5f7;pointer-events:none;z-index:10;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)"></div></div>';
+  }
+
+  /* ── Build Donut ── */
+  function buildDonut(segs, centerText){
+    var tot=0; segs.forEach(function(s){ tot+=s.value; });
+    if(!tot) return '<div class="no-data">데이터 없음</div>';
+    var R=80,r=54,cx=90,cy=90;
+    var svg='<svg viewBox="0 0 180 180" class="donut-svg" width="160" height="160">',sa=-90;
+    segs.forEach(function(seg){
+      var p=seg.value/tot,a=p*360,ea=sa+a,la=a>180?1:0;
+      var sr=sa*Math.PI/180,er=ea*Math.PI/180;
+      var x1=cx+R*Math.cos(sr),y1=cy+R*Math.sin(sr),x2=cx+R*Math.cos(er),y2=cy+R*Math.sin(er);
+      var x3=cx+r*Math.cos(er),y3=cy+r*Math.sin(er),x4=cx+r*Math.cos(sr),y4=cy+r*Math.sin(sr);
+      if(segs.length===1){
+        svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="'+seg.color+'"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#1d1d1f"/>';
+      } else {
+        svg+='<path d="M'+x1+','+y1+' A'+R+','+R+' 0 '+la+' 1 '+x2+','+y2+' L'+x3+','+y3+' A'+r+','+r+' 0 '+la+' 0 '+x4+','+y4+' Z" fill="'+seg.color+'" opacity=".85" style="transition:opacity .2s" onmouseover="this.setAttribute(\'opacity\',\'1\')" onmouseout="this.setAttribute(\'opacity\',\'.85\')"/>';
+      }
+      sa=ea;
+    });
+    svg+='<text x="'+cx+'" y="'+cy+'" text-anchor="middle" dominant-baseline="central" fill="#f5f5f7" font-size="26" font-weight="700" font-family="Pretendard,sans-serif" letter-spacing="-1">'+(centerText||num(tot))+'</text></svg>';
+    var leg='<div class="donut-legend">';
+    segs.forEach(function(s){
+      var p=Math.round(s.value/tot*100);
+      leg+='<div class="donut-legend-item"><span class="donut-legend-dot" style="background:'+s.color+'"></span><span>'+s.label+' <b style="color:var(--t1)">'+num(s.value)+'</b> ('+p+'%)';
+      if(s.extra) leg+=' &middot; '+s.extra;
+      leg+='</span></div>';
+    });
+    leg+='</div>';
+    return '<div class="donut-wrap">'+svg+leg+'</div>';
+  }
+
+  /* ── Trend badge ── */
+  function trendBadge(cur, prev){
+    if(!prev) return '';
+    var diff = cur - prev;
+    var pctVal = prev ? ((diff/prev)*100).toFixed(1) : '0.0';
+    var arrow = diff >= 0 ? '&#9650;' : '&#9660;';
+    var color = diff >= 0 ? 'var(--green)' : 'var(--pink)';
+    return '<b style="color:'+color+'">'+arrow+' '+pctVal+'%</b>';
+  }
+
+  /* ── Channel color map ── */
+  var CH_COLORS = {
+    'Direct':'#f5f5f7','Organic Search':'#30d158','Organic Social':'#ff375f',
+    'Paid Search':'#0a84ff','Paid Social':'#bf5af2','Referral':'#ff9f0a',
+    'Email':'#ffd60a','Display':'#5ac8fa','Unassigned':'#6e6e73',
+    'Cross-network':'#e879f9'
+  };
+  function chColor(ch){ return CH_COLORS[ch] || '#a1a1a6'; }
+
+  /* ═══════════════════════════════════════════════════════
+     RENDER FUNCTIONS
+     ═══════════════════════════════════════════════════════ */
+
+  function renderAll(){
+    if(!DATA || (!DATA.traffic_daily && !DATA.ecommerce_daily)){
+      document.getElementById('summaryCards').innerHTML = '<div class="hero-kpi"><div class="hero-kpi-tag">GA4 Analytics</div><div style="font-size:24px;color:var(--t4);margin-top:20px">GA4 데이터 없음</div></div>';
+      return;
+    }
+    renderHeroAndTiles();
+    renderTrafficTable();
+    renderAttributionTable();
+    renderDailyChart();
+    renderLandingPages();
+    renderDeviceChart();
+    renderGeoChart();
+    renderNewVsReturning();
+    renderPagesTable();
+  }
+
+  /* ── 1 & 2: Hero KPI + Metric Tiles ── */
+  function renderHeroAndTiles(){
+    var traffic = filterByMonth(DATA.traffic_daily, 'date');
+    var ecom = filterByMonth(DATA.ecommerce_daily, 'date');
+
+    var totSessions=0, totUsers=0, totNewUsers=0, totPurchases=0, totRevenue=0, totEngaged=0;
+    traffic.forEach(function(r){
+      totSessions += r.sessions||0;
+      totUsers += r.users||0;
+      totNewUsers += r.new_users||0;
+      totEngaged += r.engaged_sessions||0;
+    });
+    ecom.forEach(function(r){
+      totPurchases += r.purchases||0;
+      totRevenue += r.revenue||0;
+    });
+    var convRate = totSessions ? (totPurchases/totSessions*100) : 0;
+
+    // Previous period for trend
+    var prevTraffic=[], prevEcom=[];
+    if(!isAllMode && selectedMonths.size===1){
+      var curM = Array.from(selectedMonths)[0];
+      var idx = ALL_MONTHS.indexOf(curM);
+      if(idx > 0){
+        var prevM = ALL_MONTHS[idx-1];
+        prevTraffic = (DATA.traffic_daily||[]).filter(function(r){ return getMonthKey(r.date)===prevM; });
+        prevEcom = (DATA.ecommerce_daily||[]).filter(function(r){ return getMonthKey(r.date)===prevM; });
+      }
+    }
+    var pSess=0,pUsers=0,pNew=0,pPurch=0,pRev=0;
+    prevTraffic.forEach(function(r){ pSess+=r.sessions||0; pUsers+=r.users||0; pNew+=r.new_users||0; });
+    prevEcom.forEach(function(r){ pPurch+=r.purchases||0; pRev+=r.revenue||0; });
+    var hasPrev = pSess>0;
+
+    var h = '<div class="hero-kpi">';
+    h += '<div class="hero-kpi-tag">GA4 Web Analytics</div>';
+    h += '<div class="hero-kpi-value">'+num(totSessions)+'</div>';
+    h += '<div class="hero-kpi-sub">총 세션 &middot; '+num(totUsers)+' 사용자 &middot; '+num(totPurchases)+' 구매 &middot; '+$(totRevenue)+' 매출 &middot; 전환율 '+pct(convRate)+'</div>';
+    h += '</div>';
+
+    // Metric tiles
+    h += '<div class="metric-tiles">';
+    h += '<div class="m-tile"><div class="m-tile-label">Sessions</div><div class="m-tile-value" style="color:var(--t1)">'+num(totSessions)+'</div><div class="m-tile-sub">'+(hasPrev?trendBadge(totSessions,pSess)+' vs 전월':'총 세션수')+'</div></div>';
+    h += '<div class="m-tile"><div class="m-tile-label">Users</div><div class="m-tile-value" style="color:var(--accent)">'+num(totUsers)+'</div><div class="m-tile-sub">'+(hasPrev?trendBadge(totUsers,pUsers)+' vs 전월':'총 사용자')+'</div></div>';
+    h += '<div class="m-tile"><div class="m-tile-label">New Users</div><div class="m-tile-value" style="color:var(--green)">'+num(totNewUsers)+'</div><div class="m-tile-sub">'+(hasPrev?trendBadge(totNewUsers,pNew)+' vs 전월':'신규 사용자')+'</div></div>';
+    h += '<div class="m-tile"><div class="m-tile-label">Purchases</div><div class="m-tile-value" style="color:var(--orange)">'+num(totPurchases)+'</div><div class="m-tile-sub">'+(hasPrev?trendBadge(totPurchases,pPurch)+' vs 전월':'총 구매건')+'</div></div>';
+    h += '<div class="m-tile"><div class="m-tile-label">Revenue</div><div class="m-tile-value" style="color:var(--green)">'+$(totRevenue)+'</div><div class="m-tile-sub">'+(hasPrev?trendBadge(totRevenue,pRev)+' vs 전월':'총 매출')+'</div></div>';
+    h += '<div class="m-tile"><div class="m-tile-label">Conv. Rate</div><div class="m-tile-value" style="color:var(--pink)">'+pct(convRate)+'</div><div class="m-tile-sub">'+(hasPrev?trendBadge(convRate, pSess?(pPurch/pSess*100):0)+' vs 전월':'세션 대비 구매')+'</div></div>';
+    h += '</div>';
+
+    document.getElementById('summaryCards').innerHTML = h;
+  }
+
+  /* ── 3: Traffic Acquisition Table ── */
+  function renderTrafficTable(){
+    var traffic = filterByMonth(DATA.traffic_daily, 'date');
+    var ecom = filterByMonth(DATA.ecommerce_daily, 'date');
+
+    // Aggregate by channel
+    var channels = {};
+    traffic.forEach(function(r){
+      var ch = r.channel || 'Unassigned';
+      if(!channels[ch]) channels[ch] = {sessions:0,users:0,new_users:0,purchases:0,revenue:0};
+      channels[ch].sessions += r.sessions||0;
+      channels[ch].users += r.users||0;
+      channels[ch].new_users += r.new_users||0;
+    });
+    ecom.forEach(function(r){
+      var ch = r.channel || 'Unassigned';
+      if(!channels[ch]) channels[ch] = {sessions:0,users:0,new_users:0,purchases:0,revenue:0};
+      channels[ch].purchases += r.purchases||0;
+      channels[ch].revenue += r.revenue||0;
+    });
+
+    var sorted = Object.entries(channels).sort(function(a,b){ return b[1].sessions - a[1].sessions; });
+    var h = '<table><thead><tr><th>채널 그룹</th><th class="text-right">세션</th><th class="text-right">사용자</th><th class="text-right">신규</th><th class="text-right">구매</th><th class="text-right">매출</th><th class="text-right">전환율</th></tr></thead><tbody>';
+    sorted.forEach(function(e){
+      var ch=e[0], d=e[1];
+      var cr = d.sessions ? (d.purchases/d.sessions*100) : 0;
+      var co = chColor(ch);
+      h += '<tr'+(d.purchases>0?' class="has-purchase"':'')+'><td><span class="ch-dot" style="background:'+co+'"></span>'+ch+'</td>';
+      h += '<td class="text-right" style="font-weight:600">'+num(d.sessions)+'</td>';
+      h += '<td class="text-right">'+num(d.users)+'</td>';
+      h += '<td class="text-right">'+num(d.new_users)+'</td>';
+      h += '<td class="text-right" style="color:var(--orange);font-weight:600">'+num(d.purchases)+'</td>';
+      h += '<td class="text-right" style="color:var(--green);font-weight:600">'+$(d.revenue)+'</td>';
+      h += '<td class="text-right" style="color:'+(cr>2?'var(--accent)':'var(--t3)')+'">'+pct(cr)+'</td></tr>';
+    });
+    h += '</tbody></table>';
+    document.getElementById('trafficTable').innerHTML = h;
+  }
+
+  /* ── 4: Purchase Attribution ── */
+  function renderAttributionTable(){
+    var ecom = filterByMonth(DATA.ecommerce_daily, 'date');
+
+    // Aggregate by source_medium, only where purchases > 0
+    var sources = {};
+    ecom.forEach(function(r){
+      if(!r.purchases) return;
+      var sm = r.source_medium || '(direct) / (none)';
+      if(!sources[sm]) sources[sm] = {sessions:0,purchases:0,revenue:0};
+      sources[sm].purchases += r.purchases||0;
+      sources[sm].revenue += r.revenue||0;
+    });
+
+    // Also get session counts from traffic_daily if source_medium is available
+    var traffic = filterByMonth(DATA.traffic_daily, 'date');
+    // (traffic may not have source_medium; if so, skip session mapping)
+
+    var sorted = Object.entries(sources).sort(function(a,b){ return b[1].revenue - a[1].revenue; });
+    if(!sorted.length){
+      document.getElementById('attributionTable').innerHTML = '<div class="no-data">구매 데이터 없음</div>';
+      return;
+    }
+
+    var h = '<table><thead><tr><th>소스/매체</th><th class="text-right">구매</th><th class="text-right">매출</th><th class="text-right">구매당 매출</th></tr></thead><tbody>';
+    sorted.forEach(function(e){
+      var sm=e[0], d=e[1];
+      var aov = d.purchases ? d.revenue/d.purchases : 0;
+      h += '<tr class="has-purchase"><td style="font-weight:500">'+sm+'</td>';
+      h += '<td class="text-right" style="color:var(--orange);font-weight:600">'+num(d.purchases)+'</td>';
+      h += '<td class="text-right" style="color:var(--green);font-weight:600">'+$(d.revenue)+'</td>';
+      h += '<td class="text-right" style="color:var(--t2)">'+$(aov)+'</td></tr>';
+    });
+    h += '</tbody></table>';
+    document.getElementById('attributionTable').innerHTML = h;
+  }
+
+  /* ── 5: Daily Trend Chart ── */
+  function renderDailyChart(){
+    var traffic = filterByMonth(DATA.traffic_daily, 'date');
+    var ecom = filterByMonth(DATA.ecommerce_daily, 'date');
+
+    // Aggregate by date
+    var dateMap = {};
+    traffic.forEach(function(r){
+      if(!dateMap[r.date]) dateMap[r.date] = {sessions:0,purchases:0};
+      dateMap[r.date].sessions += r.sessions||0;
+    });
+    ecom.forEach(function(r){
+      if(!dateMap[r.date]) dateMap[r.date] = {sessions:0,purchases:0};
+      dateMap[r.date].purchases += r.purchases||0;
+    });
+
+    var dates = Object.keys(dateMap).sort();
+    if(dates.length < 2){
+      document.getElementById('dailyChart').innerHTML = '<div class="no-data">일별 데이터 부족</div>';
+      return;
+    }
+
+    var labels = dates.map(function(d){ return d.substring(5); }); // MM-DD
+    var sessData = dates.map(function(d){ return dateMap[d].sessions; });
+    var purchData = dates.map(function(d){ return dateMap[d].purchases * 10; }); // x10 scale
+
+    var chart = buildLineChart(labels, [
+      {id:'sess', label:'Sessions', data:sessData, color:'#0a84ff'},
+      {id:'purch', label:'Purchases (x10)', data:purchData, color:'#ff9f0a'}
+    ], {yPrefix:''});
+
+    document.getElementById('dailyChart').innerHTML = '<div class="card-title">일별 세션 & 구매 추이 <span class="ct-sub">(구매는 10배 스케일)</span></div>' + chart;
+  }
+
+  /* ── 6: Landing Pages ── */
+  function renderLandingPages(){
+    var pages = DATA.landing_pages || [];
+    // If we have date filtering and landing_pages doesn't have dates, show all
+    if(!pages.length){
+      document.getElementById('landingTable').innerHTML = '<div class="no-data">랜딩 페이지 데이터 없음</div>';
+      return;
+    }
+    var sorted = pages.slice().sort(function(a,b){ return (b.sessions||0) - (a.sessions||0); }).slice(0,15);
+
+    var h = '<table><thead><tr><th>페이지</th><th class="text-right">세션</th><th class="text-right">참여율</th><th class="text-right">구매</th><th class="text-right">매출</th></tr></thead><tbody>';
+    sorted.forEach(function(p){
+      var url = p.page || p.path || '';
+      var shortUrl = url.length > 50 ? url.substring(0,47)+'...' : url;
+      h += '<tr'+(p.purchases>0?' class="has-purchase"':'')+'>';
+      h += '<td style="font-size:13px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+url+'">'+shortUrl+'</td>';
+      h += '<td class="text-right" style="font-weight:600">'+num(p.sessions)+'</td>';
+      h += '<td class="text-right">'+pct((p.engagement_rate||0)*100)+'</td>';
+      h += '<td class="text-right" style="color:var(--orange);font-weight:600">'+num(p.purchases||0)+'</td>';
+      h += '<td class="text-right" style="color:var(--green);font-weight:600">'+$(p.revenue||0)+'</td></tr>';
+    });
+    h += '</tbody></table>';
+    document.getElementById('landingTable').innerHTML = h;
+  }
+
+  /* ── 7: Device Breakdown ── */
+  function renderDeviceChart(){
+    var devices = filterByMonth(DATA.devices||[], 'date');
+    var devMap = {};
+    devices.forEach(function(r){
+      var d = r.device || 'Unknown';
+      if(!devMap[d]) devMap[d] = {sessions:0,users:0,purchases:0,revenue:0};
+      devMap[d].sessions += r.sessions||0;
+      devMap[d].users += r.users||0;
+      devMap[d].purchases += r.purchases||0;
+      devMap[d].revenue += r.revenue||0;
+    });
+
+    var devColors = {mobile:'#0a84ff',desktop:'#30d158',tablet:'#ff9f0a',Mobile:'#0a84ff',Desktop:'#30d158',Tablet:'#ff9f0a'};
+    var segs = Object.entries(devMap).map(function(e){
+      return {label:e[0], value:e[1].sessions, color:devColors[e[0].toLowerCase()]||'#6e6e73', extra:num(e[1].purchases)+' 구매 &middot; '+$(e[1].revenue)};
+    }).sort(function(a,b){ return b.value-a.value; });
+
+    var el = document.getElementById('deviceChart');
+    if(!segs.length){ el.innerHTML='<div class="card-title">디바이스</div><div class="no-data">데이터 없음</div>'; return; }
+    el.innerHTML = '<div class="card-title">디바이스</div>' + buildDonut(segs);
+  }
+
+  /* ── 8: Geographic Distribution ── */
+  function renderGeoChart(){
+    var geo = filterByMonth(DATA.geo||[], 'date');
+    // If geo has no date field, use all
+    if(!geo.length && DATA.geo && DATA.geo.length) geo = DATA.geo;
+
+    var regionMap = {};
+    geo.forEach(function(r){
+      var reg = r.region || r.country || 'Unknown';
+      if(!regionMap[reg]) regionMap[reg] = {sessions:0,users:0,purchases:0,revenue:0};
+      regionMap[reg].sessions += r.sessions||0;
+      regionMap[reg].users += r.users||0;
+      regionMap[reg].purchases += r.purchases||0;
+      regionMap[reg].revenue += r.revenue||0;
+    });
+
+    var sorted = Object.entries(regionMap).sort(function(a,b){ return b[1].sessions - a[1].sessions; }).slice(0,10);
+    var el = document.getElementById('geoChart');
+    if(!sorted.length){ el.innerHTML='<div class="card-title">지역 분포</div><div class="no-data">데이터 없음</div>'; return; }
+
+    var mx = sorted[0][1].sessions;
+    var rc=['#0a84ff','#30d158','#ff9f0a','#ff375f','#bf5af2','#5ac8fa','#ffd60a','#ff6961','#5e5ce6','#2dd4bf'];
+    var h = '<div class="card-title">지역 분포 (Top 10)</div>';
+    sorted.forEach(function(e,i){
+      var reg=e[0], d=e[1], p=Math.round(d.sessions/mx*100);
+      var hasPurch = d.purchases > 0;
+      h += '<div class="region-bar-row">';
+      h += '<span class="region-bar-label">'+reg+'</span>';
+      h += '<div style="flex:1"><div class="region-bar-fill" style="width:'+p+'%;background:'+rc[i%rc.length]+';'+(hasPurch?'box-shadow:0 0 8px '+rc[i%rc.length]+'40':'')+'">'+(p>25?num(d.sessions):'')+'</div></div>';
+      h += '<span class="region-bar-count">'+(p<=25?num(d.sessions):'')+''+(hasPurch?' <span style="color:var(--orange);font-size:10px">'+d.purchases+'</span>':'')+'</span>';
+      h += '<span class="region-bar-pct">'+$(d.revenue)+'</span>';
+      h += '</div>';
+    });
+    el.innerHTML = h;
+  }
+
+  /* ── 9: New vs Returning ── */
+  function renderNewVsReturning(){
+    var nvr = filterByMonth(DATA.new_vs_returning||[], 'date');
+    if(!nvr.length && DATA.new_vs_returning && DATA.new_vs_returning.length) nvr = DATA.new_vs_returning;
+
+    var types = {};
+    nvr.forEach(function(r){
+      var t = r.type || 'Unknown';
+      if(!types[t]) types[t] = {sessions:0,users:0,purchases:0,revenue:0};
+      types[t].sessions += r.sessions||0;
+      types[t].users += r.users||0;
+      types[t].purchases += r.purchases||0;
+      types[t].revenue += r.revenue||0;
+    });
+
+    var el = document.getElementById('nvrCards');
+    if(!Object.keys(types).length){ el.innerHTML='<div class="no-data" style="grid-column:1/-1">데이터 없음</div>'; return; }
+
+    var h = '';
+    Object.entries(types).forEach(function(e){
+      var t=e[0], d=e[1];
+      var cr = d.sessions ? (d.purchases/d.sessions*100) : 0;
+      var label = t.toLowerCase().indexOf('new')>=0 ? '신규 사용자' : (t.toLowerCase().indexOf('return')>=0 ? '재방문 사용자' : t);
+      var accent = t.toLowerCase().indexOf('new')>=0 ? 'var(--accent)' : 'var(--purple)';
+      h += '<div class="compare-card">';
+      h += '<div class="compare-card-title" style="color:'+accent+'">'+label+'</div>';
+      h += '<div class="compare-card-value">'+num(d.sessions)+'</div>';
+      h += '<div class="compare-card-sub">세션</div>';
+      h += '<div style="margin-top:16px;text-align:left;padding:0 8px">';
+      h += '<div class="stat-row"><span class="label">사용자</span><span class="val">'+num(d.users)+'</span></div>';
+      h += '<div class="stat-row"><span class="label">구매</span><span class="val" style="color:var(--orange)">'+num(d.purchases)+'</span></div>';
+      h += '<div class="stat-row"><span class="label">매출</span><span class="val" style="color:var(--green)">'+$(d.revenue)+'</span></div>';
+      h += '<div class="stat-row"><span class="label">전환율</span><span class="val" style="color:var(--accent)">'+pct(cr)+'</span></div>';
+      h += '</div></div>';
+    });
+    el.innerHTML = h;
+  }
+
+  /* ── 10: Top Pages by Views ── */
+  function renderPagesTable(){
+    var pages = DATA.pages || [];
+    if(!pages.length){
+      document.getElementById('pagesTable').innerHTML = '<div class="no-data">페이지 데이터 없음</div>';
+      return;
+    }
+    var sorted = pages.slice().sort(function(a,b){ return (b.views||0) - (a.views||0); }).slice(0,20);
+
+    var h = '<table><thead><tr><th>페이지</th><th class="text-right">조회수</th><th class="text-right">참여율</th><th class="text-right">평균 체류</th></tr></thead><tbody>';
+    sorted.forEach(function(p){
+      var path = p.path || p.title || '';
+      var shortPath = path.length > 60 ? path.substring(0,57)+'...' : path;
+      h += '<tr>';
+      h += '<td style="font-size:13px;max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+path+'">'+shortPath+'</td>';
+      h += '<td class="text-right" style="font-weight:600">'+num(p.views||0)+'</td>';
+      h += '<td class="text-right">'+pct((p.engagement_rate||0)*100)+'</td>';
+      h += '<td class="text-right" style="color:var(--t3)">'+fmtDur(p.avg_duration||0)+'</td></tr>';
+    });
+    h += '</tbody></table>';
+    document.getElementById('pagesTable').innerHTML = h;
+  }
+
+  /* ── Chart hover handler ── */
+  document.addEventListener('mousemove',function(e){
+    var container=e.target.closest('.line-chart-container');
+    if(!container){
+      document.querySelectorAll('.line-chart-container').forEach(function(c){
+        var tt=c.querySelector('.chart-tooltip');if(tt)tt.style.display='none';
+        var ln=c.querySelector('.chart-hover-line');if(ln)ln.style.display='none';
+        c.querySelectorAll('.chart-dot-visible').forEach(function(d){d.setAttribute('opacity','0')});
+      });
+      return;
+    }
+    var svgEl=container.querySelector('svg');
+    if(!svgEl)return;
+    var rect=svgEl.getBoundingClientRect();
+    var vb=svgEl.getAttribute('viewBox').split(' ');
+    var vbW=parseFloat(vb[2]);
+    var mouseX=(e.clientX-rect.left)/rect.width*vbW;
+    var dots=container.querySelectorAll('.chart-hover-dot');
+    var nearest=null,minDist=Infinity;
+    dots.forEach(function(d){
+      var cx=parseFloat(d.getAttribute('cx'));
+      var dist=Math.abs(cx-mouseX);
+      if(dist<minDist){minDist=dist;nearest=d}
+    });
+    container.querySelectorAll('.chart-dot-visible').forEach(function(d){d.setAttribute('opacity','0')});
+    var hoverLine=container.querySelector('.chart-hover-line');
+    if(hoverLine)hoverLine.style.display='none';
+    if(nearest&&minDist<40){
+      var idx=nearest.getAttribute('data-idx');
+      container.querySelectorAll('.chart-dot-visible[data-idx="'+idx+'"]').forEach(function(d){d.setAttribute('opacity','1')});
+      if(hoverLine){var cx=parseFloat(nearest.getAttribute('cx'));hoverLine.setAttribute('x1',cx);hoverLine.setAttribute('x2',cx);hoverLine.style.display='block'}
+      var tt=container.querySelector('.chart-tooltip');
+      if(tt){
+        var lbl=nearest.getAttribute('data-labels');
+        var vals=decodeURIComponent(nearest.getAttribute('data-vals')).replace(/\\n/g,'<br>');
+        tt.innerHTML='<div style="font-weight:600;margin-bottom:4px;color:var(--accent)">'+lbl+'</div>'+vals;
+        var px=(e.clientX-container.getBoundingClientRect().left);
+        tt.style.left=Math.min(px+12,container.offsetWidth-160)+'px';
+        tt.style.top='10px';
+        tt.style.display='block';
+      }
+    }
+  });
+
+  /* ── Tile hover glow ── */
+  document.addEventListener('mousemove',function(e){
+    var tile=e.target.closest('.m-tile');
+    if(!tile)return;
+    var r=tile.getBoundingClientRect();
+    tile.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    tile.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+
+  /* ── Data status ── */
+  function showDataStatus(){
+    var el = document.getElementById('dataStatus');
+    if(DATA.updated_at){
+      el.innerHTML = '<span class="status-dot" style="background:var(--green);box-shadow:0 0 6px rgba(48,209,88,.5)"></span>GA4 데이터 기준: '+DATA.updated_at;
+    } else {
+      el.innerHTML = '<span class="status-dot" style="background:var(--orange)"></span>GA4 데이터';
+    }
+  }
+
+  /* ── Init ── */
+  function init(){
+    collectMonths();
+    buildMonthTabs();
+    showDataStatus();
+    renderAll();
+
+    // Hide loading
+    setTimeout(function(){
+      var lo = document.getElementById('loadingOverlay');
+      lo.classList.add('fade-out');
+      setTimeout(function(){ lo.style.display='none'; }, 500);
+    }, 800);
+  }
+
+  /* ── Firebase Auth ── */
+  var firebaseConfig = {
+    apiKey: "AIzaSyC-q4mncVKMU_XSaAXJk0iBuMbkmxwvQ5s",
+    authDomain: "odd-performance-dashboard.firebaseapp.com",
+    projectId: "odd-performance-dashboard",
+    storageBucket: "odd-performance-dashboard.firebasestorage.app",
+    messagingSenderId: "845033758092",
+    appId: "1:845033758092:web:05653cc77c4f4ce1460aa9"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+  auth.getRedirectResult().catch(function(){});
+
+  function signInWithGoogle(){
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ hd: 'hanah1.com' });
+    auth.signInWithRedirect(provider).catch(function(err){
+      var errEl = document.getElementById('auth-error');
+      if(errEl){ errEl.textContent = '로그인에 실패했습니다. 다시 시도해주세요.'; errEl.style.display = 'block'; }
+    });
+  }
+  window.signOut = function(){ auth.signOut().then(function(){ location.reload(); }); };
+
+  auth.onAuthStateChanged(function(user){
+    var gate = document.getElementById('auth-gate');
+    var content = document.getElementById('dashboard-content');
+    var userBar = document.getElementById('user-bar');
+    if(user){
+      var email = user.email || '';
+      if(!email.endsWith('@hanah1.com')){
+        var errEl = document.getElementById('auth-error');
+        if(errEl){ errEl.textContent = '@hanah1.com 계정만 접속할 수 있습니다.'; errEl.style.display = 'block'; }
+        auth.signOut();
+        return;
+      }
+      gate.style.display = 'none';
+      content.style.display = 'block';
+      userBar.style.display = 'flex';
+      document.getElementById('user-photo').src = user.photoURL || '';
+      document.getElementById('user-email').textContent = email.split('@')[0];
+      db.collection('access_logs').add({
+        email: email,
+        displayName: user.displayName || '',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        userAgent: navigator.userAgent,
+        page: 'analytics'
+      }).catch(function(){});
+      init();
+    } else {
+      content.style.display = 'none';
+      signInWithGoogle();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
