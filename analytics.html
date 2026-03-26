@@ -37,7 +37,7 @@ body{font-family:var(--sans);background:#000;color:var(--t2);line-height:1.55;fo
 ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
 
 /* Nav */
-.nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08);margin-top:16px}
+.nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.92);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
 .nav-inner{max-width:1120px;margin:0 auto;padding:0 28px;height:48px;display:flex;align-items:center;justify-content:space-between}
 .nav-left{display:flex;align-items:center;gap:14px}
 .logo-img{height:18px;width:auto;object-fit:contain;display:block}
@@ -69,8 +69,7 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 
 /* Hero KPI */
 .summary-sticky{position:relative;background:#000;padding-bottom:8px}
-.summary-sticky::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:24px;background:linear-gradient(to bottom,#000,transparent);pointer-events:none;z-index:89}
-.hero-kpi{text-align:center;padding:56px 40px 48px;margin:0;position:relative;animation:fadeUp .7s var(--ease) both;transition:padding .3s ease,opacity .3s ease}
+.hero-kpi{text-align:center;padding:56px 40px 48px;margin:0;position:relative;animation:fadeUp .7s var(--ease) both}
 .hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
 .hero-kpi-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t3);letter-spacing:.5px;margin-bottom:20px}
 .hero-kpi-tag::before{content:'';width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block}
@@ -78,8 +77,8 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 .hero-kpi-sub{font-size:17px;color:var(--t3);margin-top:16px;font-weight:400;transition:all .3s ease}
 
 /* Metric Tiles */
-.metric-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden;transition:gap .3s ease}
-.m-tile{background:var(--bg-raised);padding:32px 24px;transition:all .35s var(--ease);position:relative;cursor:default}
+.metric-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:0;animation:fadeUp .6s var(--ease) .05s both;border-radius:var(--r);overflow:hidden}
+.m-tile{background:var(--bg-raised);padding:32px 24px;position:relative;cursor:default}
 .m-tile::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(10,132,255,.08) 0%,transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
 .m-tile:hover{background:#2c2c2e}
 .m-tile:hover::after{opacity:1}
