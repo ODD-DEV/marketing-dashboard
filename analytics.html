@@ -283,13 +283,27 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
   <!-- 1. Hero KPI + Metric Tiles -->
   <div class="summary-sticky" id="summaryCards"></div>
 
-  <!-- 2. Traffic Acquisition -->
+  <!-- 2. Traffic Acquisition — Shopify D2C (odd.us) -->
   <section class="content-section">
-    <div class="section-tag">Acquisition</div>
+    <div class="section-tag" style="color:#30d158">Shopify D2C · odd.us</div>
     <h2 class="section-heading">트래픽 채널 분석</h2>
     <div class="card">
       <div class="table-wrap" id="trafficTable"></div>
     </div>
+  </section>
+
+  <!-- 2b. Amazon Traffic -->
+  <section class="content-section">
+    <div class="section-tag" style="color:#ff9f0a">Amazon</div>
+    <h2 class="section-heading">Amazon 트래픽 분석</h2>
+    <div class="card" id="amazonTraffic"></div>
+  </section>
+
+  <!-- 2c. TikTok Shop Traffic -->
+  <section class="content-section">
+    <div class="section-tag" style="color:#ff375f">TikTok Shop</div>
+    <h2 class="section-heading">TikTok Shop 트래픽 분석</h2>
+    <div class="card" id="tiktokTraffic"></div>
   </section>
 
   <!-- 3. Daily Trend -->
@@ -653,6 +667,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     }
     renderHeroAndTiles();
     renderTrafficTable();
+    renderMarketplaceTraffic();
     renderDailyChart();
     renderLandingPages();
     renderDeviceChart();
@@ -663,9 +678,10 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     animateCountUp();
   }
 
-  /* ── ERP 매출을 선택된 기간으로 필터 (전체 채널) ── */
+  /* ── ERP 매출을 선택된 기간으로 필터 (전체 + 채널별) ── */
   function getFilteredERP(){
     var result={orders:0,rev:0};
+    var byCh={shopify:{orders:0,rev:0},shopify_direct:{orders:0,rev:0},amazon:{orders:0,rev:0},tiktok_shop:{orders:0,rev:0}};
     (ERP.orders||[]).forEach(function(o){
       if(o.s!=='sale'&&o.s!=='done') return;
       var mo=getMonth(o.d);
@@ -673,7 +689,13 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
       if(!isAllWeeks){var ws=getWeekSunday(o.d);if(!selectedWeeks.has(ws)) return;}
       result.orders++;
       result.rev+=o.t;
+      var ch=o.ch||'';
+      if(byCh[ch]){byCh[ch].orders++;byCh[ch].rev+=o.t}
     });
+    // Shopify 합산 (ERP경유 + Direct API)
+    result.shopify={orders:byCh.shopify.orders+byCh.shopify_direct.orders,rev:byCh.shopify.rev+byCh.shopify_direct.rev};
+    result.amazon=byCh.amazon;
+    result.tiktok=byCh.tiktok_shop;
     return result;
   }
 
@@ -681,6 +703,16 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
   function renderHeroAndTiles(){
     var traffic=filterDaily(DATA.traffic_daily);
     var erp=getFilteredERP();
+
+    // GA4 ecommerce ATC + 구매 집계 (기간 필터)
+    var ga4ATC=0,ga4Purchases=0;
+    (DATA.ecommerce_daily||[]).forEach(function(e){
+      var iso=ga4ToISO(e.date);var mo=getMonth(iso);
+      if(!isAllMode&&!selectedMonths.has(mo))return;
+      if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+      ga4ATC+=(e.add_to_carts||0);
+      ga4Purchases+=(e.purchases||0);
+    });
 
     var totSessions=0,totUsers=0,totNewUsers=0,totEngaged=0,totDuration=0,durationCount=0;
     traffic.forEach(function(r){
@@ -696,22 +728,28 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var avgDuration=durationCount?totDuration/durationCount:0;
     var engRate=totSessions?(totEngaged/totSessions*100):0;
     var convRate=totSessions?(erp.orders/totSessions*100):0;
+    var aov=erp.orders?(erp.rev/erp.orders):0;
+    var sh=erp.shopify,am=erp.amazon,tk=erp.tiktok;
 
     var h='<div class="hero-kpi">';
-    h+='<div class="hero-kpi-tag">Web Analytics · odd.us</div>';
-    var convRate=totSessions?(erp.orders/totSessions*100):0;
+    h+='<div class="hero-kpi-tag">Sales Analytics · ODD.</div>';
     h+='<div class="hero-kpi-value">'+dollar(erp.rev)+'</div>';
-    h+='<div class="hero-kpi-sub">실매출 &middot; '+erp.orders+'건 &middot; 전환율 '+pct(convRate)+'</div>';
+    h+='<div class="hero-kpi-sub">전체 실매출 &middot; '+erp.orders+'건 &middot; AOV '+dollar(Math.round(aov))+'</div>';
     h+='</div>';
 
-    h+='<div class="metric-tiles">';
-    var aov=erp.orders?(erp.rev/erp.orders):0;
-    h+='<div class="m-tile"><div class="m-tile-label">매출</div><div class="m-tile-value" style="color:var(--green)">'+dollar(erp.rev)+'</div><div class="m-tile-sub">실매출</div></div>';
-    h+='<div class="m-tile"><div class="m-tile-label">주문</div><div class="m-tile-value" style="color:var(--accent)">'+erp.orders+'건</div><div class="m-tile-sub">AOV '+dollar(Math.round(aov))+'</div></div>';
-    h+='<div class="m-tile"><div class="m-tile-label">전환율</div><div class="m-tile-value" style="color:var(--orange)">'+pct(convRate)+'</div><div class="m-tile-sub">주문 ÷ 세션</div></div>';
+    h+='<div class="metric-tiles" style="grid-template-columns:repeat(3,1fr)">';
+    h+='<div class="m-tile"><div class="m-tile-label" style="color:#30d158">Shopify D2C</div><div class="m-tile-value" style="color:#30d158">'+dollar(sh.rev)+'</div><div class="m-tile-sub">'+sh.orders+'건 · AOV '+dollar(sh.orders?Math.round(sh.rev/sh.orders):0)+'</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label" style="color:#ff9f0a">Amazon</div><div class="m-tile-value" style="color:#ff9f0a">'+dollar(am.rev)+'</div><div class="m-tile-sub">'+am.orders+'건'+(am.orders?' · AOV '+dollar(Math.round(am.rev/am.orders)):'')+'</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label" style="color:#ff375f">TikTok Shop</div><div class="m-tile-value" style="color:#ff375f">'+dollar(tk.rev)+'</div><div class="m-tile-sub">'+tk.orders+'건'+(tk.orders?' · AOV '+dollar(Math.round(tk.rev/tk.orders)):'')+'</div></div>';
+    h+='</div>';
+
+    h+='<div class="metric-tiles" style="margin-top:2px">';
+    h+='<div class="m-tile"><div class="m-tile-label">전환율</div><div class="m-tile-value" style="color:var(--orange)">'+pct(convRate)+'</div><div class="m-tile-sub">주문 ÷ 세션 (odd.us)</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">세션</div><div class="m-tile-value" style="color:var(--t1)">'+num(totSessions)+'</div><div class="m-tile-sub">GA4 총 세션</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">사용자</div><div class="m-tile-value" style="color:var(--purple)">'+num(totUsers)+'</div><div class="m-tile-sub">신규 '+num(totNewUsers)+'</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">참여율</div><div class="m-tile-value" style="color:var(--pink)">'+pct(engRate)+'</div><div class="m-tile-sub">체류 '+fmtDur(avgDuration)+'</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label">장바구니</div><div class="m-tile-value" style="color:var(--orange)">'+num(ga4ATC)+'</div><div class="m-tile-sub">Add to Cart</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label">웹 구매</div><div class="m-tile-value" style="color:var(--green)">'+num(ga4Purchases)+'</div><div class="m-tile-sub">GA4 추적 구매</div></div>';
     h+='</div>';
 
     document.getElementById('summaryCards').innerHTML=h;
@@ -798,6 +836,66 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     h+='</tbody></table>';
     h+='<div style="font-size:11px;color:var(--t5);margin-top:8px">* GA4 ecommerce 실데이터 기반 · Shopify + ReCharge 실매출 연동 · 구독 갱신은 별도 표시</div>';
     document.getElementById('trafficTable').innerHTML=h;
+  }
+
+  /* ── 2b/2c: Amazon & TikTok Traffic (매출 표시 + API 연동 대기) ── */
+  function renderMarketplaceTraffic(){
+    var erp=getFilteredERP();
+    var am=erp.amazon,tk=erp.tiktok;
+
+    // Amazon
+    var amH='<div style="padding:28px">';
+    amH+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    amH+='<div><div style="font-size:32px;font-weight:700;color:#ff9f0a">'+dollar(am.rev)+'</div>';
+    amH+='<div style="font-size:13px;color:var(--t3);margin-top:4px">'+am.orders+'건'+(am.orders?' · AOV '+dollar(Math.round(am.rev/am.orders)):'')+'</div></div>';
+    amH+='<div style="text-align:right"><div style="font-size:11px;color:var(--t5);margin-bottom:4px">API 연동 준비 중</div>';
+    amH+='<div style="display:inline-flex;gap:6px;flex-wrap:wrap">';
+    ['세션','전환율','트래픽 소스','키워드 순위','ACOS'].forEach(function(label){
+      amH+='<span style="padding:4px 10px;border-radius:100px;border:1px solid rgba(255,159,10,.2);font-size:10px;color:var(--t4)">'+label+'</span>';
+    });
+    amH+='</div></div></div>';
+    if(am.orders){
+      amH+='<table><thead><tr><th>지표</th><th class="text-right">값</th><th>상태</th></tr></thead><tbody>';
+      amH+='<tr><td>매출</td><td class="text-right" style="color:#ff9f0a;font-weight:600">'+dollar(am.rev)+'</td><td style="color:var(--green);font-size:11px">✓ ERP 실데이터</td></tr>';
+      amH+='<tr><td>주문</td><td class="text-right" style="font-weight:600">'+am.orders+'건</td><td style="color:var(--green);font-size:11px">✓ ERP 실데이터</td></tr>';
+      amH+='<tr><td>AOV</td><td class="text-right">'+dollar(Math.round(am.rev/am.orders))+'</td><td style="color:var(--green);font-size:11px">✓ 계산값</td></tr>';
+      amH+='<tr style="opacity:.4"><td>세션</td><td class="text-right">-</td><td style="font-size:11px">Amazon SP-API 연동 시 활성화</td></tr>';
+      amH+='<tr style="opacity:.4"><td>전환율</td><td class="text-right">-</td><td style="font-size:11px">Amazon SP-API 연동 시 활성화</td></tr>';
+      amH+='<tr style="opacity:.4"><td>광고 지출 (ACOS)</td><td class="text-right">-</td><td style="font-size:11px">Amazon Ads API 연동 시 활성화</td></tr>';
+      amH+='<tr style="opacity:.4"><td>키워드 순위</td><td class="text-right">-</td><td style="font-size:11px">Amazon SP-API 연동 시 활성화</td></tr>';
+      amH+='</tbody></table>';
+    } else {
+      amH+='<div style="color:var(--t4);text-align:center;padding:20px">선택 기간에 Amazon 매출 없음</div>';
+    }
+    amH+='</div>';
+    document.getElementById('amazonTraffic').innerHTML=amH;
+
+    // TikTok
+    var tkH='<div style="padding:28px">';
+    tkH+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    tkH+='<div><div style="font-size:32px;font-weight:700;color:#ff375f">'+dollar(tk.rev)+'</div>';
+    tkH+='<div style="font-size:13px;color:var(--t3);margin-top:4px">'+tk.orders+'건'+(tk.orders?' · AOV '+dollar(Math.round(tk.rev/tk.orders)):'')+'</div></div>';
+    tkH+='<div style="text-align:right"><div style="font-size:11px;color:var(--t5);margin-bottom:4px">API 연동 준비 중</div>';
+    tkH+='<div style="display:inline-flex;gap:6px;flex-wrap:wrap">';
+    ['세션','전환율','트래픽 소스','영상 조회수','ROAS'].forEach(function(label){
+      tkH+='<span style="padding:4px 10px;border-radius:100px;border:1px solid rgba(255,55,95,.2);font-size:10px;color:var(--t4)">'+label+'</span>';
+    });
+    tkH+='</div></div></div>';
+    if(tk.orders){
+      tkH+='<table><thead><tr><th>지표</th><th class="text-right">값</th><th>상태</th></tr></thead><tbody>';
+      tkH+='<tr><td>매출</td><td class="text-right" style="color:#ff375f;font-weight:600">'+dollar(tk.rev)+'</td><td style="color:var(--green);font-size:11px">✓ ERP 실데이터</td></tr>';
+      tkH+='<tr><td>주문</td><td class="text-right" style="font-weight:600">'+tk.orders+'건</td><td style="color:var(--green);font-size:11px">✓ ERP 실데이터</td></tr>';
+      tkH+='<tr><td>AOV</td><td class="text-right">'+dollar(Math.round(tk.rev/tk.orders))+'</td><td style="color:var(--green);font-size:11px">✓ 계산값</td></tr>';
+      tkH+='<tr style="opacity:.4"><td>세션</td><td class="text-right">-</td><td style="font-size:11px">TikTok Shop API 연동 시 활성화</td></tr>';
+      tkH+='<tr style="opacity:.4"><td>전환율</td><td class="text-right">-</td><td style="font-size:11px">TikTok Shop API 연동 시 활성화</td></tr>';
+      tkH+='<tr style="opacity:.4"><td>영상 조회수</td><td class="text-right">-</td><td style="font-size:11px">TikTok Ads API 연동 시 활성화</td></tr>';
+      tkH+='<tr style="opacity:.4"><td>광고 ROAS</td><td class="text-right">-</td><td style="font-size:11px">TikTok Ads API 연동 시 활성화</td></tr>';
+      tkH+='</tbody></table>';
+    } else {
+      tkH+='<div style="color:var(--t4);text-align:center;padding:20px">선택 기간에 TikTok 매출 없음</div>';
+    }
+    tkH+='</div>';
+    document.getElementById('tiktokTraffic').innerHTML=tkH;
   }
 
   /* ── 3: Daily Trend Chart (sessions + ERP revenue) ── */
