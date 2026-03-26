@@ -699,14 +699,18 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
 
     var h='<div class="hero-kpi">';
     h+='<div class="hero-kpi-tag">Web Analytics · odd.us</div>';
-    h+='<div class="hero-kpi-value">'+dollar(erp.rev)+'</div>';
-    h+='<div class="hero-kpi-sub">전체 매출 (ERP 기준) &middot; '+erp.orders+'건 &middot; odd.us 전환율 '+pct(convRate)+'</div>';
+    var shopifyRev=(ERP.shopify_analytics||{}).total_revenue||erp.rev;
+    var shopifyOrders=(ERP.shopify_analytics||{}).total_orders||erp.orders;
+    var realConvRate=totSessions?(shopifyOrders/totSessions*100):0;
+    h+='<div class="hero-kpi-value">'+dollar(shopifyRev)+'</div>';
+    h+='<div class="hero-kpi-sub">Shopify 실매출 &middot; '+shopifyOrders+'건 &middot; 전환율 '+pct(realConvRate)+'</div>';
     h+='</div>';
 
     h+='<div class="metric-tiles">';
-    h+='<div class="m-tile"><div class="m-tile-label">매출</div><div class="m-tile-value" style="color:var(--green)">'+dollar(erp.rev)+'</div><div class="m-tile-sub">ERP 전체 채널</div></div>';
-    h+='<div class="m-tile"><div class="m-tile-label">주문</div><div class="m-tile-value" style="color:var(--accent)">'+erp.orders+'건</div><div class="m-tile-sub">전체 주문 건수</div></div>';
-    h+='<div class="m-tile"><div class="m-tile-label">전환율</div><div class="m-tile-value" style="color:var(--orange)">'+pct(convRate)+'</div><div class="m-tile-sub">주문 ÷ 세션</div></div>';
+    var aov=shopifyOrders?(shopifyRev/shopifyOrders):0;
+    h+='<div class="m-tile"><div class="m-tile-label">매출</div><div class="m-tile-value" style="color:var(--green)">'+dollar(shopifyRev)+'</div><div class="m-tile-sub">Shopify 실매출</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label">주문</div><div class="m-tile-value" style="color:var(--accent)">'+shopifyOrders+'건</div><div class="m-tile-sub">AOV '+dollar(Math.round(aov))+'</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label">전환율</div><div class="m-tile-value" style="color:var(--orange)">'+pct(realConvRate)+'</div><div class="m-tile-sub">주문 ÷ 세션</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">세션</div><div class="m-tile-value" style="color:var(--t1)">'+num(totSessions)+'</div><div class="m-tile-sub">GA4 총 세션</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">사용자</div><div class="m-tile-value" style="color:var(--purple)">'+num(totUsers)+'</div><div class="m-tile-sub">신규 '+num(totNewUsers)+'</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">참여율</div><div class="m-tile-value" style="color:var(--pink)">'+pct(engRate)+'</div><div class="m-tile-sub">체류 '+fmtDur(avgDuration)+'</div></div>';
@@ -715,69 +719,86 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     document.getElementById('summaryCards').innerHTML=h;
   }
 
-  /* ── 2: Traffic Acquisition Table (GA4 트래픽 + ERP 매출 매칭) ── */
+  /* ── 2: Traffic Acquisition Table (GA4 ecommerce 실매출 + Shopify/ReCharge 실데이터) ── */
   function renderTrafficTable(){
     var traffic=filterDaily(DATA.traffic_daily);
-    var erp=getFilteredERP();
+    var shopifyAnalytics=ERP.shopify_analytics||{};
 
-    // 채널별 세션 + 날짜별 세션 비율로 ERP 매출 배분
+    // ── GA4 트래픽 채널별 세션 집계 ──
     var channels={};
-    var dateChannelSessions={}; // date -> {channel -> sessions}
     traffic.forEach(function(r){
       var ch=r.channel||'Unassigned';
-      var iso=ga4ToISO(r.date);
-      if(!channels[ch]) channels[ch]={sessions:0,users:0,new_users:0,engaged:0,durTotal:0};
+      if(!channels[ch]) channels[ch]={sessions:0,users:0,new_users:0,engaged:0,durTotal:0,purchases:0,revenue:0,atc:0};
       channels[ch].sessions+=r.sessions||0;
       channels[ch].users+=r.users||0;
       channels[ch].new_users+=r.new_users||0;
       channels[ch].engaged+=r.engaged_sessions||0;
       channels[ch].durTotal+=(r.avg_duration||0)*(r.sessions||0);
-      if(!dateChannelSessions[iso]) dateChannelSessions[iso]={};
-      dateChannelSessions[iso][ch]=(dateChannelSessions[iso][ch]||0)+(r.sessions||0);
     });
 
-    // 날짜별로 ERP 매출을 세션 비율로 채널에 배분
-    var channelRev={};
-    var channelOrders={};
-    Object.keys(dateChannelSessions).forEach(function(date){
-      var erpDay=erpByDate[date];
-      if(!erpDay) return;
-      var dayChs=dateChannelSessions[date];
-      var dayTotal=0;
-      Object.values(dayChs).forEach(function(s){dayTotal+=s});
-      if(!dayTotal) return;
-      Object.keys(dayChs).forEach(function(ch){
-        var ratio=dayChs[ch]/dayTotal;
-        channelRev[ch]=(channelRev[ch]||0)+erpDay.rev*ratio;
-        channelOrders[ch]=(channelOrders[ch]||0)+erpDay.orders*ratio;
-      });
+    // ── GA4 ecommerce 실매출 매칭 (날짜 필터 적용) ──
+    var ecom=DATA.ecommerce_daily||[];
+    ecom.forEach(function(e){
+      var iso=ga4ToISO(e.date);
+      var mo=getMonth(iso);
+      if(!isAllMode && !selectedMonths.has(mo)) return;
+      if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws)) return;}
+      var ch=e.channel||'Unassigned';
+      if(!channels[ch]) channels[ch]={sessions:0,users:0,new_users:0,engaged:0,durTotal:0,purchases:0,revenue:0,atc:0};
+      channels[ch].purchases+=(e.purchases||0);
+      channels[ch].revenue+=(e.revenue||0);
+      channels[ch].atc+=(e.add_to_carts||0);
     });
 
-    var totSess=0;
+    // ── Shopify 실매출 합산 (GA4에 안 잡힌 구독 갱신 등) ──
+    var ga4Total={purchases:0,revenue:0};
+    Object.values(channels).forEach(function(d){ga4Total.purchases+=d.purchases;ga4Total.revenue+=d.revenue});
+    var shopifyTotal=shopifyAnalytics.total_revenue||0;
+    var unmatchedRev=Math.max(0,shopifyTotal-ga4Total.revenue);
+    var unmatchedOrders=Math.max(0,(shopifyAnalytics.total_orders||0)-ga4Total.purchases);
+
+    var totSess=0,totPurchases=ga4Total.purchases,totRev=ga4Total.revenue;
     Object.values(channels).forEach(function(d){totSess+=d.sessions});
 
     var sorted=Object.entries(channels).sort(function(a,b){return b[1].sessions-a[1].sessions});
-    var h='<table><thead><tr><th>채널 그룹</th><th class="text-right">세션</th><th class="text-right">비중</th><th class="text-right">사용자</th><th class="text-right">추정 매출</th><th class="text-right">추정 전환율</th><th class="text-right">참여율</th><th class="text-right">체류시간</th></tr></thead><tbody>';
+    var h='<table><thead><tr><th>채널 그룹</th><th class="text-right">세션</th><th class="text-right">비중</th><th class="text-right">사용자</th><th class="text-right">구매</th><th class="text-right" style="color:var(--green)">매출</th><th class="text-right">전환율</th><th class="text-right">ATC</th><th class="text-right">참여율</th><th class="text-right">체류</th></tr></thead><tbody>';
     sorted.forEach(function(e){
       var ch=e[0],d=e[1];
       var engRate=d.sessions?(d.engaged/d.sessions*100):0;
       var avgDur=d.sessions?d.durTotal/d.sessions:0;
       var share=totSess?(d.sessions/totSess*100):0;
-      var rev=channelRev[ch]||0;
-      var orders=channelOrders[ch]||0;
-      var convRate=d.sessions?(orders/d.sessions*100):0;
+      var convRate=d.sessions?(d.purchases/d.sessions*100):0;
       var co=chColor(ch);
       h+='<tr><td><span class="ch-dot" style="background:'+co+'"></span>'+ch+'</td>';
       h+='<td class="text-right" style="font-weight:600">'+num(d.sessions)+'</td>';
       h+='<td class="text-right" style="color:var(--t3)">'+pct(share)+'</td>';
       h+='<td class="text-right">'+num(d.users)+'</td>';
-      h+='<td class="text-right" style="color:var(--green);font-weight:600">'+dollar(Math.round(rev))+'</td>';
+      h+='<td class="text-right" style="color:'+(d.purchases?'var(--accent)':'var(--t5)')+'">'+d.purchases+'</td>';
+      h+='<td class="text-right" style="color:var(--green);font-weight:600">'+dollar(d.revenue)+'</td>';
       h+='<td class="text-right" style="color:'+(convRate>1?'var(--green)':'var(--t3)')+'">'+pct(convRate)+'</td>';
+      h+='<td class="text-right" style="color:'+(d.atc?'var(--orange)':'var(--t5)')+'">'+d.atc+'</td>';
       h+='<td class="text-right" style="color:'+(engRate>50?'var(--green)':'var(--t3)')+'">'+pct(engRate)+'</td>';
       h+='<td class="text-right" style="color:var(--t3)">'+fmtDur(avgDur)+'</td></tr>';
     });
+    // 구독 갱신 등 GA4에 안 잡힌 매출
+    if(unmatchedRev>0){
+      h+='<tr style="opacity:.7"><td><span class="ch-dot" style="background:var(--purple)"></span>구독 갱신 / 앱</td>';
+      h+='<td class="text-right" style="color:var(--t5)">-</td><td></td><td></td>';
+      h+='<td class="text-right" style="color:var(--accent)">'+Math.round(unmatchedOrders)+'</td>';
+      h+='<td class="text-right" style="color:var(--green);font-weight:600">'+dollar(Math.round(unmatchedRev))+'</td>';
+      h+='<td colspan="4"></td></tr>';
+    }
+    // 합계
+    var allRev=ga4Total.revenue+unmatchedRev;
+    var allOrders=ga4Total.purchases+unmatchedOrders;
+    h+='<tr style="font-weight:700;border-top:2px solid var(--border-h)"><td>합계</td>';
+    h+='<td class="text-right">'+num(totSess)+'</td><td></td><td></td>';
+    h+='<td class="text-right" style="color:var(--accent)">'+Math.round(allOrders)+'</td>';
+    h+='<td class="text-right" style="color:var(--green)">'+dollar(Math.round(allRev))+'</td>';
+    h+='<td class="text-right">'+pct(totSess?(allOrders/totSess*100):0)+'</td>';
+    h+='<td colspan="3"></td></tr>';
     h+='</tbody></table>';
-    h+='<div style="font-size:11px;color:var(--t5);margin-top:8px">* 추정 매출 = 해당 날짜의 ERP Shopify 매출을 채널 세션 비율로 배분</div>';
+    h+='<div style="font-size:11px;color:var(--t5);margin-top:8px">* GA4 ecommerce 실데이터 기반 · Shopify + ReCharge 실매출 연동 · 구독 갱신은 별도 표시</div>';
     document.getElementById('trafficTable').innerHTML=h;
   }
 
