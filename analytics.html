@@ -68,19 +68,9 @@ main{max-width:1120px;margin:0 auto;padding:0 28px 80px}
 .week-tab.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
 
 /* Hero KPI */
-.summary-sticky{position:sticky;top:48px;z-index:90;background:#000;padding-bottom:8px;transition:all .3s ease}
+.summary-sticky{position:relative;background:#000;padding-bottom:8px}
 .summary-sticky::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:24px;background:linear-gradient(to bottom,#000,transparent);pointer-events:none;z-index:89}
 .hero-kpi{text-align:center;padding:56px 40px 48px;margin:0;position:relative;animation:fadeUp .7s var(--ease) both;transition:padding .3s ease,opacity .3s ease}
-.summary-sticky.scrolled .hero-kpi{padding:12px 20px 8px}
-.summary-sticky.scrolled .hero-kpi-value{font-size:36px !important;letter-spacing:-1px}
-.summary-sticky.scrolled .hero-kpi-sub{font-size:12px;margin-top:4px;opacity:.7}
-.summary-sticky.scrolled .hero-kpi-tag{font-size:11px;margin-bottom:6px}
-.summary-sticky.scrolled .hero-kpi::after{display:none}
-.summary-sticky.scrolled .metric-tiles{gap:1px}
-.summary-sticky.scrolled .m-tile{padding:14px 16px}
-.summary-sticky.scrolled .m-tile-value{font-size:20px}
-.summary-sticky.scrolled .m-tile-label{font-size:10px}
-.summary-sticky.scrolled .m-tile-sub{font-size:9px}
 .hero-kpi::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
 .hero-kpi-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t3);letter-spacing:.5px;margin-bottom:20px}
 .hero-kpi-tag::before{content:'';width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block}
@@ -373,19 +363,6 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
 <script>
 (function(){
   'use strict';
-
-  /* ── 스크롤 시 히어로 섹션 축소 ── */
-  var summaryEl = document.querySelector('.summary-sticky');
-  if (summaryEl) {
-    var scrollThreshold = 120;
-    window.addEventListener('scroll', function() {
-      if (window.scrollY > scrollThreshold) {
-        summaryEl.classList.add('scrolled');
-      } else {
-        summaryEl.classList.remove('scrolled');
-      }
-    }, { passive: true });
-  }
 
   var DATA = window.GA4_DATA || {};
   var ERP = window.EMBEDDED_DATA || {};
