@@ -930,41 +930,51 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     document.getElementById('dailyChart').innerHTML='<div class="card-title">일별 세션 · 사용자 · 매출 추이</div>'+chart;
   }
 
-  /* ── 4: Landing Pages (aggregated + pages 데이터에서 체류시간 매칭) ── */
+  /* ── 4: Landing Pages (날짜별 필터 적용) ── */
   function renderLandingPages(){
-    var pages=DATA.landing_pages||[];
+    // landing_pages_daily (date 차원 포함) 또는 legacy landing_pages
+    var raw=DATA.landing_pages_daily||DATA.landing_pages||[];
+    var hasDate=raw.length>0&&raw[0].date;
     var badge=document.getElementById('landingPeriodBadge');
-    if(badge) badge.textContent='전체 기간';
+    if(badge) badge.textContent=hasDate?(isAllMode?'전체 기간':'선택 기간'):'전체 기간';
 
-    if(!pages.length){
-      document.getElementById('landingTable').innerHTML='<div class="no-data">랜딩 페이지 데이터 없음</div>';
+    // 날짜 필터 → 페이지별 집계
+    var pageMap={};
+    raw.forEach(function(r){
+      if(hasDate){
+        var iso=ga4ToISO(r.date);var mo=getMonth(iso);
+        if(!isAllMode&&!selectedMonths.has(mo))return;
+        if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+      }
+      var pg=r.page||r.path||'';
+      if(!pageMap[pg]) pageMap[pg]={sessions:0,engaged:0,durTotal:0,purchases:0,revenue:0};
+      var p=pageMap[pg];
+      p.sessions+=r.sessions||0;
+      p.engaged+=r.engaged_sessions||0;
+      p.durTotal+=(r.avg_duration||0)*(r.sessions||0);
+      p.purchases+=r.purchases||0;
+      p.revenue+=r.revenue||0;
+    });
+
+    var sorted=Object.entries(pageMap).sort(function(a,b){return b[1].sessions-a[1].sessions}).slice(0,15);
+    if(!sorted.length){
+      document.getElementById('landingTable').innerHTML='<div class="no-data">선택 기간에 랜딩 페이지 데이터 없음</div>';
       return;
     }
 
-    // pages 데이터에서 avg_duration 매핑 (landing_pages에 없는 경우)
-    var pageDurMap={};
-    (DATA.pages||[]).forEach(function(pg){
-      var path=pg.path||'';
-      pageDurMap[path]=pg.avg_duration||0;
-    });
-
-    var sorted=pages.slice().sort(function(a,b){return(b.sessions||0)-(a.sessions||0)}).slice(0,15);
-
     var h='<table><thead><tr><th>페이지</th><th class="text-right">세션</th><th class="text-right">참여율</th><th class="text-right">구매</th><th class="text-right">매출</th><th class="text-right">평균 체류</th></tr></thead><tbody>';
-    sorted.forEach(function(p){
-      var url=p.page||p.path||'';
+    sorted.forEach(function(e){
+      var url=e[0],d=e[1];
       var shortUrl=url.length>50?url.substring(0,47)+'...':url;
-      var engRate=(p.engagement_rate||0)*100;
-      var dur=p.avg_duration||pageDurMap[url]||0;
-      var purchases=p.purchases||0;
-      var revenue=p.revenue||0;
+      var engRate=d.sessions?(d.engaged/d.sessions*100):0;
+      var avgDur=d.sessions?d.durTotal/d.sessions:0;
       h+='<tr>';
       h+='<td style="font-size:13px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+url+'">'+shortUrl+'</td>';
-      h+='<td class="text-right" style="font-weight:600">'+num(p.sessions)+'</td>';
+      h+='<td class="text-right" style="font-weight:600">'+num(d.sessions)+'</td>';
       h+='<td class="text-right" style="color:'+(engRate>50?'var(--green)':'var(--t3)')+'">'+pct(engRate)+'</td>';
-      h+='<td class="text-right" style="color:'+(purchases?'var(--accent)':'var(--t5)')+'">'+purchases+'</td>';
-      h+='<td class="text-right" style="color:'+(revenue?'var(--green)':'var(--t5)')+'">'+dollar(revenue)+'</td>';
-      h+='<td class="text-right" style="color:var(--t3)">'+fmtDur(dur)+'</td></tr>';
+      h+='<td class="text-right" style="color:'+(d.purchases?'var(--accent)':'var(--t5)')+'">'+d.purchases+'</td>';
+      h+='<td class="text-right" style="color:'+(d.revenue?'var(--green)':'var(--t5)')+'">'+dollar(d.revenue)+'</td>';
+      h+='<td class="text-right" style="color:var(--t3)">'+fmtDur(avgDur)+'</td></tr>';
     });
     h+='</tbody></table>';
     document.getElementById('landingTable').innerHTML=h;
@@ -994,13 +1004,18 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     el.innerHTML='<div class="card-title">디바이스</div>'+buildDonut(segs);
   }
 
-  /* ── 6: Geographic Distribution ── */
+  /* ── 6: Geographic Distribution (날짜 필터 적용) ── */
   function renderGeoChart(){
-    var geo=DATA.geo||[];
-    // geo is aggregated (no date dimension)
+    var raw=DATA.geo_daily||DATA.geo||[];
+    var hasDate=raw.length>0&&raw[0].date;
 
     var regionMap={};
-    geo.forEach(function(r){
+    raw.forEach(function(r){
+      if(hasDate){
+        var iso=ga4ToISO(r.date);var mo=getMonth(iso);
+        if(!isAllMode&&!selectedMonths.has(mo))return;
+        if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+      }
       var reg=r.region||r.country||'Unknown';
       if(!regionMap[reg]) regionMap[reg]={sessions:0,users:0};
       regionMap[reg].sessions+=r.sessions||0;
@@ -1013,7 +1028,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
 
     var mx=sorted[0][1].sessions;
     var rc=['#0a84ff','#30d158','#ff9f0a','#ff375f','#bf5af2','#5ac8fa','#ffd60a','#ff6961','#5e5ce6','#2dd4bf'];
-    var h='<div class="card-title">지역 분포 (Top 10) <span class="ct-sub">전체 기간</span></div>';
+    var h='<div class="card-title">지역 분포 (Top 10) <span class="ct-sub">'+(isAllMode?'전체 기간':'선택 기간')+'</span></div>';
     sorted.forEach(function(e,i){
       var reg=e[0],d=e[1],p=Math.round(d.sessions/mx*100);
       h+='<div class="region-bar-row">';
@@ -1062,27 +1077,47 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     el.innerHTML=h;
   }
 
-  /* ── 8: Top Pages by Views (aggregated) ── */
+  /* ── 8: Top Pages by Views (날짜 필터 적용) ── */
   function renderPagesTable(){
-    var pages=DATA.pages||[];
+    var raw=DATA.pages_daily||DATA.pages||[];
+    var hasDate=raw.length>0&&raw[0].date;
     var badge=document.getElementById('pagesPeriodBadge');
-    if(badge) badge.textContent='전체 기간';
+    if(badge) badge.textContent=hasDate?(isAllMode?'전체 기간':'선택 기간'):'전체 기간';
 
-    if(!pages.length){
-      document.getElementById('pagesTable').innerHTML='<div class="no-data">페이지 데이터 없음</div>';
+    // 날짜 필터 → 페이지별 집계
+    var pageMap={};
+    raw.forEach(function(r){
+      if(hasDate){
+        var iso=ga4ToISO(r.date);var mo=getMonth(iso);
+        if(!isAllMode&&!selectedMonths.has(mo))return;
+        if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+      }
+      var pg=r.path||r.title||'';
+      if(!pageMap[pg]) pageMap[pg]={views:0,engTotal:0,durTotal:0,count:0};
+      var p=pageMap[pg];
+      p.views+=r.views||0;
+      p.engTotal+=(r.engagement_rate||0)*(r.views||1);
+      p.durTotal+=(r.avg_duration||0)*(r.views||1);
+      p.count+=r.views||1;
+    });
+
+    var sorted=Object.entries(pageMap).sort(function(a,b){return b[1].views-a[1].views}).slice(0,20);
+    if(!sorted.length){
+      document.getElementById('pagesTable').innerHTML='<div class="no-data">선택 기간에 페이지 데이터 없음</div>';
       return;
     }
-    var sorted=pages.slice().sort(function(a,b){return(b.views||0)-(a.views||0)}).slice(0,20);
 
     var h='<table><thead><tr><th>페이지</th><th class="text-right">조회수</th><th class="text-right">참여율</th><th class="text-right">평균 체류</th></tr></thead><tbody>';
-    sorted.forEach(function(p){
-      var path=p.path||p.title||'';
+    sorted.forEach(function(e){
+      var path=e[0],p=e[1];
       var shortPath=path.length>60?path.substring(0,57)+'...':path;
+      var engRate=p.count?(p.engTotal/p.count*100):0;
+      var avgDur=p.count?p.durTotal/p.count:0;
       h+='<tr>';
       h+='<td style="font-size:13px;max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+path+'">'+shortPath+'</td>';
-      h+='<td class="text-right" style="font-weight:600">'+num(p.views||0)+'</td>';
-      h+='<td class="text-right">'+pct((p.engagement_rate||0)*100)+'</td>';
-      h+='<td class="text-right" style="color:var(--t3)">'+fmtDur(p.avg_duration||0)+'</td></tr>';
+      h+='<td class="text-right" style="font-weight:600">'+num(p.views)+'</td>';
+      h+='<td class="text-right">'+pct(engRate)+'</td>';
+      h+='<td class="text-right" style="color:var(--t3)">'+fmtDur(avgDur)+'</td></tr>';
     });
     h+='</tbody></table>';
     document.getElementById('pagesTable').innerHTML=h;
