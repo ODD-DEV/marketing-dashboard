@@ -652,7 +652,6 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     renderNewVsReturning();
     renderPagesTable();
     renderAttributionTable();
-    animateCountUp();
   }
 
   /* ── ERP 매출을 선택된 기간으로 필터 (전체 + 채널별) ── */
@@ -1227,11 +1226,9 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     showDataStatus();
     renderAll();
 
-    setTimeout(function(){
-      var lo=document.getElementById('loadingOverlay');
-      lo.classList.add('fade-out');
-      setTimeout(function(){lo.style.display='none';animateCountUp()},500);
-    },800);
+    var lo=document.getElementById('loadingOverlay');
+    lo.classList.add('fade-out');
+    setTimeout(function(){lo.style.display='none';animateCountUp()},500);
   }
 
   /* ── Firebase Auth ── */
