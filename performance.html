@@ -1110,20 +1110,7 @@
 // ═══ SVG Chart Functions (replacing Chart.js) ═══
 let cachedSections = null;
 // 현재 날짜 기준 최신 월 자동 감지
-const _now = new Date();
-const _curMonth = _now.getMonth() + 1; // 1=Jan, 2=Feb, 3=Mar
-let currentPeriod = _curMonth >= 3 ? 'mar' : 'feb';
-let selectedWeeks = WEEK_DATE_RANGES.map(function(_,i){return i}); // 전체 주차 선택
-
-// WEEK_RANGES 자동 생성 (WEEK_DATE_RANGES 기반)
-const WEEK_RANGES = WEEK_DATE_RANGES.map(function(r, i) {
-  var sm = r.start.getMonth()+1, sd = r.start.getDate();
-  var em = r.end.getMonth()+1, ed = r.end.getDate();
-  return { label: 'W'+(i+1), start: sm+'/'+sd, end: em+'/'+ed };
-});
-
-// Week date ranges for matching sales data (2026 year)
-// 주차 범위 자동 생성 — 2/8부터 현재 날짜까지 7일 단위
+// 주차 범위 자동 생성 — 2/8부터 현재 날짜까지 7일 단위 (맨 먼저 선언)
 const WEEK_DATE_RANGES = (function(){
   var ranges = [];
   var start = new Date(2026,1,8); // 2026-02-08
@@ -1141,8 +1128,19 @@ const WEEK_DATE_RANGES = (function(){
   return ranges;
 })();
 
+// WEEK_RANGES, 현재 기간, 선택된 주차 (WEEK_DATE_RANGES 이후에 선언)
+const WEEK_RANGES = WEEK_DATE_RANGES.map(function(r, i) {
+  var sm = r.start.getMonth()+1, sd = r.start.getDate();
+  var em = r.end.getMonth()+1, ed = r.end.getDate();
+  return { label: 'W'+(i+1), start: sm+'/'+sd, end: em+'/'+ed };
+});
+const _now = new Date();
+const _curMonth = _now.getMonth() + 1;
+let currentPeriod = _curMonth >= 3 ? 'mar' : 'feb';
+let selectedWeeks = WEEK_DATE_RANGES.map(function(_,i){return i});
+
 function getSalesWeeklyRevenue() {
-  var rev = [0,0,0,0,0];
+  var rev = WEEK_DATE_RANGES.map(function(){return 0});
   if (typeof EMBEDDED_DATA === 'undefined' || !EMBEDDED_DATA.orders) return rev;
   EMBEDDED_DATA.orders.forEach(function(o) {
     if (o.s === 'cancel' || !o.d || !o.t) return;
