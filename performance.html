@@ -525,7 +525,16 @@
       <button class="period-tab" data-period="mar" onclick="switchPeriod('mar')">3월</button>
       <button class="period-tab" data-period="feb" onclick="switchPeriod('feb')">2월</button>
     </div>
-    <div class="week-tabs" id="weekTabs" style="display:none"></div>
+    <div class="week-tabs" id="weekTabs" style="display:none">
+      <button class="week-tab" data-week="0" onclick="toggleWeek(0)">W1<br><span>2/8</span></button>
+      <button class="week-tab" data-week="1" onclick="toggleWeek(1)">W2<br><span>2/15</span></button>
+      <button class="week-tab" data-week="2" onclick="toggleWeek(2)">W3<br><span>2/22</span></button>
+      <button class="week-tab" data-week="3" onclick="toggleWeek(3)">W4<br><span>3/1</span></button>
+      <button class="week-tab" data-week="4" onclick="toggleWeek(4)">W5<br><span>3/8</span></button>
+      <button class="week-tab" data-week="5" onclick="toggleWeek(5)">W6<br><span>3/15</span></button>
+      <button class="week-tab" data-week="6" onclick="toggleWeek(6)">W7<br><span>3/22</span></button>
+      <button class="week-tab" data-week="7" onclick="toggleWeek(7)">W8<br><span>3/29</span></button>
+    </div>
   </div>
 
   <!-- OVERVIEW TAB -->
@@ -1110,37 +1119,36 @@
 // ═══ SVG Chart Functions (replacing Chart.js) ═══
 let cachedSections = null;
 // 현재 날짜 기준 최신 월 자동 감지
-// 주차 범위 자동 생성 — 2/8부터 현재 날짜까지 7일 단위 (맨 먼저 선언)
-const WEEK_DATE_RANGES = (function(){
-  var ranges = [];
-  var start = new Date(2026,1,8); // 2026-02-08
-  var today = new Date();
-  today.setHours(23,59,59,999);
-  while (start <= today) {
-    var end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    end.setHours(23,59,59,999);
-    if (end > today) end = new Date(today);
-    ranges.push({ start: new Date(start), end: end });
-    start = new Date(start);
-    start.setDate(start.getDate() + 7);
-  }
-  return ranges;
-})();
-
-// WEEK_RANGES, 현재 기간, 선택된 주차 (WEEK_DATE_RANGES 이후에 선언)
-const WEEK_RANGES = WEEK_DATE_RANGES.map(function(r, i) {
-  var sm = r.start.getMonth()+1, sd = r.start.getDate();
-  var em = r.end.getMonth()+1, ed = r.end.getDate();
-  return { label: 'W'+(i+1), start: sm+'/'+sd, end: em+'/'+ed };
-});
 const _now = new Date();
-const _curMonth = _now.getMonth() + 1;
+const _curMonth = _now.getMonth() + 1; // 1=Jan, 2=Feb, 3=Mar
 let currentPeriod = _curMonth >= 3 ? 'mar' : 'feb';
-let selectedWeeks = WEEK_DATE_RANGES.map(function(_,i){return i});
+let selectedWeeks = currentPeriod === 'mar' ? [3, 4, 5, 6, 7] : [0, 1, 2];
+
+const WEEK_RANGES = [
+  { label: 'W1', start: '2/8', end: '2/14' },
+  { label: 'W2', start: '2/15', end: '2/21' },
+  { label: 'W3', start: '2/22', end: '2/28' },
+  { label: 'W4', start: '3/1', end: '3/7' },
+  { label: 'W5', start: '3/8', end: '3/14' },
+  { label: 'W6', start: '3/15', end: '3/21' },
+  { label: 'W7', start: '3/22', end: '3/28' },
+  { label: 'W8', start: '3/29', end: '3/31' }
+];
+
+// Week date ranges for matching sales data (2026 year)
+const WEEK_DATE_RANGES = [
+  { start: new Date(2026,1,8), end: new Date(2026,1,14,23,59,59) },
+  { start: new Date(2026,1,15), end: new Date(2026,1,21,23,59,59) },
+  { start: new Date(2026,1,22), end: new Date(2026,1,28,23,59,59) },
+  { start: new Date(2026,2,1), end: new Date(2026,2,7,23,59,59) },
+  { start: new Date(2026,2,8), end: new Date(2026,2,14,23,59,59) },
+  { start: new Date(2026,2,15), end: new Date(2026,2,21,23,59,59) },
+  { start: new Date(2026,2,22), end: new Date(2026,2,28,23,59,59) },
+  { start: new Date(2026,2,29), end: new Date(2026,2,31,23,59,59) }
+];
 
 function getSalesWeeklyRevenue() {
-  var rev = WEEK_DATE_RANGES.map(function(){return 0});
+  var rev = [0,0,0,0,0,0,0,0];
   if (typeof EMBEDDED_DATA === 'undefined' || !EMBEDDED_DATA.orders) return rev;
   EMBEDDED_DATA.orders.forEach(function(o) {
     if (o.s === 'cancel' || !o.d || !o.t) return;
@@ -1175,18 +1183,9 @@ function switchTab(tab) {
 
 function switchPeriod(period) {
   currentPeriod = period;
-  // 월 기준으로 주차 자동 매핑
-  var febWeeks = [], marWeeks = [], allWeeks = [];
-  for (var i = 0; i < WEEK_DATE_RANGES.length; i++) {
-    allWeeks.push(i);
-    var m = WEEK_DATE_RANGES[i].start.getMonth();
-    if (m === 1) febWeeks.push(i);      // February
-    else if (m === 2) marWeeks.push(i);  // March
-    else if (m >= 3) marWeeks.push(i);   // April+ → latest month group
-  }
-  if (period === 'feb') selectedWeeks = febWeeks;
-  else if (period === 'mar') selectedWeeks = marWeeks;
-  else selectedWeeks = allWeeks;
+  if (period === 'feb') selectedWeeks = [0, 1, 2];
+  else if (period === 'mar') selectedWeeks = [3, 4, 5, 6, 7];
+  else selectedWeeks = [0, 1, 2, 3, 4, 5, 6, 7];
   syncPickerUI();
   if (cachedSections) { updateOverviewForPeriod(); updateMetaForPeriod(); updateTiktokForPeriod(); updateFunnelForPeriod(); }
 }
@@ -1214,36 +1213,22 @@ function syncPickerUI() {
   document.querySelectorAll('.period-tab').forEach(b => {
     b.classList.toggle('active', b.dataset.period === currentPeriod);
   });
-  // 주차 탭 동적 생성
-  var showWeeks = (currentPeriod === 'feb' || currentPeriod === 'mar' || currentPeriod === 'custom');
+  // 월 선택 시에만 주간 버튼 노출
+  const showWeeks = (currentPeriod === 'feb' || currentPeriod === 'mar' || currentPeriod === 'custom');
+  const febWeeks = [0, 1, 2];
+  const marWeeks = [3, 4, 5, 6, 7];
   var weekRow = document.getElementById('weekTabs');
-  if (!weekRow) return;
-  weekRow.style.display = showWeeks ? '' : 'none';
-
-  // 해당 월의 주차만 필터
-  var febWeeks = [], marWeeks = [];
-  for (var i = 0; i < WEEK_DATE_RANGES.length; i++) {
-    var m = WEEK_DATE_RANGES[i].start.getMonth();
-    if (m === 1) febWeeks.push(i);
-    else marWeeks.push(i);
-  }
-  var visibleWeeks = currentPeriod === 'feb' ? febWeeks : currentPeriod === 'mar' ? marWeeks : WEEK_DATE_RANGES.map(function(_,i){return i});
-
-  var h = '';
-  visibleWeeks.forEach(function(idx) {
-    var r = WEEK_DATE_RANGES[idx];
-    var sm = r.start.getMonth()+1, sd = r.start.getDate();
-    var active = selectedWeeks.includes(idx) ? ' active' : '';
-    h += '<button class="week-tab'+active+'" data-week="'+idx+'" onclick="toggleWeek('+idx+')">W'+(idx+1)+'<br><span>'+sm+'/'+sd+'</span></button>';
+  if (weekRow) weekRow.style.display = showWeeks ? '' : 'none';
+  document.querySelectorAll('.week-tab').forEach(b => {
+    const idx = parseInt(b.dataset.week);
+    b.classList.toggle('active', selectedWeeks.includes(idx));
+    if (currentPeriod === 'feb') b.style.display = febWeeks.includes(idx) ? '' : 'none';
+    else if (currentPeriod === 'mar') b.style.display = marWeeks.includes(idx) ? '' : 'none';
+    else b.style.display = '';
   });
-  weekRow.innerHTML = h;
 }
 
-const weekLabels = WEEK_DATE_RANGES.map(function(r, i) {
-  var sm = r.start.getMonth()+1, sd = r.start.getDate();
-  var em = r.end.getMonth()+1, ed = r.end.getDate();
-  return 'W'+(i+1)+' ('+sm+'/'+sd+'-'+ed+')';
-});
+const weekLabels = ['W1 (2/8-14)', 'W2 (2/15-21)', 'W3 (2/22-28)', 'W4 (3/1-7)', 'W5 (3/8-14)', 'W6 (3/15-21)', 'W7 (3/22-28)', 'W8 (3/29-31)'];
 
 /* ═══ SVG Line Chart — Premium layered glass style (from Sales Dashboard) ═══ */
 function buildLineChart(labels, datasets, opts) {
