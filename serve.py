@@ -814,6 +814,7 @@ def fetch_shopify_orders(config):
             "c": cname,
             "ch": "shopify_direct",
             "src": src,
+            "order_name": o.get("name", ""),
             "st": state,
             "ct": city,
             "g": infer_gender(cname),
@@ -924,19 +925,23 @@ def refresh_data():
         print(f"[GENDER] Unknown first names: {sorted(gender_unknown)}")
     print(f"[ADDR] Address stats: {addr_found} with address, {addr_missing} missing")
 
-    # Shopify D2C 주문 + 매출 분석 지표 (ERP에 없는 것만 추가 — 중복 방지)
+    # Shopify D2C 주문 + 매출 분석 지표 (ERP에 없는 것만 추가 — order name 기반 중복 방지)
     shopify_direct, shopify_analytics = fetch_shopify_orders(config)
-    erp_shopify_keys = set()
+    # ERP의 src 필드에서 "shopify #1198" 형태의 order name 추출
+    erp_order_names = set()
     for o in sales_orders:
-        if o.get("ch") == "shopify":
-            erp_shopify_keys.add((o["d"], round(o["t"], 2)))
+        src = o.get("src", "")
+        if src.startswith("shopify #") or src.startswith("Shopify #"):
+            erp_order_names.add(src.split("#")[-1].strip())
+        # shopify_direct 주문의 order_name 필드도 체크
+        if o.get("order_name"):
+            erp_order_names.add(o["order_name"].replace("#", "").strip())
     new_shopify = []
     for o in shopify_direct:
-        key = (o["d"], round(o["t"], 2))
-        if key not in erp_shopify_keys:
-            new_shopify.append(o)
-        else:
-            erp_shopify_keys.discard(key)
+        order_num = o.get("order_name", "").replace("#", "").strip()
+        if order_num and order_num in erp_order_names:
+            continue  # ERP에 이미 있음
+        new_shopify.append(o)
     sales_orders.extend(new_shopify)
     print(f"[SHOPIFY] {len(shopify_direct)} API orders, {len(new_shopify)} new (not in ERP), {len(shopify_direct) - len(new_shopify)} duplicates skipped")
 
