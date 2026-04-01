@@ -392,6 +392,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
   function getMonth(d){ return d ? d.substring(0,7) : ''; }
   function fmtMon(y){ var p=y.split('-'); return (p[0]==='2025'?"'25 ":"'26 ")+parseInt(p[1])+'월'; }
   function getWeekSunday(d){ var x=new Date(d+'T12:00:00'); x.setDate(x.getDate()-x.getDay()); return x.toISOString().substring(0,10); }
+  function getWeekMonth(sun){ var t=new Date(sun+'T12:00:00'); t.setDate(t.getDate()+4); return t.toISOString().substring(0,7); }
   function fmtWeek(s){ var a=new Date(s+'T12:00:00'),b=new Date(a); b.setDate(b.getDate()+6); return (a.getMonth()+1)+'/'+a.getDate()+' ~ '+(b.getMonth()+1)+'/'+b.getDate(); }
 
   var ALL_MONTHS=[];
@@ -407,6 +408,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
       var iso=ga4ToISO(r.date);
       var mo=getMonth(iso);
       if(mo) m[mo]=true;
+      var wm=getWeekMonth(getWeekSunday(iso));
+      if(wm) m[wm]=true;
     });
     ALL_MONTHS=Object.keys(m).sort().reverse();
     isAllMode=true;
@@ -451,8 +454,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var w={};
     (DATA.traffic_daily||[]).forEach(function(r){
       var iso=ga4ToISO(r.date);
-      if(getMonth(iso)===ym){
-        var s=getWeekSunday(iso);
+      var s=getWeekSunday(iso);
+      if(getWeekMonth(s)===ym){
         w[s]=(w[s]||0)+1;
       }
     });
@@ -493,10 +496,10 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     if(!arr) return [];
     return arr.filter(function(r){
       var iso=ga4ToISO(r.date);
+      if(!isAllWeeks){var ws=getWeekSunday(iso);return selectedWeeks.has(ws);}
+      if(isAllMode) return true;
       var mo=getMonth(iso);
-      if(!selectedMonths.has(mo)) return false;
-      if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws)) return false;}
-      return true;
+      return selectedMonths.has(mo);
     });
   }
 
@@ -660,9 +663,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var byCh={shopify:{orders:0,rev:0},shopify_direct:{orders:0,rev:0},amazon:{orders:0,rev:0},tiktok_shop:{orders:0,rev:0}};
     (ERP.orders||[]).forEach(function(o){
       if(o.s!=='sale'&&o.s!=='done') return;
-      var mo=getMonth(o.d);
-      if(!isAllMode && !selectedMonths.has(mo)) return;
       if(!isAllWeeks){var ws=getWeekSunday(o.d);if(!selectedWeeks.has(ws)) return;}
+      else if(!isAllMode){var mo=getMonth(o.d);if(!selectedMonths.has(mo)) return;}
       result.orders++;
       result.rev+=o.t;
       var ch=o.ch||'';
