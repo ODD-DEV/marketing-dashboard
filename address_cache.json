@@ -880,5 +880,11 @@
   "state": "DE",
   "zip": "19904",
   "country": "US"
+ },
+ "SO3008821": {
+  "city": "Stockton",
+  "state": "CA",
+  "zip": "95219",
+  "country": "US"
  }
 }
