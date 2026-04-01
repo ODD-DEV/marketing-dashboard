@@ -1150,8 +1150,13 @@ const WEEK_DATE_RANGES = [
 ];
 
 // 선택된 월의 전체 매출 (광고 주차와 무관하게 월 전체)
+// custom 기간에서는 선택된 주차의 날짜 범위로 매출 계산
 function getSelectedMonthRevenue() {
   if (typeof EMBEDDED_DATA === 'undefined' || !EMBEDDED_DATA.orders) return 0;
+  if (currentPeriod === 'custom') {
+    // 개별 주차 선택 시 해당 주차 날짜 범위의 매출만 합산
+    return getSelectedSalesRevenue();
+  }
   var months = currentPeriod === 'feb' ? ['2026-02'] : currentPeriod === 'mar' ? ['2026-03'] : ['2026-02','2026-03'];
   var total = 0;
   EMBEDDED_DATA.orders.forEach(function(o) {
@@ -1216,8 +1221,8 @@ function toggleWeek(idx) {
   selectedWeeks.sort();
   const s = selectedWeeks.join(',');
   if (s === '0,1,2') currentPeriod = 'feb';
-  else if (s === '3,4') currentPeriod = 'mar';
-  else if (s === '0,1,2,3,4') currentPeriod = 'total';
+  else if (s === '3,4,5,6,7') currentPeriod = 'mar';
+  else if (s === '0,1,2,3,4,5,6,7') currentPeriod = 'total';
   else currentPeriod = 'custom';
   syncPickerUI();
   if (cachedSections) { updateOverviewForPeriod(); updateMetaForPeriod(); updateTiktokForPeriod(); updateFunnelForPeriod(); }
@@ -1425,20 +1430,20 @@ var fmtNum = function(v) { return typeof v === 'number' ? v.toLocaleString() : v
 function renderInitialCharts() {
   // Overview line charts
   document.getElementById('chartWeeklySpend').innerHTML = buildLineChart(weekLabels, [
-    {id:'wm',label:'Meta',color:'#4f8df9',data:[339.83,3089.18,3653.33,1913.57,104.08]},
-    {id:'wt',label:'TikTok',color:'#ff3b5c',data:[0,0,841.03,0,0]}
+    {id:'wm',label:'Meta',color:'#4f8df9',data:[339.83,3089.18,3653.33,1913.57,104.08,0,0,0]},
+    {id:'wt',label:'TikTok',color:'#ff3b5c',data:[0,0,841.03,0,0,0,0,0]}
   ], {yFormat: fmtDollar});
   document.getElementById('chartWeeklyCTR').innerHTML = buildLineChart(weekLabels, [
-    {id:'mc',label:'Meta CTR',color:'#4f8df9',data:[5.9,7.1,4.4,2.9,0.3]},
-    {id:'tc',label:'TikTok CTR',color:'#ff3b5c',data:[0,0,0.0,0,0]}
+    {id:'mc',label:'Meta CTR',color:'#4f8df9',data:[5.9,7.1,4.4,2.9,0.3,0,0,0]},
+    {id:'tc',label:'TikTok CTR',color:'#ff3b5c',data:[0,0,0.0,0,0,0,0,0]}
   ], {yFormat: fmtPct, height:260});
   document.getElementById('chartWeeklyCVR').innerHTML = buildLineChart(weekLabels, [
-    {id:'mcv',label:'Meta CVR',color:'#4f8df9',data:[0.0,1.2,1.5,0.0,0.0]},
-    {id:'tcv',label:'TikTok CVR',color:'#ff3b5c',data:[0,0,1.0,0,0]}
+    {id:'mcv',label:'Meta CVR',color:'#4f8df9',data:[0.0,1.2,1.5,0.0,0.0,0,0,0]},
+    {id:'tcv',label:'TikTok CVR',color:'#ff3b5c',data:[0,0,1.0,0,0,0,0,0]}
   ], {yFormat: fmtPct, height:260});
   document.getElementById('chartWeekly3s').innerHTML = buildLineChart(weekLabels, [
-    {id:'m3',label:'Meta 3s+ Views',color:'#4f8df9',data:[56,101648,115425,39890,0]},
-    {id:'t3',label:'TikTok 2s+ Views',color:'#ff3b5c',data:[0,0,126670,0,0]}
+    {id:'m3',label:'Meta 3s+ Views',color:'#4f8df9',data:[56,101648,115425,39890,0,0,0,0]},
+    {id:'t3',label:'TikTok 2s+ Views',color:'#ff3b5c',data:[0,0,126670,0,0,0,0,0]}
   ], {yFormat: fmtK});
   // Spend Pie
   document.getElementById('chartSpendPie').innerHTML = buildDoughnutChart([
@@ -1446,11 +1451,11 @@ function renderInitialCharts() {
     {label:'Meta BOF',value:314.30,color:'#f97316'},{label:'TikTok TOF',value:841.03,color:'#ff3b5c'}
   ]);
   // Meta CTR
-  document.getElementById('chartMetaCTR').innerHTML = buildLineChart(['W1','W2','W3','W4','W5'], [
-    {id:'msc',label:'Meta Sum CTR',color:'#4f8df9',data:[5.9,7.1,4.4,2.9,0.3]},
-    {id:'tofc',label:'TOF CTR',color:'#38bdf8',data:[6.4,7.1,5.0,4.3,0]},
-    {id:'mofc',label:'MOF CTR',color:'#a78bfa',data:[5.3,5.4,2.5,2.3,0]},
-    {id:'bofc',label:'BOF CTR',color:'#f97316',data:[0.7,0.7,1.0,1.1,0.3]}
+  document.getElementById('chartMetaCTR').innerHTML = buildLineChart(weekLabels, [
+    {id:'msc',label:'Meta Sum CTR',color:'#4f8df9',data:[5.9,7.1,4.4,2.9,0.3,0,0,0]},
+    {id:'tofc',label:'TOF CTR',color:'#38bdf8',data:[6.4,7.1,5.0,4.3,0,0,0,0]},
+    {id:'mofc',label:'MOF CTR',color:'#a78bfa',data:[5.3,5.4,2.5,2.3,0,0,0,0]},
+    {id:'bofc',label:'BOF CTR',color:'#f97316',data:[0.7,0.7,1.0,1.1,0.3,0,0,0]}
   ], {yFormat: fmtPct});
   // Meta Video Funnel
   document.getElementById('chartVideoFunnel').innerHTML = buildLineChart(['3s+','25%','50%','75%','95%'], [
@@ -1458,11 +1463,11 @@ function renderInitialCharts() {
   ], {yFormat: fmtK});
   // Meta Video Rate
   document.getElementById('chartMetaVideoRate').innerHTML = buildLineChart(weekLabels, [
-    {id:'vr3',label:'3s+ Rate',color:'#4f8df9',data:[0,38,31,26,0]},
-    {id:'vr25',label:'25% Rate',color:'#38bdf8',data:[0,36,29,23,0]},
-    {id:'vr50',label:'50% Rate',color:'#a78bfa',data:[0,25,18,12,0]},
-    {id:'vr75',label:'75% Rate',color:'#f97316',data:[0,17,69,7,0]},
-    {id:'vr95',label:'95% Rate',color:'#f87171',data:[0,13,9,5,0]}
+    {id:'vr3',label:'3s+ Rate',color:'#4f8df9',data:[0,38,31,26,0,0,0,0]},
+    {id:'vr25',label:'25% Rate',color:'#38bdf8',data:[0,36,29,23,0,0,0,0]},
+    {id:'vr50',label:'50% Rate',color:'#a78bfa',data:[0,25,18,12,0,0,0,0]},
+    {id:'vr75',label:'75% Rate',color:'#f97316',data:[0,17,69,7,0,0,0,0]},
+    {id:'vr95',label:'95% Rate',color:'#f87171',data:[0,13,9,5,0,0,0,0]}
   ], {yFormat: fmtPct});
   // TikTok Video Completion
   document.getElementById('chartTiktokVideo').innerHTML = buildLineChart(['2s+ (54%)','25% (39%)','50% (27%)','75% (13%)','100% (6%)'], [
@@ -1581,7 +1586,7 @@ function parseSections(rows) {
   return sections;
 }
 
-const WCOLS = [14, 22, 30, 38, 46];
+const WCOLS = [14, 22, 30, 38, 46, 54, 62, 70];
 const TKCOLS = [24, 25, 26, 27, 28];
 
 function getWeekly(row) { return WCOLS.map(c => pn(row?.[c]) || 0); }
@@ -1689,7 +1694,7 @@ function updateOverviewForPeriod() {
   // Re-render SVG charts with live data
   if (S.metaSum && S.metaSum['Expense']) {
     var metaSpendW = getWeekly(S.metaSum['Expense']);
-    var tkSpendW = (S.tiktokTOF || S.tiktokSum || {})['Expense'] ? getWeekly((S.tiktokTOF || S.tiktokSum || {})['Expense']) : [0,0,0,0,0];
+    var tkSpendW = (S.tiktokTOF || S.tiktokSum || {})['Expense'] ? getWeekly((S.tiktokTOF || S.tiktokSum || {})['Expense']) : [0,0,0,0,0,0,0,0];
     document.getElementById('chartWeeklySpend').innerHTML = buildLineChart(weekLabels, [
       {id:'wm',label:'Meta',color:'#4f8df9',data:metaSpendW},
       {id:'wt',label:'TikTok',color:'#ff3b5c',data:tkSpendW}
@@ -1699,7 +1704,7 @@ function updateOverviewForPeriod() {
     var metaCTRw = getWeekly(S.metaSum['CTR(%)']).map(function(v) { return v || 0; });
     document.getElementById('chartWeeklyCTR').innerHTML = buildLineChart(weekLabels, [
       {id:'mc',label:'Meta CTR',color:'#4f8df9',data:metaCTRw},
-      {id:'tc',label:'TikTok CTR',color:'#ff3b5c',data:[0,0,0,0,0]}
+      {id:'tc',label:'TikTok CTR',color:'#ff3b5c',data:[0,0,0,0,0,0,0,0]}
     ], {yFormat: fmtPct, height:260});
   }
   // Weekly CVR
@@ -1707,13 +1712,13 @@ function updateOverviewForPeriod() {
     var metaCVRw = getWeekly(S.metaSum['Profile visit -> Follow CVR(%)']).map(function(v){return v||0;});
     document.getElementById('chartWeeklyCVR').innerHTML = buildLineChart(weekLabels, [
       {id:'mcv',label:'Meta CVR',color:'#4f8df9',data:metaCVRw},
-      {id:'tcv',label:'TikTok CVR',color:'#ff3b5c',data:[0,0,0,0,0]}
+      {id:'tcv',label:'TikTok CVR',color:'#ff3b5c',data:[0,0,0,0,0,0,0,0]}
     ], {yFormat: fmtPct, height:260});
   }
   if (S.metaSum && S.metaSum['3s+ video views']) {
     var meta3sw = getWeekly(S.metaSum['3s+ video views']);
     var ts2 = S.tiktokTOF || S.tiktokSum || {};
-    var tk3sw = (ts2['2s+ video views'] || ts2['3s+ video views']) ? getWeekly(ts2['2s+ video views'] || ts2['3s+ video views']) : [0,0,0,0,0];
+    var tk3sw = (ts2['2s+ video views'] || ts2['3s+ video views']) ? getWeekly(ts2['2s+ video views'] || ts2['3s+ video views']) : [0,0,0,0,0,0,0,0];
     document.getElementById('chartWeekly3s').innerHTML = buildLineChart(weekLabels, [
       {id:'m3',label:'Meta 3s+ Views',color:'#4f8df9',data:meta3sw},
       {id:'t3',label:'TikTok 2s+ Views',color:'#ff3b5c',data:tk3sw}
@@ -1832,10 +1837,10 @@ function updateMetaForPeriod() {
   // Re-render Meta CTR by funnel SVG
   if (ms['CTR(%)']) {
     var msCTRw = getWeekly(ms['CTR(%)']).map(function(v){return v||0;});
-    var tofCTRw = mt['CTR(%)'] ? getWeekly(mt['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0];
-    var mofCTRw = mm['CTR(%)'] ? getWeekly(mm['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0];
-    var bofCTRw = mb['CTR(%)'] ? getWeekly(mb['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0];
-    document.getElementById('chartMetaCTR').innerHTML = buildLineChart(['W1','W2','W3','W4','W5'], [
+    var tofCTRw = mt['CTR(%)'] ? getWeekly(mt['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0,0,0,0];
+    var mofCTRw = mm['CTR(%)'] ? getWeekly(mm['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0,0,0,0];
+    var bofCTRw = mb['CTR(%)'] ? getWeekly(mb['CTR(%)']).map(function(v){return v||0;}) : [0,0,0,0,0,0,0,0];
+    document.getElementById('chartMetaCTR').innerHTML = buildLineChart(weekLabels, [
       {id:'msc',label:'Meta Sum CTR',color:'#4f8df9',data:msCTRw},
       {id:'tofc',label:'TOF CTR',color:'#38bdf8',data:tofCTRw},
       {id:'mofc',label:'MOF CTR',color:'#a78bfa',data:mofCTRw},
@@ -1845,10 +1850,10 @@ function updateMetaForPeriod() {
   // Re-render Meta Video View Rate SVG
   if (ms['3s+ video views rate']) {
     var vr3w = getWeekly(ms['3s+ video views rate'] || []).map(function(v){return v||0;});
-    var vr25w = ms['25% video views rate'] ? getWeekly(ms['25% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
-    var vr50w = ms['50% video views rate'] ? getWeekly(ms['50% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
-    var vr75w = ms['75% video views rate'] ? getWeekly(ms['75% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
-    var vr95w = ms['95% video views rate'] ? getWeekly(ms['95% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0];
+    var vr25w = ms['25% video views rate'] ? getWeekly(ms['25% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0,0,0,0];
+    var vr50w = ms['50% video views rate'] ? getWeekly(ms['50% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0,0,0,0];
+    var vr75w = ms['75% video views rate'] ? getWeekly(ms['75% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0,0,0,0];
+    var vr95w = ms['95% video views rate'] ? getWeekly(ms['95% video views rate']).map(function(v){return v||0;}) : [0,0,0,0,0,0,0,0];
     document.getElementById('chartMetaVideoRate').innerHTML = buildLineChart(weekLabels, [
       {id:'vr3',label:'3s+ Rate',color:'#4f8df9',data:vr3w},
       {id:'vr25',label:'25% Rate',color:'#38bdf8',data:vr25w},
@@ -1860,14 +1865,13 @@ function updateMetaForPeriod() {
 
   const fwTable = document.querySelector('#metaFunnelWeeklyTable tbody');
   if (fwTable) {
-    const weekNames = ['W1 (2/8-14)','W2 (2/15-21)','W3 (2/22-28)','W4 (3/1-7)','W5 (3/8-14)'];
     const funnelNames = ['TOF','MOF','BOF'];
     const funnelColors = ['var(--tof-color)','var(--mof-color)','var(--bof-color)'];
     let html = '';
     sections.forEach((sec, fi) => {
       if (!sec['Expense']) return;
       const hasCVR = fi < 2;
-      for (let wi = 0; wi < 5; wi++) {
+      for (let wi = 0; wi < WCOLS.length; wi++) {
         const isSelected = selectedWeeks.includes(wi);
         const dimStyle = isSelected ? '' : ' style="opacity:0.35;"';
         const wSpend = pn(sec['Expense'][WCOLS[wi]]) || 0;
@@ -1884,7 +1888,7 @@ function updateMetaForPeriod() {
         const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : '';
         const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid rgba(255,255,255,.06);' : '';
         const bt = borderTop ? ` style="${borderTop}"` : '';
-        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>$${fn(wSpend,2)}</td><td${bt}>${fn(Math.round(wViews))}</td><td${bt}>${fn(Math.round(wClicks))}</td><td${bt}>${wCTR}</td><td${bt}>${wCPC}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wFollows))}</td><td${bt}>${wFCPA}</td>`;
+        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekLabels[wi]}</td><td${bt}>$${fn(wSpend,2)}</td><td${bt}>${fn(Math.round(wViews))}</td><td${bt}>${fn(Math.round(wClicks))}</td><td${bt}>${wCTR}</td><td${bt}>${wCPC}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wFollows))}</td><td${bt}>${wFCPA}</td>`;
         if (hasCVR) html += `<td${bt}>${w3sRate}</td><td${bt}>${wV2PV}</td><td${bt}>${w3s2PV}</td>`;
         else html += `<td${bt}>—</td><td${bt}>—</td><td${bt}>—</td>`;
         html += '</tr>';
@@ -1987,17 +1991,16 @@ function updateTiktokForPeriod() {
 
   const tkFwTable = document.querySelector('#tiktokFunnelWeeklyTable tbody');
   if (tkFwTable) {
-    const weekNames = ['W1 (2/8-14)','W2 (2/15-21)','W3 (2/22-28)','W4 (3/1-7)','W5 (3/8-14)'];
     const funnelNames = ['TOF','MOF','BOF'];
     const funnelColors = ['var(--tof-color)','var(--mof-color)','var(--bof-color)'];
     let html = '';
     tkSections.forEach((sec, fi) => {
       if (!sec['Expense']) {
-        for (let wi = 0; wi < 5; wi++) { const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : ''; const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid rgba(255,255,255,.06);' : ''; const bt = borderTop ? ` style="${borderTop}"` : ''; html += `<tr style="opacity:0.25;"><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td></tr>`; }
+        for (let wi = 0; wi < WCOLS.length; wi++) { const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : ''; const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid rgba(255,255,255,.06);' : ''; const bt = borderTop ? ` style="${borderTop}"` : ''; html += `<tr style="opacity:0.25;"><td${bt}>${fLabel}</td><td${bt}>${weekLabels[wi]}</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td><td${bt}>—</td></tr>`; }
         html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);opacity:0.25;"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td colspan="12">데이터 없음</td></tr>`;
         return;
       }
-      for (let wi = 0; wi < 5; wi++) {
+      for (let wi = 0; wi < WCOLS.length; wi++) {
         const isSelected = selectedWeeks.includes(wi);
         const dimStyle = isSelected ? '' : ' style="opacity:0.35;"';
         const wS = pn(sec['Expense'][WCOLS[wi]]) || 0;
@@ -2015,7 +2018,7 @@ function updateTiktokForPeriod() {
         const fLabel = wi === 0 ? `<span style="color:${funnelColors[fi]};font-weight:700;">${funnelNames[fi]}</span>` : '';
         const borderTop = wi === 0 && fi > 0 ? 'border-top:2px solid rgba(255,255,255,.06);' : '';
         const bt = borderTop ? ` style="${borderTop}"` : '';
-        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekNames[wi]}</td><td${bt}>$${fn(wS,2)}</td><td${bt}>${fn(Math.round(wV))}</td><td${bt}>${fn(Math.round(wR))}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wF))}</td><td${bt}>${wFCPA}</td><td${bt}>${fn(Math.round(w2s))}</td><td${bt}>${w2sRate}</td><td${bt}>${w3s2PV}</td><td${bt}>${w6sRate}</td><td${bt}>${w50Rate}</td><td${bt}>${w100Rate}</td></tr>`;
+        html += `<tr${dimStyle}><td${bt}>${fLabel}</td><td${bt}>${weekLabels[wi]}</td><td${bt}>$${fn(wS,2)}</td><td${bt}>${fn(Math.round(wV))}</td><td${bt}>${fn(Math.round(wR))}</td><td${bt}>${fn(Math.round(wPV))}</td><td${bt}>${fn(Math.round(wF))}</td><td${bt}>${wFCPA}</td><td${bt}>${fn(Math.round(w2s))}</td><td${bt}>${w2sRate}</td><td${bt}>${w3s2PV}</td><td${bt}>${w6sRate}</td><td${bt}>${w50Rate}</td><td${bt}>${w100Rate}</td></tr>`;
       }
       const tS = getSelectedSum(sec['Expense']); const tV = getSelectedSum(sec['View']); const tR = getSelectedSum(sec['Reach']); const tPV = getSelectedSum(sec['Profile visit']); const tF = getSelectedSum(sec['Follow']); const t2s = getSelectedSum(sec['2s+ video views'] || sec['3s+ video views']); const t2sRate = tV > 0 ? (t2s / tV * 100).toFixed(0) + '%' : '—'; const t3sV = getSelectedSum(sec['3s+ video views'] || sec['2s+ video views']); const t3s2PV = t3sV > 0 ? (tPV / t3sV * 100).toFixed(2) + '%' : '—'; const t6s = getSelectedSum(sec['6s+ video views']); const t6sRate = tV > 0 ? (t6s / tV * 100).toFixed(1) + '%' : '—'; const t50 = getSelectedSum(sec['50% video views']); const t50Rate = tV > 0 ? (t50 / tV * 100).toFixed(1) + '%' : '—'; const t100 = getSelectedSum(sec['100% video views']); const t100Rate = tV > 0 ? (t100 / tV * 100).toFixed(1) + '%' : '—';
       html += `<tr style="font-weight:700;background:rgba(255,255,255,0.03);"><td style="color:${funnelColors[fi]}">${funnelNames[fi]} 소계</td><td>—</td><td>$${fn(tS,2)}</td><td>${fn(Math.round(tV))}</td><td>${fn(Math.round(tR))}</td><td>${fn(Math.round(tPV))}</td><td>${fn(Math.round(tF))}</td><td>${tF > 0 ? '$'+(tS/tF).toFixed(2) : '—'}</td><td>${fn(Math.round(t2s))}</td><td>${t2sRate}</td><td>${t3s2PV}</td><td>${t6sRate}</td><td>${t50Rate}</td><td>${t100Rate}</td></tr>`;
@@ -2161,9 +2164,8 @@ function updateDashboard(rows) {
   const metaTable = document.querySelector('#metaWeeklySummaryTable tbody');
   if (metaTable && ms['Expense']) {
     const wSpend = getWeekly(ms['Expense']); const wViews = getWeekly(ms['View'] || []); const wClicks = getWeekly(ms['Click'] || []); const wCTR = ms['CTR(%)'] ? WCOLS.map(c => ms['CTR(%)'][c] || '—') : []; const wPV = getWeekly(ms['Profile visit'] || []); const wFollows = ms['Follow'] ? WCOLS.map(c => pn(ms['Follow'][c]) || 0) : []; const wFollowCVR = ms['Profile visit -> Follow CVR(%)'] ? WCOLS.map(c => ms['Profile visit -> Follow CVR(%)'][c] || '0.0%') : []; const w3s = getWeekly(ms['3s+ video views'] || []); const w3sRate = ms['3s+ video views rate'] ? WCOLS.map(c => ms['3s+ video views rate'][c] || '0%') : [];
-    const weekNames = ['W1 (2/8-14)','W2 (2/15-21)','W3 (2/22-28)','W4 (3/1-7)','W5 (3/8-14)'];
     let html = '';
-    for (let i = 0; i < 5; i++) { html += `<tr><td>${weekNames[i]}</td><td>$${fn(wSpend[i],2)}</td><td>${fn(Math.round(wViews[i]))}</td><td>${fn(Math.round(wClicks[i]))}</td><td>${wCTR[i]}</td><td>${fn(Math.round(wPV[i]))}</td><td>${fn(Math.round(wFollows[i]))}</td><td>${wFollowCVR[i]}</td><td>${fn(Math.round(w3s[i]))}</td><td>${w3sRate[i]}</td></tr>`; }
+    for (let i = 0; i < WCOLS.length; i++) { html += `<tr><td>${weekLabels[i]}</td><td>$${fn(wSpend[i],2)}</td><td>${fn(Math.round(wViews[i]))}</td><td>${fn(Math.round(wClicks[i]))}</td><td>${wCTR[i]}</td><td>${fn(Math.round(wPV[i]))}</td><td>${fn(Math.round(wFollows[i]))}</td><td>${wFollowCVR[i]}</td><td>${fn(Math.round(w3s[i]))}</td><td>${w3sRate[i]}</td></tr>`; }
     const metaCTR = metaViews > 0 ? (metaClicks / metaViews * 100) : 0;
     const metaFCVR = metaProfileVisits > 0 ? (metaFollows / metaProfileVisits * 100).toFixed(1) + '%' : '—';
     const metaVR = metaViews > 0 ? (meta3s / metaViews * 100).toFixed(0) + '%' : '—';
