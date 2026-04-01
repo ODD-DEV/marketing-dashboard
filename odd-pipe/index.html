@@ -1,0 +1,3975 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ODD Pipe — Visual Asset Pipeline</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Warm dark palette */
+  --bg-0: #0d0c0b;
+  --bg-1: #131211;
+  --bg-2: #1a1918;
+  --bg-3: #211f1e;
+  --bg-4: #2a2826;
+  --bg-inspector: #14130f;
+
+  /* Text */
+  --text-0: #f5f0eb;
+  --text-1: #c8c2b8;
+  --text-2: #8a8478;
+  --text-3: #5c5750;
+  --text-4: #3d3a35;
+
+  /* Accents */
+  --red: #e03e3e;
+  --red-dim: rgba(224, 62, 62, 0.12);
+  --red-glow: rgba(224, 62, 62, 0.25);
+  --green: #3ecf8e;
+  --green-dim: rgba(62, 207, 142, 0.12);
+  --amber: #f0b429;
+  --amber-dim: rgba(240, 180, 41, 0.10);
+  --blue: #5b9cf4;
+
+  /* Borders */
+  --border-subtle: rgba(255, 245, 230, 0.04);
+  --border-light: rgba(255, 245, 230, 0.07);
+  --border-medium: rgba(255, 245, 230, 0.10);
+
+  /* Liquid Glass */
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shine: rgba(255, 255, 255, 0.06);
+  --glass-blur: 12px;
+
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 12px;
+
+  /* Font */
+  --font: 'Inter', -apple-system, 'Pretendard', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text-1);
+  background: var(--bg-0);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════ */
+.header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(18, 16, 14, 0.6);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  z-index: 50;
+}
+
+/* Warm gradient accent line under header */
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(240, 180, 41, 0.15) 20%,
+    rgba(224, 62, 62, 0.25) 50%,
+    rgba(240, 180, 41, 0.15) 80%,
+    transparent 100%
+  );
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-0);
+}
+.logo span { color: var(--red); }
+
+.mode-tabs {
+  display: flex; gap: 1px; margin-left: 16px;
+  background: rgba(224, 62, 62, 0.06); border-radius: 12px; padding: 3px;
+  border: 1px solid rgba(224, 62, 62, 0.12);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.mode-tab {
+  padding: 5px 20px; border-radius: 9px; font-size: 11px; font-weight: 500;
+  font-family: var(--font); border: none; cursor: pointer;
+  color: rgba(255,255,255,0.35); background: transparent; transition: all 0.25s;
+  letter-spacing: 0.02em;
+}
+.mode-tab.active {
+  background: rgba(224, 62, 62, 0.55);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(224, 62, 62, 0.2), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.mode-tab:not(.active):hover { color: rgba(255,255,255,0.6); background: rgba(224, 62, 62, 0.08); }
+
+/* Edit mode */
+.edit-layout {
+  max-width: 560px; margin: 0 auto; padding: 16px;
+}
+.edit-container { display: flex; flex-direction: column; gap: 16px; }
+.edit-model-btn {
+  padding: 4px 10px; border-radius: 5px; font-size: 10px; font-family: var(--font);
+  border: 1px solid var(--border); background: transparent; color: var(--text-4); cursor: pointer;
+  transition: all 0.15s;
+}
+.edit-model-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text-1); }
+.edit-model-btn.active { border-color: var(--red); background: rgba(224,62,62,0.12); color: var(--red); font-weight: 600; }
+
+.edit-analysis-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; margin-bottom: 4px;
+  background: rgba(255,255,255,0.02); border-radius: 6px;
+  font-size: 11px; color: var(--text-3);
+}
+.edit-analysis-item .move-btn {
+  margin-left: auto; cursor: pointer; color: var(--text-4); font-size: 9px;
+  padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); background: none;
+  font-family: var(--font);
+}
+.edit-analysis-item .move-btn:hover { color: var(--amber); border-color: var(--amber); }
+
+.header-badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.learning-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-2);
+  background: var(--amber-dim);
+  border: 1px solid rgba(240, 180, 41, 0.08);
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+.learning-badge .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(240, 180, 41, 0.4);
+}
+.learning-badge strong {
+  font-weight: 600;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.header-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: transparent;
+}
+.header-icon:hover {
+  border-color: var(--border-medium);
+  color: var(--text-2);
+  background: var(--border-subtle);
+}
+
+/* ═══════════════════════════════════════════
+   MAIN LAYOUT
+   ═══════════════════════════════════════════ */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - 48px);
+  padding-bottom: 72px; /* space for floating bar */
+}
+
+/* ═══════════════════════════════════════════
+   LEFT PANEL — WORKSPACE
+   ═══════════════════════════════════════════ */
+.workspace {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 48px - 72px);
+}
+
+/* --- Liquid Glass Card --- */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px;
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  position: relative;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 40%, rgba(255,255,255,0.01) 100%);
+  pointer-events: none;
+}
+
+/* --- Section Label --- */
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label .accent {
+  width: 3px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--red), var(--amber));
+}
+
+/* --- Brief Textarea --- */
+.brief-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text-0);
+  font-size: 13.5px;
+  line-height: 1.65;
+  height: 100px;
+  resize: none;
+  font-family: var(--font);
+  transition: all 0.2s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+  outline: none;
+}
+.brief-textarea:focus,
+.brief-textarea.focused {
+  border-color: rgba(224, 62, 62, 0.25);
+  box-shadow:
+    0 0 0 3px rgba(224, 62, 62, 0.06),
+    inset 0 0 20px rgba(224, 62, 62, 0.03);
+}
+.brief-textarea::placeholder { color: var(--text-4); }
+
+/* --- Reference Zone --- */
+.ref-zone {
+  margin-top: 10px;
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+}
+.ref-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(224,62,62,0.03), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.ref-zone.drag-active {
+  border-color: rgba(224, 62, 62, 0.3);
+  background: rgba(224, 62, 62, 0.04);
+}
+.ref-zone.drag-active::before { opacity: 1; }
+
+.ref-icon {
+  font-size: 20px;
+  color: var(--text-4);
+  margin-bottom: 6px;
+  display: block;
+}
+.ref-text {
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+.ref-text .key {
+  display: inline-block;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-light);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 9px;
+  margin: 0 2px;
+  color: var(--text-2);
+}
+.ref-modes {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  justify-content: center;
+}
+.ref-mode-btn {
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font);
+}
+.ref-mode-btn.active {
+  border-color: rgba(224, 62, 62, 0.25);
+  color: var(--text-1);
+  background: var(--red-dim);
+}
+
+/* --- Sub Brief (Detail Fields) --- */
+.detail-section {
+  margin-top: 12px;
+}
+.detail-toggle {
+  font-size: 11px;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  transition: color 0.15s;
+}
+.detail-toggle:hover { color: var(--text-2); }
+.detail-toggle .arrow {
+  font-size: 8px;
+  transition: transform 0.2s;
+}
+.detail-toggle.open .arrow { transform: rotate(180deg); }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.detail-field {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(13, 12, 11, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.detail-field:hover { border-color: var(--border-light); }
+.detail-field.full { grid-column: 1 / -1; }
+
+.field-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  padding: 7px 0 7px 10px;
+  white-space: nowrap;
+  min-width: 42px;
+}
+
+.field-input {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 7px 10px;
+  color: var(--text-1);
+  font-size: 11px;
+  font-family: var(--font);
+  outline: none;
+}
+.field-input:focus { background: rgba(255,255,255,0.04); }
+.field-input:-webkit-autofill,
+.field-input:-webkit-autofill:hover,
+.field-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(13,12,11,0.95) inset !important;
+  -webkit-text-fill-color: var(--text-1) !important;
+  caret-color: var(--text-1);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* --- Results Area --- */
+.results-area {
+  flex: 1;
+}
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.result-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.2s;
+  position: relative;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+}
+.result-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.result-image {
+  width: 100%;
+  aspect-ratio: 4/5;
+  position: relative;
+  overflow: hidden;
+}
+.result-image.img-1 {
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(240, 180, 41, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 70%, rgba(224, 62, 62, 0.06) 0%, transparent 50%),
+    linear-gradient(165deg, #1f1d1a 0%, #14130f 40%, #1a1715 100%);
+}
+.result-image.img-2 {
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(91, 156, 244, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 80%, rgba(62, 207, 142, 0.05) 0%, transparent 50%),
+    linear-gradient(165deg, #18191c 0%, #111214 40%, #171819 100%);
+}
+
+/* Fake content inside result images */
+.result-image .silhouette {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.result-image .silhouette svg {
+  width: 80px;
+  height: 100px;
+  opacity: 0.06;
+}
+
+.result-image .img-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 12px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.5));
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.img-badge {
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--text-1);
+}
+
+.result-footer {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.result-model-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.model-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.model-dot.nbp { background: #f0b429; box-shadow: 0 0 6px rgba(240,180,41,0.4); }
+.model-dot.flux { background: #5b9cf4; box-shadow: 0 0 6px rgba(91,156,244,0.4); }
+
+.result-time {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-3);
+}
+
+.result-actions {
+  display: flex;
+  gap: 4px;
+}
+.action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.12s;
+}
+.action-btn:hover {
+  border-color: var(--border-medium);
+  color: var(--text-1);
+  background: var(--border-subtle);
+}
+.action-btn.save {
+  border-color: rgba(62, 207, 142, 0.15);
+  color: var(--green);
+}
+.action-btn.save:hover {
+  background: var(--green-dim);
+  border-color: rgba(62, 207, 142, 0.25);
+}
+
+/* ═══════════════════════════════════════════
+   RIGHT PANEL — INSPECTOR
+   ═══════════════════════════════════════════ */
+.inspector {
+  background: var(--bg-inspector);
+  border-left: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  max-height: calc(100vh - 48px - 72px);
+  overflow: hidden;
+}
+/* Subtle left-edge highlight */
+.inspector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(240,180,41,0.08) 30%, rgba(224,62,62,0.08) 70%, transparent);
+}
+
+/* --- Inspector Tabs --- */
+.inspector-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  background: var(--bg-inspector);
+  z-index: 5;
+}
+
+.inspector-tab {
+  padding: 12px 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-4);
+  text-align: center;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  position: relative;
+}
+.inspector-tab:hover { color: var(--text-2); }
+.inspector-tab.active {
+  color: var(--text-0);
+  border-bottom-color: var(--red);
+}
+.inspector-tab.active::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 4px;
+  background: var(--red);
+  filter: blur(6px);
+  opacity: 0.4;
+}
+
+/* --- Inspector Body --- */
+.inspector-body {
+  padding: 16px 18px 24px;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+.inspector-tab-content { display: none; }
+.inspector-tab-content.active { display: block; }
+
+/* --- Presets as Mood Boards --- */
+.presets-section { margin-bottom: 20px; }
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.preset-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(6px);
+}
+.preset-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.preset-card.active {
+  border-color: rgba(224, 62, 62, 0.3);
+  box-shadow: 0 0 16px rgba(224, 62, 62, 0.08);
+}
+
+.preset-visual {
+  height: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.preset-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 40%, rgba(13,12,11,0.5));
+}
+
+.preset-info {
+  padding: 7px 10px;
+  background: var(--bg-2);
+}
+.preset-name {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+.preset-meta {
+  font-size: 8px;
+  font-family: var(--mono);
+  color: var(--text-4);
+  margin-top: 1px;
+}
+
+/* --- Category Rows --- */
+.category-group {
+  margin-bottom: 8px;
+}
+.category-group-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  margin: 0 -10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.cat-row:hover { background: rgba(255,245,230,0.02); }
+.cat-row.expanded { background: rgba(255,245,230,0.02); }
+
+.cat-label {
+  font-size: 11px;
+  color: var(--text-2);
+}
+.cat-value {
+  font-size: 11px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cat-value.has-value { color: var(--text-0); }
+.cat-value .chevron {
+  font-size: 7px;
+  opacity: 0.4;
+  transition: transform 0.2s;
+}
+.cat-row.expanded .cat-value .chevron { transform: rotate(180deg); }
+
+/* --- Chips Grid --- */
+.chips-container {
+  padding: 8px 0 12px;
+}
+
+.chip-group-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  margin: 10px 0 6px;
+}
+.chip-group-label:first-child { margin-top: 0; }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chip {
+  font-size: 10px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(6px);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font);
+}
+.chip:hover {
+  border-color: var(--border-medium);
+  color: var(--text-1);
+  background: rgba(255,245,230,0.02);
+}
+.chip.active {
+  border-color: rgba(224, 62, 62, 0.35);
+  color: var(--text-0);
+  background: var(--red-dim);
+  box-shadow: 0 0 10px rgba(224, 62, 62, 0.08);
+}
+
+/* --- Slider --- */
+.slider-section {
+  padding: 12px 0;
+}
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.slider-label {
+  font-size: 11px;
+  color: var(--text-2);
+}
+.slider-value {
+  font-size: 12px;
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text-0);
+}
+
+.slider-track-wrap {
+  position: relative;
+  padding: 8px 0;
+}
+.slider-track {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #c47a2a, #e8d5b0 45%, #6b9ed6);
+  position: relative;
+}
+.slider-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-0);
+  border: 2.5px solid var(--bg-0);
+  box-shadow: 0 0 0 1.5px rgba(255,245,230,0.15), 0 2px 8px rgba(0,0,0,0.3);
+  position: absolute;
+  top: 50%;
+  left: 45%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+.slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.slider-tick {
+  font-size: 8px;
+  font-family: var(--mono);
+  color: var(--text-4);
+}
+
+/* --- Toggle --- */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+.toggle-label {
+  font-size: 11px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.toggle-switch {
+  width: 34px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--bg-4);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-switch.on { background: var(--red); }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-0);
+  top: 2px;
+  left: 2px;
+  transition: left 0.15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.toggle-switch.on::after { left: 18px; }
+
+/* ═══════════════════════════════════════════
+   FLOATING GENERATE BAR
+   ═══════════════════════════════════════════ */
+.floating-bar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 28px;
+  background: rgba(20, 18, 16, 0.6);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Top accent glow */
+.floating-bar::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 5%,
+    rgba(240,180,41,0.12) 25%,
+    rgba(224,62,62,0.2) 50%,
+    rgba(240,180,41,0.12) 75%,
+    transparent 95%
+  );
+}
+/* Top glow bloom */
+.floating-bar::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 10%;
+  right: 10%;
+  height: 12px;
+  background: linear-gradient(180deg, transparent, rgba(224,62,62,0.03));
+  pointer-events: none;
+}
+
+.bar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-chip {
+  font-size: 10px;
+  font-family: var(--mono);
+  font-weight: 500;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.status-dot.green {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(62,207,142,0.5);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+.status-dot.amber {
+  background: var(--amber);
+  box-shadow: 0 0 8px rgba(240,180,41,0.5);
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 6px rgba(62,207,142,0.4); }
+  50% { box-shadow: 0 0 12px rgba(62,207,142,0.6); }
+}
+
+.bar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-light);
+  margin: 0 4px;
+}
+
+.active-count {
+  font-size: 10px;
+  font-family: var(--mono);
+  font-weight: 500;
+  padding: 6px 14px;
+  background: var(--red-dim);
+  border: 1px solid rgba(224, 62, 62, 0.12);
+  border-radius: var(--r-sm);
+  color: var(--red);
+}
+
+.model-indicators {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(255,245,230,0.03);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-sm);
+}
+.model-ind {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.model-ind.on { box-shadow: 0 0 6px currentColor; }
+.model-ind.nbp { background: #f0b429; color: #f0b429; }
+.model-ind.flux { background: #5b9cf4; color: #5b9cf4; }
+.model-ind.hf { background: #a78bfa; color: #a78bfa; }
+.model-ind.off { background: var(--text-4); opacity: 0.3; }
+.model-label {
+  font-size: 8px;
+  color: var(--text-3);
+  margin-left: 4px;
+  font-family: var(--mono);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+/* --- Stop Button --- */
+.stop-btn {
+  height: 42px;
+  min-width: 80px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.stop-btn:hover { background: rgba(255,60,60,0.2); border-color: rgba(255,60,60,0.4); color: #ff6b6b; }
+
+/* --- Generate Button --- */
+.generate-btn {
+  height: 42px;
+  min-width: 200px;
+  background: rgba(224, 62, 62, 0.65);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255, 100, 100, 0.25);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  letter-spacing: -0.01em;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 4px 20px rgba(224, 62, 62, 0.2),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: btn-pulse 3s ease-in-out infinite;
+}
+.generate-btn:hover {
+  background: rgba(224, 62, 62, 0.75);
+  box-shadow:
+    0 6px 32px rgba(224, 62, 62, 0.3),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+.generate-btn .kbd {
+  font-size: 10px;
+  font-family: var(--mono);
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+/* Shimmer animation */
+.generate-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { left: -100%; }
+  50% { left: 150%; }
+}
+
+@keyframes btn-pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(224,62,62,0.2), inset 0 1px 0 rgba(255,255,255,0.1); }
+  50% { box-shadow: 0 4px 24px rgba(224,62,62,0.28), inset 0 1px 0 rgba(255,255,255,0.1); }
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-medium); }
+
+/* ═══════════════════════════════════════════
+   FUNCTIONAL STYLES
+   ═══════════════════════════════════════════ */
+
+/* --- Placement --- */
+.placement-section { margin-top: 0; }
+.placement-canvas-wrap { position: relative; border: 1px solid var(--border-medium); border-radius: var(--r-md); overflow: hidden; background: var(--bg-2); max-width: 200px; }
+.placement-canvas { width: 100%; aspect-ratio: 9/16; position: relative; cursor: crosshair; user-select: none; touch-action: none; background-color: rgba(255,255,255,.02); }
+.placement-grid-line-h, .placement-grid-line-v { position: absolute; background: rgba(255,255,255,.06); pointer-events: none; }
+.placement-grid-line-h { left: 0; right: 0; height: 1px; }
+.placement-grid-line-v { top: 0; bottom: 0; width: 1px; }
+.placement-box { position: absolute; border: 2px solid var(--red); background: rgba(224,62,62,.1); border-radius: 4px; cursor: move; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text-2); font-weight: 600; pointer-events: all; letter-spacing: .05em; }
+.placement-box .resize-handle { position: absolute; right: -4px; bottom: -4px; width: 12px; height: 12px; background: var(--red); border-radius: 2px; cursor: nwse-resize; }
+.placement-info { font-size: 10px; color: var(--text-4); padding: 6px 8px; background: rgba(0,0,0,.3); display: flex; justify-content: space-between; align-items: center; }
+
+/* --- Model Selector --- */
+.model-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.model-chip { padding: 8px 14px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(8px); color: var(--text-3); font-size: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; font-family: var(--font); }
+.model-chip:hover { border-color: rgba(255,255,255,0.15); color: var(--text-0); background: rgba(255,255,255,0.06); box-shadow: 0 2px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
+.model-chip.selected { border-color: var(--red); color: var(--text-0); background: rgba(224,62,62,0.1); box-shadow: 0 0 12px rgba(224,62,62,0.15), inset 0 1px 0 rgba(255,255,255,0.05); }
+/* Duration sliders per video model */
+.vid-duration {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px; margin-top: 4px;
+  background: rgba(255,255,255,0.02); border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.dur-label { font-size: 9px; color: var(--text-4); font-weight: 600; min-width: 65px; letter-spacing: 0.02em; }
+.dur-slider {
+  flex: 1; -webkit-appearance: none; appearance: none; height: 3px;
+  background: rgba(255,255,255,0.1); border-radius: 2px; outline: none; cursor: pointer;
+}
+.dur-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--red); border: 2px solid rgba(255,255,255,0.2); cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.dur-value { font-size: 11px; font-weight: 600; color: var(--text-1); min-width: 24px; text-align: right; font-family: var(--mono); }
+
+.model-chip .chip-icon { font-size: 13px; }
+.model-chip .chip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-4); transition: all .3s ease; }
+.model-chip .chip-dot.on { background: var(--green); box-shadow: 0 0 6px rgba(62,207,142,0.4); animation: pulse-green 2s ease-in-out infinite; }
+
+/* --- Range Input --- */
+input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: linear-gradient(to right, #f97316, #fbbf24, #fef3c7, #e0e7ff, #93c5fd, #60a5fa); outline: none; cursor: pointer; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text-0); border: 2px solid var(--bg-0); box-shadow: 0 0 4px rgba(0,0,0,.4); cursor: grab; }
+input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; }
+
+/* --- Generate Button States --- */
+.generate-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.generate-btn.loading { background: var(--bg-2) !important; border: 1px solid var(--border-light); color: var(--text-3); animation: shimmer 2s infinite !important; }
+
+/* --- Result Cards (Functional) --- */
+#results { display: flex; flex-direction: column; gap: 12px; }
+#results .ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.result-header { padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; }
+.result-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.result-label { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.result-badge { margin-left: auto; font-size: 10px; color: var(--text-3); background: rgba(255,255,255,.05); padding: 3px 10px; border-radius: 100px; }
+.result-body { padding: 12px; }
+.result-body img, .result-body video { width: 100%; border-radius: var(--r-md); display: block; }
+.result-body pre { font-size: 11px; color: var(--text-3); white-space: pre-wrap; word-break: break-word; line-height: 1.5; background: rgba(0,0,0,.3); padding: 12px; border-radius: var(--r-sm); max-height: 200px; overflow-y: auto; }
+.router-card { background: rgba(139,92,246,.04); border-color: rgba(139,92,246,.12); }
+.router-info { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+.router-model { font-weight: 700; color: var(--text-0); }
+.router-reason { color: var(--text-3); font-size: 12px; margin-top: 4px; }
+
+/* --- Spinner & Progress --- */
+.spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border-light); border-top-color: var(--red); border-radius: 50%; animation: spin .8s linear infinite; }
+.progress-text { font-size: 13px; color: var(--text-3); margin-top: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* --- Prompt Toggle --- */
+.prompt-toggle { font-size: 12px; color: var(--text-3); cursor: pointer; background: none; border: none; font-family: var(--font); padding: 4px 0; transition: color 0.15s; }
+.prompt-toggle:hover { color: var(--text-1); }
+.prompt-content { display: none; margin-top: 8px; }
+.prompt-content.open { display: block; }
+
+/* --- History --- */
+.history-section { margin-top: 32px; border-top: 1px solid var(--border-subtle); padding-top: 24px; }
+.history-title { font-size: 11px; color: var(--text-4); font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: .06em; }
+.history-item { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: var(--r-sm); cursor: pointer; transition: background 0.15s; margin-bottom: 4px; }
+.history-item:hover { background: rgba(255,245,230,.02); }
+.history-thumb { width: 48px; height: 48px; border-radius: var(--r-sm); object-fit: cover; background: var(--bg-4); }
+.history-meta { flex: 1; min-width: 0; }
+.history-brief { font-size: 13px; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-model { font-size: 11px; color: var(--text-3); }
+
+/* --- Rating Buttons --- */
+.rating-row { display: flex; gap: 6px; padding: 10px 20px 14px; align-items: center; flex-wrap: wrap; }
+.rate-btn { font-size: 12px; padding: 6px 12px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(8px); cursor: pointer; transition: all 0.15s; color: var(--text-3); font-family: var(--font); display: flex; align-items: center; gap: 4px; }
+.rate-btn:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.15); transform: translateY(-1px); }
+.rate-btn.active-save { border-color: var(--green); background: rgba(62,207,142,.15); color: var(--green); }
+.rate-btn.active-ok { border-color: var(--amber); background: rgba(240,180,41,.1); color: var(--amber); }
+.rate-btn.active-flag { border-color: var(--red); background: rgba(224,62,62,.12); color: var(--red); }
+
+/* --- Settings Modal --- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 200; display: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.modal-overlay.open { display: flex; align-items: center; justify-content: center; }
+.modal { background: rgba(20,20,20,0.95); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border-medium); border-radius: var(--r-lg); padding: 28px; width: 90%; max-width: 440px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.modal h3 { font-size: 16px; margin-bottom: 20px; font-weight: 600; color: var(--text-0); }
+.modal-section { font-size: 10px; color: var(--text-4); text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 10px; font-weight: 600; }
+.modal-field { margin-bottom: 14px; }
+.modal-field label { font-size: 13px; color: var(--text-2); display: block; margin-bottom: 6px; }
+.modal-field input { width: 100%; background: var(--bg-1); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 11px 14px; color: var(--text-0); font-size: 13px; font-family: var(--font); outline: none; transition: border-color 0.2s; min-height: 44px; }
+.modal-field input:focus { border-color: rgba(224,62,62,0.3); box-shadow: 0 0 0 2px rgba(224,62,62,0.08); }
+.modal-field .hint { font-size: 11px; color: var(--text-4); margin-top: 4px; }
+.modal-save { width: 100%; margin-top: 20px; padding: 13px; border-radius: var(--r-md); border: none; background: linear-gradient(135deg, #e03e3e, #c03030); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: all 0.15s; }
+.modal-save:hover { box-shadow: 0 4px 16px rgba(224,62,62,0.25); }
+.modal-close { position: absolute; right: 20px; top: 20px; background: none; border: 1px solid var(--border-light); border-radius: var(--r-sm); color: var(--text-3); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.modal-close:hover { border-color: var(--border-medium); color: var(--text-0); }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — DESKTOP WIDE (1400px+)
+   ═══════════════════════════════════════════ */
+@media (min-width: 1400px) {
+  .layout { grid-template-columns: 1fr 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — DESKTOP (1024-1399px)
+   ═══════════════════════════════════════════ */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .layout { grid-template-columns: 1fr 1fr; }
+  .workspace { padding: 16px 20px; }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — TABLET (768-1023px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-bottom: 80px;
+  }
+  .workspace {
+    max-height: none;
+    overflow-y: visible;
+    padding: 16px;
+  }
+  .inspector {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+    max-height: none;
+    overflow: visible;
+  }
+  .inspector-body {
+    max-height: none;
+    overflow-y: visible;
+    padding-bottom: 500px;
+  }
+  .inspector-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .glass-card { padding: 14px; }
+  .detail-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .results-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .presets-grid { grid-template-columns: repeat(3, 1fr); }
+  .floating-bar { padding: 0 16px; gap: 8px; }
+  .generate-btn { min-width: 160px; font-size: 13px; }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — MOBILE (< 768px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .header { padding: 0 12px; height: 44px; }
+  .logo { font-size: 13px; }
+  .header-badge { display: none; }
+  .learning-badge { font-size: 9px; padding: 3px 8px; }
+
+  .layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-bottom: 72px;
+  }
+  .workspace {
+    padding: 12px;
+    max-height: none;
+    overflow-y: visible;
+    gap: 12px;
+  }
+  .inspector {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+    max-height: none;
+    overflow: visible;
+  }
+  .inspector-body {
+    padding: 12px 14px 500px;
+    max-height: none;
+    overflow-y: visible;
+  }
+  .inspector-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .inspector-tab { font-size: 10px; padding: 10px 2px 8px; }
+
+  .glass-card { padding: 12px; border-radius: var(--r-md); }
+  .brief-textarea { height: 80px; font-size: 13px; padding: 12px; }
+  .section-label { font-size: 9px; margin-bottom: 8px; }
+
+  .ref-zone { padding: 12px; }
+  .ref-text { font-size: 10px; }
+  .ref-mode-btn { font-size: 9px; padding: 3px 10px; }
+
+  .detail-section { margin-top: 8px; }
+  .detail-grid { grid-template-columns: 1fr; gap: 4px; }
+  .detail-field.full { grid-column: 1; }
+  .field-label { font-size: 8px; padding: 6px 0 6px 8px; min-width: 36px; }
+  .field-input { font-size: 10px; padding: 6px 8px; }
+
+  .placement-canvas-wrap { max-width: 160px; }
+
+  .results-grid { grid-template-columns: 1fr; gap: 10px; }
+  .result-card { border-radius: var(--r-md); }
+
+  .presets-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .preset-name { font-size: 9px; }
+  .preset-meta { font-size: 7px; }
+  .preset-visual { height: 32px; }
+  .preset-info { padding: 5px 8px; }
+
+  .category-group-title { font-size: 8px; margin: 12px 0 6px; }
+  .cat-row { padding: 7px 8px; margin: 0 -8px; }
+  .cat-label { font-size: 10px; }
+  .cat-value { font-size: 10px; }
+  .chip { font-size: 9px; padding: 4px 10px; }
+  .chip-group-label { font-size: 8px; }
+
+  .slider-label { font-size: 10px; }
+  .slider-value { font-size: 11px; }
+  .slider-tick { font-size: 7px; }
+
+  .model-chip { font-size: 11px; padding: 6px 12px; }
+  .model-row { gap: 5px; }
+
+  .floating-bar {
+    height: 56px;
+    padding: 0 10px;
+    gap: 6px;
+  }
+  .bar-chip { font-size: 9px; padding: 4px 10px; }
+  .bar-divider { height: 20px; }
+  .active-count { font-size: 9px; padding: 4px 10px; }
+  .model-indicators { padding: 4px 8px; }
+  .generate-btn {
+    height: 38px;
+    min-width: 120px;
+    font-size: 13px;
+    border-radius: var(--r-sm);
+  }
+  .generate-btn .kbd { display: none; }
+
+  .history-section { margin-top: 20px; padding-top: 16px; }
+  .history-item { padding: 8px; }
+  .history-thumb { width: 40px; height: 40px; }
+  .history-brief { font-size: 12px; }
+
+  .rating-row { padding: 8px 12px 10px; gap: 4px; }
+  .rate-btn { font-size: 11px; padding: 5px 10px; }
+
+  .modal { padding: 20px; width: 95%; }
+  .modal h3 { font-size: 15px; }
+  .modal-field input { padding: 10px 12px; font-size: 12px; min-height: 40px; }
+
+  .toggle-row { padding: 6px 0; }
+  .toggle-label { font-size: 10px; }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — SMALL MOBILE (< 400px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .floating-bar { gap: 4px; padding: 0 6px; }
+  .bar-chip { padding: 3px 6px; font-size: 8px; }
+  .bar-divider { display: none; }
+  .model-indicators { display: none; }
+  .generate-btn { min-width: 100px; font-size: 12px; }
+  .presets-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── AUTH GATE ─── -->
+<div id="authGate" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity 0.3s">
+  <div style="font-family:var(--font);color:var(--text-1);font-size:22px;font-weight:700;letter-spacing:-0.02em">
+    <span style="color:var(--red)">ODD</span> <span style="font-weight:400">Pipe</span>
+  </div>
+  <div style="color:var(--text-4);font-size:13px">@hanah1.com 계정으로 로그인해주세요</div>
+  <div id="g_id_onload"
+    data-client_id="74549778864-2bdku5f4vlh0cg3f13jndhomacfcugbj.apps.googleusercontent.com"
+    data-callback="handleGoogleAuth"
+    data-auto_prompt="true"
+    data-auto_select="true"
+    data-itp_support="true"
+    data-context="signin"
+    data-ux_mode="popup"
+    data-login_uri="https://odd-pipe.pages.dev">
+  </div>
+  <div class="g_id_signin"
+    data-type="standard"
+    data-shape="pill"
+    data-theme="filled_black"
+    data-text="signin_with"
+    data-size="large"
+    data-logo_alignment="left"
+    data-width="280">
+  </div>
+  <div id="authError" style="color:var(--red);font-size:12px;display:none"></div>
+</div>
+
+<script>
+const ALLOWED_DOMAIN = 'hanah1.com';
+
+function handleGoogleAuth(response) {
+  try {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const email = payload.email || '';
+    const domain = email.split('@')[1];
+
+    if (domain !== ALLOWED_DOMAIN) {
+      const errEl = document.getElementById('authError');
+      errEl.textContent = `${email} — @${ALLOWED_DOMAIN} 계정만 사용 가능합니다.`;
+      errEl.style.display = 'block';
+      return;
+    }
+
+    // Auth success — save token and hide gate
+    sessionStorage.setItem('odd_pipe_auth', JSON.stringify({
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture,
+      exp: payload.exp,
+      token: response.credential
+    }));
+
+    const gate = document.getElementById('authGate');
+    gate.style.opacity = '0';
+    setTimeout(() => { gate.style.display = 'none'; }, 300);
+
+    // Show user info in header if element exists
+    const userEl = document.getElementById('authUserInfo');
+    if (userEl) {
+      userEl.innerHTML = `<img src="${payload.picture}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle"> <span style="font-size:11px;color:var(--text-3)">${payload.name}</span>`;
+      userEl.style.display = 'flex';
+    }
+  } catch (e) {
+    console.error('[Auth] Token parse error:', e);
+  }
+}
+
+// Check existing session on load
+(function checkAuth() {
+  const stored = sessionStorage.getItem('odd_pipe_auth');
+  if (stored) {
+    try {
+      const auth = JSON.parse(stored);
+      const now = Math.floor(Date.now() / 1000);
+      if (auth.exp && auth.exp > now && auth.email?.endsWith('@' + ALLOWED_DOMAIN)) {
+        // Still valid — hide gate immediately (no flash)
+        const gate = document.getElementById('authGate');
+        gate.style.display = 'none';
+        // Restore user info after DOM loads
+        window.addEventListener('DOMContentLoaded', () => {
+          const userEl = document.getElementById('authUserInfo');
+          if (userEl) {
+            userEl.innerHTML = `<img src="${auth.picture}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle"> <span style="font-size:11px;color:var(--text-3)">${auth.name}</span>`;
+            userEl.style.display = 'flex';
+          }
+        });
+        return;
+      }
+    } catch(e) {}
+    sessionStorage.removeItem('odd_pipe_auth');
+  }
+  // Not authenticated — gate stays visible
+})();
+</script>
+
+<!-- ─── HEADER ─── -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo"><span>ODD</span> Pipe</div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="main" onclick="switchMode('main')">Main</button>
+      <button class="mode-tab" data-mode="edit" onclick="switchMode('edit')">Edit</button>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="authUserInfo" style="display:none;align-items:center;gap:6px;margin-right:8px"></div>
+    <div class="learning-badge">
+      <span class="dot"></span>
+      <strong id="learnCount">0</strong> patterns learned
+    </div>
+    <div class="header-icon" onclick="openSettings()" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+  </div>
+</header>
+
+<!-- ─── MAIN LAYOUT ─── -->
+<div class="layout">
+
+  <!-- ─── LEFT: WORKSPACE ─── -->
+  <div class="workspace">
+
+    <!-- Creative Brief Card -->
+    <div class="glass-card">
+      <div class="section-label">
+        <span class="accent"></span>
+        Creative Brief
+      </div>
+      <textarea class="brief-textarea" id="briefInput" placeholder="만들고 싶은 비주얼 에셋을 설명하세요...&#10;&#10;예: M-01 병이 아침 햇살 받는 대리석 테이블 위에 놓인 제품 히어로샷. 레몬 슬라이스와 린넨 냅킨이 옆에 있는 따뜻한 에디토리얼 무드."></textarea>
+
+      <!-- Reference Zone (mockup design) -->
+      <div class="ref-zone" id="refDropzone">
+        <span class="ref-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        </span>
+        <div class="ref-text"><span class="ref-drop-text">레퍼런스 드래그 또는 <span class="key">V</span> 붙여넣기</span></div>
+        <input type="file" id="refFileInput" accept="image/*" multiple style="display:none">
+      </div>
+      <!-- Preview row OUTSIDE dropzone to prevent click propagation -->
+      <div class="ref-preview-row" id="refPreviewRow" style="display:flex;gap:8px;margin-top:10px;justify-content:center"></div>
+      <div class="ref-modes" id="refModeRow" style="display:none"></div>
+
+      <!-- First/Last Frame Zone (shown only when FLF model is selected) -->
+      <div id="flfZone" style="display:none;margin-top:10px">
+        <div style="font-size:10px;color:var(--text-4);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">
+          🎞️ First / Last Frame — 시작 프레임과 끝 프레임을 모두 업로드하세요
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <!-- First Frame -->
+          <div>
+            <div style="font-size:10px;color:var(--green);font-weight:600;margin-bottom:4px">① 시작 프레임</div>
+            <div class="ref-zone" id="flfFirstDropzone" onclick="document.getElementById('flfFirstFileInput').click()" style="min-height:72px;cursor:pointer;border-color:rgba(52,168,83,.3)">
+              <span class="ref-icon" style="font-size:14px">▶</span>
+              <div id="flfFirstText" style="font-size:11px;color:var(--text-3)">드래그 또는 클릭</div>
+              <input type="file" id="flfFirstFileInput" accept="image/*" style="display:none" onchange="handleFlfFile(event,'first')">
+            </div>
+            <div id="flfFirstPreview" style="display:none;margin-top:6px;position:relative;text-align:center">
+              <img id="flfFirstImg" style="max-height:72px;max-width:100%;border-radius:6px;border:1px solid var(--green);object-fit:cover">
+              <button onclick="clearFlfFrame('first')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1">✕</button>
+            </div>
+          </div>
+          <!-- Last Frame -->
+          <div>
+            <div style="font-size:10px;color:var(--red);font-weight:600;margin-bottom:4px">② 끝 프레임</div>
+            <div class="ref-zone" id="flfLastDropzone" onclick="document.getElementById('flfLastFileInput').click()" style="min-height:72px;cursor:pointer;border-color:rgba(234,67,53,.3)">
+              <span class="ref-icon" style="font-size:14px">⏹</span>
+              <div id="flfLastText" style="font-size:11px;color:var(--text-3)">드래그 또는 클릭</div>
+              <input type="file" id="flfLastFileInput" accept="image/*" style="display:none" onchange="handleFlfFile(event,'last')">
+            </div>
+            <div id="flfLastPreview" style="display:none;margin-top:6px;position:relative;text-align:center">
+              <img id="flfLastImg" style="max-height:72px;max-width:100%;border-radius:6px;border:1px solid var(--red);object-fit:cover">
+              <button onclick="clearFlfFrame('last')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1">✕</button>
+            </div>
+          </div>
+        </div>
+        <!-- FLF drag-and-drop listeners -->
+        <div style="font-size:10px;color:var(--text-5);margin-top:6px;text-align:center">드래그로 각 슬롯에 올려놓거나 클릭해서 업로드</div>
+      </div>
+
+      <!-- Detail Fields (mockup design) -->
+      <div class="detail-section">
+        <div class="detail-toggle open" id="detailToggle" onclick="toggleSubBrief()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          Details
+          <span class="arrow" id="sbArrow">&#9660;</span>
+        </div>
+        <div class="detail-grid" id="sbBody">
+          <div class="detail-field">
+            <span class="field-label">Model</span>
+            <input class="field-input" id="sbSubject" placeholder="인물/제품 상세">
+          </div>
+          <div class="detail-field">
+            <span class="field-label">Action</span>
+            <input class="field-input" id="sbAction" placeholder="동작">
+          </div>
+          <div class="detail-field">
+            <span class="field-label">Props</span>
+            <input class="field-input" id="sbProps" placeholder="추가 오브젝트">
+          </div>
+          <div class="detail-field">
+            <span class="field-label">Scene</span>
+            <input class="field-input" id="sbEnvironment" placeholder="장소/환경">
+          </div>
+          <div class="detail-field full">
+            <span class="field-label">Mood</span>
+            <input class="field-input" id="sbMood" placeholder="분위기 키워드">
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject Placement -->
+      <div class="placement-section" style="margin-top:12px">
+        <div class="toggle-row" onclick="togglePlacement()" style="cursor:pointer;padding:6px 0">
+          <span class="toggle-label" style="display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="placementToggle" style="accent-color:var(--red);cursor:pointer">
+            Subject Placement
+          </span>
+          <span style="font-size:10px;color:var(--text-4)" id="placementDesc">OFF</span>
+        </div>
+        <div class="placement-canvas-wrap" id="placementWrap" style="display:none">
+          <div class="placement-canvas" id="placementCanvas">
+            <div class="placement-grid-line-v" style="left:33.33%"></div>
+            <div class="placement-grid-line-v" style="left:66.66%"></div>
+            <div class="placement-grid-line-h" style="top:33.33%"></div>
+            <div class="placement-grid-line-h" style="top:66.66%"></div>
+            <div class="placement-grid-line-v" style="left:50%;opacity:.3"></div>
+            <div class="placement-grid-line-h" style="top:50%;opacity:.3"></div>
+            <div class="placement-box" id="subjectBox" style="left:25%;top:15%;width:50%;height:60%">
+              SUBJECT
+              <div class="resize-handle" id="resizeHandle"></div>
+            </div>
+          </div>
+          <div class="placement-info">
+            <span id="placementPosition">center-upper</span>
+            <span id="placementSize">50% x 60%</span>
+            <button onclick="resetPlacement()" style="font-size:10px;color:var(--text-3);background:none;border:1px solid var(--border-light);border-radius:4px;padding:2px 8px;cursor:pointer">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Area (inside workspace) -->
+    <div class="results-area">
+      <div class="section-label">
+        <span class="accent"></span>
+        Results
+        <span style="margin-left:auto;font-family:var(--mono);color:var(--text-4);font-size:9px;letter-spacing:0" id="resultCount"></span>
+      </div>
+      <div id="results"></div>
+
+      <!-- History -->
+      <div class="history-section" id="historySection" style="display:none">
+        <div class="history-title">Session History</div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── RIGHT: INSPECTOR ─── -->
+  <div class="inspector">
+    <div class="inspector-tabs" style="grid-template-columns:repeat(3,1fr)">
+      <div class="inspector-tab" onclick="switchInspectorTab(0)">Model</div>
+      <div class="inspector-tab active" onclick="switchInspectorTab(1)">Camera</div>
+      <div class="inspector-tab" onclick="switchInspectorTab(2)">Motion</div>
+    </div>
+
+    <div class="inspector-body">
+
+      <!-- Tab 0: Model Selection + AR -->
+      <div class="inspector-tab-content" data-tab="0">
+        <div class="section-label" style="margin-bottom:10px">
+          <span class="accent"></span>
+          Model Selection
+        </div>
+        <div class="model-row" id="modelRow">
+        </div>
+        <div class="category-group-title">Image</div>
+        <div class="model-row" id="imgRow">
+          <button class="model-chip selected" data-model="nano-banana-pro" onclick="selectModel('nano-banana-pro')"><span class="chip-dot" id="dot-nano-banana-pro"></span> NBP</button>
+          <button class="model-chip" data-model="flux-max" onclick="selectModel('flux-max')"><span class="chip-dot" id="dot-flux-max"></span> FLUX Max</button>
+          <button class="model-chip" data-model="flux-kontext" onclick="selectModel('flux-kontext')"><span class="chip-dot" id="dot-flux-kontext"></span> FLUX Kontext</button>
+          <button class="model-chip" data-model="reve" onclick="selectModel('reve')"><span class="chip-dot" id="dot-reve"></span> Reve</button>
+          <button class="model-chip" data-model="flux-2-pro" onclick="selectModel('flux-2-pro')"><span class="chip-dot" id="dot-flux-2-pro"></span> FLUX.2 Pro</button>
+          <button class="model-chip" data-model="seedream" onclick="selectModel('seedream')"><span class="chip-dot" id="dot-seedream"></span> Seedream 4.5</button>
+        </div>
+        <div class="category-group-title">Video</div>
+        <div id="vidRow">
+          <div class="model-row" style="margin-bottom:4px">
+            <button class="model-chip" data-model="veo3.1" onclick="selectModel('veo3.1')"><span class="chip-dot" id="dot-veo3.1"></span> Veo 3.1 <span style="font-size:9px;color:var(--text-4)">(T2V/I2V)</span></button>
+            <button class="model-chip" data-model="veo3.1-fast" onclick="selectModel('veo3.1-fast')"><span class="chip-dot" id="dot-veo3.1-fast"></span> Veo 3.1 Fast <span style="font-size:9px;color:var(--text-4)">(T2V/I2V)</span></button>
+            <button class="model-chip" data-model="veo3.1-flf" onclick="selectModel('veo3.1-flf')"><span class="chip-dot" id="dot-veo3.1-flf"></span> Veo 3.1 FLF <span style="font-size:9px;color:var(--text-4)">(시작↔끝)</span></button>
+            <button class="model-chip" data-model="veo3.1-fast-flf" onclick="selectModel('veo3.1-fast-flf')"><span class="chip-dot" id="dot-veo3.1-fast-flf"></span> Veo Fast FLF <span style="font-size:9px;color:var(--text-4)">(시작↔끝 빠름)</span></button>
+            <button class="model-chip" data-model="veo3.1-ref" onclick="selectModel('veo3.1-ref')"><span class="chip-dot" id="dot-veo3.1-ref"></span> Veo 3.1 Ref <span style="font-size:9px;color:var(--text-4)">(레퍼런스→영상)</span></button>
+          </div>
+          <div class="model-row" style="margin-bottom:4px">
+            <button class="model-chip" data-model="kling" onclick="selectModel('kling')"><span class="chip-dot" id="dot-kling"></span> Kling 3.0 <span style="font-size:9px;color:var(--text-4)">(I2V)</span></button>
+            <button class="model-chip" data-model="sora2" onclick="selectModel('sora2')"><span class="chip-dot" id="dot-sora2"></span> Sora 2 <span style="font-size:9px;color:var(--text-4)">(I2V)</span></button>
+            <button class="model-chip" data-model="seedance2" onclick="selectModel('seedance2')"><span class="chip-dot" id="dot-seedance2"></span> Seedance 2 <span style="font-size:9px;color:var(--text-4)">(T2V/I2V)</span></button>
+          </div>
+          <!-- Per-model duration sliders (shown when model is selected) -->
+          <div class="vid-duration" id="dur-veo3.1" style="display:none">
+            <span class="dur-label">Veo 3.1</span>
+            <input type="range" min="4" max="8" step="2" value="8" class="dur-slider" oninput="setModelDuration('veo3.1',this.value)">
+            <span class="dur-value" id="dur-val-veo3.1">8s</span>
+          </div>
+          <div class="vid-duration" id="dur-veo3.1-fast" style="display:none">
+            <span class="dur-label">Veo 3.1 Fast</span>
+            <input type="range" min="4" max="8" step="2" value="8" class="dur-slider" oninput="setModelDuration('veo3.1-fast',this.value)">
+            <span class="dur-value" id="dur-val-veo3.1-fast">8s</span>
+          </div>
+          <div class="vid-duration" id="dur-kling" style="display:none">
+            <span class="dur-label">Kling 3.0</span>
+            <input type="range" min="5" max="10" step="5" value="10" class="dur-slider" oninput="setModelDuration('kling',this.value)">
+            <span class="dur-value" id="dur-val-kling">10s</span>
+          </div>
+          <div class="vid-duration" id="dur-sora2" style="display:none">
+            <span class="dur-label">Sora 2</span>
+            <input type="range" min="5" max="20" step="1" value="10" class="dur-slider" oninput="setModelDuration('sora2',this.value)">
+            <span class="dur-value" id="dur-val-sora2">10s</span>
+          </div>
+          <div class="vid-duration" id="dur-seedance2" style="display:none">
+            <span class="dur-label">Seedance 2</span>
+            <input type="range" min="4" max="15" step="1" value="10" class="dur-slider" oninput="setModelDuration('seedance2',this.value)">
+            <span class="dur-value" id="dur-val-seedance2">10s</span>
+          </div>
+          <div class="vid-duration" id="dur-veo3.1-flf" style="display:none">
+            <span class="dur-label">Veo FLF</span>
+            <input type="range" min="4" max="8" step="2" value="8" class="dur-slider" oninput="setModelDuration('veo3.1-flf',this.value)">
+            <span class="dur-value" id="dur-val-veo3.1-flf">8s</span>
+          </div>
+          <div class="vid-duration" id="dur-veo3.1-fast-flf" style="display:none">
+            <span class="dur-label">Veo Fast FLF</span>
+            <input type="range" min="4" max="8" step="2" value="8" class="dur-slider" oninput="setModelDuration('veo3.1-fast-flf',this.value)">
+            <span class="dur-value" id="dur-val-veo3.1-fast-flf">8s</span>
+          </div>
+          <div class="vid-duration" id="dur-veo3.1-ref" style="display:none">
+            <span class="dur-label">Veo Ref2V</span>
+            <input type="range" min="4" max="8" step="2" value="8" class="dur-slider" oninput="setModelDuration('veo3.1-ref',this.value)">
+            <span class="dur-value" id="dur-val-veo3.1-ref">8s</span>
+          </div>
+        </div>
+        <div class="category-group-title">Options</div>
+        <div class="cat-row" style="cursor:default">
+          <span class="cat-label">Aspect Ratio</span>
+          <span class="cat-value has-value" id="arValueLabel">9:16</span>
+        </div>
+        <div style="padding:8px 0 12px">
+          <div class="chips" id="arGroup">
+            <button class="chip active" data-ar="9:16" onclick="selectAR('9:16')">9:16</button>
+            <button class="chip" data-ar="1:1" onclick="selectAR('1:1')">1:1</button>
+            <button class="chip" data-ar="4:5" onclick="selectAR('4:5')">4:5</button>
+            <button class="chip" data-ar="16:9" onclick="selectAR('16:9')">16:9</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 1: Camera (Presets + Framing + Lighting) — default active -->
+      <div class="inspector-tab-content active" data-tab="1">
+        <!-- Presets -->
+        <div class="presets-section">
+          <div class="section-label" style="margin-bottom:10px">
+            <span class="accent"></span>
+            Presets
+          </div>
+          <div class="presets-grid" id="vdPresets"></div>
+        </div>
+
+        <!-- Camera + Lighting categories rendered dynamically -->
+        <div id="vdCameraCategories"></div>
+      </div>
+
+      <!-- Tab 2: Motion (Video categories + Model categories) -->
+      <div class="inspector-tab-content" data-tab="2">
+        <div id="vdMotionCategories"></div>
+        <div id="vdModelCategories"></div>
+        <div id="vdWarnings" style="margin-top:12px"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── EDIT MODE LAYOUT ─── -->
+<div class="edit-layout" id="editLayout" style="display:none">
+  <div class="edit-container">
+
+    <!-- Edit: Reference -->
+    <div class="glass-card">
+      <div class="section-label"><span class="accent"></span>Edit Mode</div>
+      <div class="edit-ref-area" id="editRefArea">
+        <div class="ref-zone" id="editRefDropzone" onclick="document.getElementById('editRefFileInput').click()" style="min-height:120px">
+          <span class="ref-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          </span>
+          <div class="ref-text"><span class="ref-drop-text">편집할 이미지를 드래그하거나 클릭</span></div>
+          <input type="file" id="editRefFileInput" accept="image/*" style="display:none">
+        </div>
+        <div id="editRefPreview" style="display:none;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="position:relative">
+              <img id="editRefImg" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--red)">
+              <button onclick="clearEditRef()" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.8);color:#fff;border:1px solid var(--border);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--red);font-weight:600">SCENE 레퍼런스로 고정됨</div>
+              <div style="font-size:10px;color:var(--text-4);margin-top:2px">이 이미지의 구조를 기반으로 편집합니다</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit: Brief input -->
+      <textarea class="brief-textarea" id="editBriefInput" placeholder="바꾸고 싶은 것만 자연어로 적으세요...&#10;&#10;예: 스푼은 그대로 두고 배경만 대리석으로 바꿔줘" style="margin-top:12px;min-height:80px"></textarea>
+      <button onclick="runEditAnalysis()" style="width:100%;margin-top:8px;padding:12px;background:rgba(224,62,62,0.55);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);color:#fff;border:1px solid rgba(255,100,100,0.2);border-radius:12px;font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(224,62,62,0.15),inset 0 1px 0 rgba(255,255,255,0.1)" onmouseover="this.style.background='rgba(224,62,62,0.7)'" onmouseout="this.style.background='rgba(224,62,62,0.55)'">분석 후 생성 →</button>
+      <div style="font-size:10px;color:var(--text-4);margin-top:4px;text-align:center">Cmd+Enter로도 실행 가능</div>
+
+      <!-- Edit: Model selector -->
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+        <div>
+          <div style="font-size:9px;color:var(--text-4);font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:5px">Image</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap" id="editImageModels">
+            <button class="edit-model-btn active" data-model="nano-banana-pro" onclick="selectEditModel('nano-banana-pro')">NBP</button>
+            <button class="edit-model-btn" data-model="flux-max" onclick="selectEditModel('flux-max')">FLUX Max</button>
+            <button class="edit-model-btn" data-model="flux-2-pro" onclick="selectEditModel('flux-2-pro')">FLUX.2 Pro</button>
+            <button class="edit-model-btn" data-model="flux-kontext" onclick="selectEditModel('flux-kontext')">Kontext</button>
+            <button class="edit-model-btn" data-model="seedream" onclick="selectEditModel('seedream')">Seedream</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text-4);font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:5px">Video</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap" id="editVideoModels">
+            <button class="edit-model-btn" data-model="veo3.1" onclick="selectEditModel('veo3.1')">Veo 3.1</button>
+            <button class="edit-model-btn" data-model="veo3.1-fast" onclick="selectEditModel('veo3.1-fast')">Veo 3.1 Fast</button>
+            <button class="edit-model-btn" data-model="kling" onclick="selectEditModel('kling')">Kling 3.0</button>
+            <button class="edit-model-btn" data-model="seedance2" onclick="selectEditModel('seedance2')">Seedance 2</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit: Analysis panel (hidden until analysis runs) -->
+    <div class="glass-card" id="editAnalysisPanel" style="display:none">
+      <div class="section-label" style="display:flex;align-items:center;gap:6px">
+        <span>🔍</span> 변경 분석 결과
+      </div>
+      <div id="editKeepList"></div>
+      <div id="editChangeList"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="editAnalysisConfirm()" style="flex:1;padding:10px;background:var(--red);color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer">확인 후 생성</button>
+        <button onclick="editAnalysisRetry()" style="padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-3);font-size:12px;font-family:var(--font);cursor:pointer">수정</button>
+      </div>
+    </div>
+
+    <!-- Edit: Results -->
+    <div id="editResults"></div>
+
+  </div>
+</div>
+
+<!-- ─── FLOATING BAR ─── -->
+<div class="floating-bar">
+  <div class="bar-group">
+    <div class="bar-chip">
+      <span class="status-dot green" id="floatingDot1"></span>
+      <span id="floatingModelLabel">NBP</span>
+    </div>
+  </div>
+
+  <div class="bar-divider"></div>
+
+  <div class="bar-chip" id="floatingRatioLabel">9:16</div>
+  <span class="res-label" id="floatingResLabel" style="font-size:9px;color:var(--text-3);font-family:var(--font-mono);margin-left:4px">2304×4096</span>
+
+  <div class="bar-divider"></div>
+
+  <div class="model-indicators">
+    <span class="model-ind nbp" id="mi-nbp"></span>
+    <span class="model-ind flux" id="mi-flux"></span>
+    <span class="model-ind hf" id="mi-hf"></span>
+    <span class="model-label" id="mi-count"></span>
+  </div>
+
+  <div class="active-count" id="floatingActiveCount"></div>
+
+  <div class="bar-divider"></div>
+
+  <button class="stop-btn" id="stopBtn" onclick="handleStop()" style="display:none">
+    ■ Stop
+  </button>
+  <button class="generate-btn" id="generateBtn" onclick="handleGenerate()">
+    Generate
+    <span class="kbd">&#8984;&#9166;</span>
+  </button>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeSettings()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h3>API Settings</h3>
+
+    <div class="modal-section">Image / Video Generation</div>
+    <div class="modal-field">
+      <label>Higgsfield API Key <span style="font-size:10px;color:var(--amber)">NBP + Veo 3.1</span></label>
+      <input type="password" id="keyHiggs" placeholder="KEY_ID:KEY_SECRET">
+      <div class="hint">cloud.higgsfield.ai — Nano Banana Pro, Veo 3.1</div>
+    </div>
+    <div class="modal-field">
+      <label>OpenAI API Key <span style="font-size:10px;color:#10A37F">GPT Image</span></label>
+      <input type="password" id="keyOpenAI" placeholder="sk-...">
+      <div class="hint">platform.openai.com — GPT Image 생성</div>
+    </div>
+    <div class="modal-field">
+      <label>fal.ai API Key <span style="font-size:10px;color:var(--blue)">FLUX.2 Pro</span></label>
+      <input type="password" id="keyFal" placeholder="key_...">
+      <div class="hint">fal.ai — FLUX.2 Pro 이미지 생성</div>
+    </div>
+    <div class="modal-field">
+      <label>Ideogram API Key <span style="font-size:10px;color:var(--amber)">Ideogram</span></label>
+      <input type="password" id="keyIdeogram" placeholder="api_...">
+      <div class="hint">developer.ideogram.ai — 텍스트/타이포 이미지</div>
+    </div>
+
+    <div class="modal-section">Prompt Optimization (Gemini -> Claude 자동 폴백)</div>
+    <div class="modal-field">
+      <label>Gemini API Key <span style="font-size:10px;color:var(--blue)">Primary</span></label>
+      <input type="password" id="keyGemini" placeholder="AIzaSy...">
+      <div class="hint">aistudio.google.com — 1순위 프롬프트 최적화</div>
+    </div>
+    <div class="modal-field">
+      <label>Claude API Key <span style="font-size:10px;color:var(--amber)">Fallback</span></label>
+      <input type="password" id="keyClaude" placeholder="sk-ant-...">
+      <div class="hint">console.anthropic.com — Gemini 할당량 초과 시 Claude Opus 4.6 자동 전환</div>
+    </div>
+
+    <div class="modal-section">Brand Context</div>
+    <div class="modal-field">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="brandContextToggle" style="accent-color:var(--red)">
+        ODD. 브랜드 컨텍스트 활성화
+      </label>
+      <div class="hint">체크 시 ODD 제품(M-01) 관련 프롬프트 최적화가 자동 주입됩니다</div>
+    </div>
+
+    <div class="modal-section">LoRA Models</div>
+    <div class="modal-field">
+      <div id="loraList" style="margin-bottom:8px"></div>
+      <button onclick="showLoraTrainer()" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px dashed var(--border-light);border-radius:6px;color:var(--text-3);font-size:11px;cursor:pointer">+ 새 LoRA 학습</button>
+    </div>
+    <div id="loraTrainerPanel" style="display:none">
+      <div class="modal-field">
+        <label>LoRA 이름</label>
+        <input type="text" id="loraName" placeholder="예: Erewhon Tone, Paparazzi Style">
+      </div>
+      <div class="modal-field">
+        <label>트리거 워드</label>
+        <input type="text" id="loraTrigger" placeholder="예: erewhon_style">
+        <div class="hint">프롬프트에 이 단어가 포함되면 LoRA 자동 적용</div>
+      </div>
+      <div class="modal-field">
+        <label>학습 이미지 (9-50장)</label>
+        <div id="loraImageDrop" style="border:1px dashed var(--border-light);border-radius:6px;padding:16px;text-align:center;cursor:pointer;color:var(--text-4);font-size:11px" onclick="document.getElementById('loraImageInput').click()">
+          이미지 드래그 또는 클릭하여 업로드
+          <div id="loraImageCount" style="color:var(--amber);margin-top:4px"></div>
+        </div>
+        <input type="file" id="loraImageInput" accept="image/*" multiple style="display:none" onchange="handleLoraImages(this.files)">
+      </div>
+      <div class="modal-field" style="display:flex;gap:8px">
+        <button onclick="startLoraTraining()" style="flex:1;padding:8px;background:var(--red);border:none;border-radius:6px;color:white;font-size:11px;font-weight:600;cursor:pointer">학습 시작</button>
+        <button onclick="hideLoraTrainer()" style="padding:8px 16px;background:rgba(255,255,255,0.06);border:1px solid var(--border-light);border-radius:6px;color:var(--text-3);font-size:11px;cursor:pointer">취소</button>
+      </div>
+      <div id="loraTrainingStatus" style="font-size:10px;color:var(--text-4);margin-top:4px"></div>
+    </div>
+
+    <button class="modal-save" onclick="saveSettings()">Save & Close</button>
+  </div>
+</div>
+
+<script type="module">
+const v = Date.now();
+const { routeBrief, MODEL_INFO } = await import('./js/router-engine.js?' + v);
+const { generateAsset, getAvailableModels, MODEL_RESOLUTIONS } = await import('./js/generators.js?' + v);
+window._MODEL_RESOLUTIONS = MODEL_RESOLUTIONS;
+const { optimizePromptForModel } = await import('./js/prompt-optimizer-pipe.js?' + v);
+const { saveGeneration, rateGeneration, getMemoryStats } = await import('./js/prompt-memory.js?' + v);
+// Import cinematography with version cache-buster
+const cinematography = await import('./js/cinematography.js?' + v);
+// Expose module reference globally so inline onclick handlers share the same instance
+window._cinematography = cinematography;
+let autoPipeline = null;
+try { autoPipeline = await import('./js/auto-pipeline.js?' + v); } catch(e) { console.warn('auto-pipeline not loaded:', e.message); }
+
+// ── State ──
+let selectedModels = ['nano-banana-pro']; // supports multi-select (up to 2)
+let selectedAR = '9:16';
+let modelDurations = { 'veo3.1': '8', 'veo3.1-fast': '8', 'veo3.1-flf': '8', 'veo3.1-fast-flf': '8', 'veo3.1-ref': '8', 'kling': '10', 'sora2': '10', 'seedance2': '10' };
+
+// ── FLF State ──
+let flfFirstFrame = null; // { dataUrl, name }
+let flfLastFrame  = null; // { dataUrl, name }
+
+// ── FLF Handlers ──
+window.handleFlfFile = function(event, slot) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    if (slot === 'first') {
+      flfFirstFrame = { dataUrl, name: file.name };
+      const img = document.getElementById('flfFirstImg');
+      const preview = document.getElementById('flfFirstPreview');
+      const text = document.getElementById('flfFirstText');
+      if (img) img.src = dataUrl;
+      if (preview) preview.style.display = 'block';
+      if (text) text.textContent = file.name;
+    } else {
+      flfLastFrame = { dataUrl, name: file.name };
+      const img = document.getElementById('flfLastImg');
+      const preview = document.getElementById('flfLastPreview');
+      const text = document.getElementById('flfLastText');
+      if (img) img.src = dataUrl;
+      if (preview) preview.style.display = 'block';
+      if (text) text.textContent = file.name;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+window.clearFlfFrame = function(slot) {
+  if (slot === 'first') {
+    flfFirstFrame = null;
+    const preview = document.getElementById('flfFirstPreview');
+    const text = document.getElementById('flfFirstText');
+    const input = document.getElementById('flfFirstFileInput');
+    if (preview) preview.style.display = 'none';
+    if (text) text.textContent = '드래그 또는 클릭';
+    if (input) input.value = '';
+  } else {
+    flfLastFrame = null;
+    const preview = document.getElementById('flfLastPreview');
+    const text = document.getElementById('flfLastText');
+    const input = document.getElementById('flfLastFileInput');
+    if (preview) preview.style.display = 'none';
+    if (text) text.textContent = '드래그 또는 클릭';
+    if (input) input.value = '';
+  }
+};
+
+// FLF drag-and-drop
+['flfFirstDropzone', 'flfLastDropzone'].forEach(id => {
+  document.addEventListener('DOMContentLoaded', function() {
+    const zone = document.getElementById(id);
+    if (!zone) return;
+    const slot = id.includes('First') ? 'first' : 'last';
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.opacity = '.6'; });
+    zone.addEventListener('dragleave', () => { zone.style.opacity = ''; });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.style.opacity = '';
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = ev => window.handleFlfFile({ target: { files: [file] } }, slot);
+      window.handleFlfFile({ target: { files: [file] } }, slot);
+    });
+  });
+});
+
+let sessionHistory = [];
+let abortController = null; // For stopping generation
+let isGenerating = false;
+let referenceImages = []; // [{name, dataUrl, file}]
+let referenceMode = 'scene'; // 'scene' = full image reference, 'object' = extract object
+let colorTemp = 0; // 0 = auto, 2500-8000 = manual Kelvin
+
+window.updateColorTemp = function(val) {
+  val = parseInt(val);
+  if (val <= 2500) {
+    colorTemp = 0;
+  } else {
+    colorTemp = val;
+  }
+  // Update slider-val label if exists
+  const sliderLabel = document.getElementById('slider-val-color_temperature');
+  if (sliderLabel) sliderLabel.textContent = colorTemp > 0 ? colorTemp + 'K' : '자동';
+};
+
+function getColorTempPrompt() {
+  if (!colorTemp) return '';
+  return `Color temperature set to ${colorTemp}K, all lighting in the scene should match this warm-to-cool balance consistently.`;
+}
+
+window.setRefMode = function(mode) {
+  referenceMode = mode;
+  document.querySelectorAll('[data-refmode]').forEach(b => {
+    b.classList.toggle('active', b.dataset.refmode === mode);
+  });
+};
+
+// ── Reference Image Drag & Drop ──
+const dropzone = document.getElementById('refDropzone');
+const fileInput = document.getElementById('refFileInput');
+const previewRow = document.getElementById('refPreviewRow');
+
+dropzone.addEventListener('click', (e) => {
+  // Don't open file picker if clicking on preview buttons (mode selectors, remove buttons)
+  if (e.target.closest('.ref-preview-row') || e.target.closest('[onclick]') || e.target.tagName === 'BUTTON') return;
+  fileInput.click();
+});
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-active'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-active'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('drag-active');
+  handleFiles(e.dataTransfer.files);
+});
+
+// H-2: Paste (Cmd+V / Ctrl+V) to add reference image
+document.addEventListener('paste', (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  const imageItems = [...items].filter(i => i.type.startsWith('image/'));
+  if (imageItems.length === 0) return;
+  // Only capture paste if not focused on a text input
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  e.preventDefault();
+  const files = imageItems.map(i => i.getAsFile()).filter(Boolean);
+  handleFiles(files);
+});
+
+function handleFiles(files) {
+  [...files].forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    if (referenceImages.length >= 3) return; // max 3 ref images
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      referenceImages.push({ name: file.name, dataUrl: e.target.result, mode: 'scene' });
+      renderRefPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// removeRefImage is defined below with stopPropagation support
+
+window.setImageMode = function(evt, idx, mode) {
+  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+  if (referenceImages[idx]) {
+    referenceImages[idx].mode = mode;
+    referenceMode = referenceImages[0]?.mode || 'scene';
+    renderRefPreviews();
+  }
+};
+
+window.removeRefImage = function(idx, evt) {
+  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+  referenceImages.splice(idx, 1);
+  renderRefPreviews();
+};
+
+function renderRefPreviews() {
+  const modeLabels = { scene: 'Scene', object: 'Object', style: 'Style' };
+  const modeColors = { scene: '#e03e3e', object: '#3ea0e0', style: '#9b59b6' };
+  previewRow.innerHTML = referenceImages.map((img, i) => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="position:relative;width:56px;height:56px;border-radius:6px;overflow:hidden;border:2px solid ${modeColors[img.mode] || '#555'}">
+        <img src="${img.dataUrl}" alt="ref ${i+1}" style="width:100%;height:100%;object-fit:cover">
+        <button onclick="removeRefImage(${i},event)" style="position:absolute;top:1px;right:1px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,0.7);color:#fff;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+      </div>
+      <div style="display:flex;gap:2px">
+        ${['scene','object','style'].map(m => `<button onclick="setImageMode(event,${i},'${m}')" style="font-size:9px;padding:3px 8px;border-radius:4px;border:1px solid ${img.mode===m ? modeColors[m] : 'rgba(255,255,255,0.15)'};background:${img.mode===m ? modeColors[m]+'22' : 'transparent'};color:${img.mode===m ? modeColors[m] : 'var(--text-4)'};cursor:pointer;font-family:var(--font);letter-spacing:0.02em">${modeLabels[m]}</button>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  const text = dropzone.querySelector('.ref-drop-text');
+  // Update global referenceMode for backward compat
+  referenceMode = referenceImages[0]?.mode || 'scene';
+  if (referenceImages.length > 0) {
+    text.textContent = `${referenceImages.length}/3 이미지 첨부됨`;
+    previewRow.style.display = 'flex';
+  } else {
+    text.innerHTML = '레퍼런스 드래그 또는 <span class="key">V</span> 붙여넣기';
+    previewRow.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════
+// Sub-Brief Toggle
+// ═══════════════════════════════════════════
+window.toggleSubBrief = function() {
+  const body = document.getElementById('sbBody');
+  const toggle = document.getElementById('detailToggle');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'grid';
+  if (toggle) toggle.classList.toggle('open', !isOpen);
+};
+window.toggleSubBriefs = window.toggleSubBrief;
+
+function collectSubBriefs() {
+  // If MODEL toggle is OFF, skip the subject/model field
+  const subject = modelEnabled ? (document.getElementById('sbSubject')?.value.trim() || '') : '';
+  const action = document.getElementById('sbAction')?.value.trim() || '';
+  const props = document.getElementById('sbProps')?.value.trim() || '';
+  const env = document.getElementById('sbEnvironment')?.value.trim() || '';
+  const mood = document.getElementById('sbMood')?.value.trim() || '';
+
+  if (!subject && !action && !props && !env && !mood) return '';
+
+  let prose = '';
+  if (subject) prose += `주인공/피사체: ${subject}. `;
+  if (action) prose += `동작/포즈: ${action}. `;
+  if (props) prose += `소품/오브젝트 (반드시 포함): ${props}. `;
+  if (env) prose += `장소/배경: ${env}. `;
+  if (mood) prose += `분위기: ${mood}.`;
+
+  return prose.trim();
+}
+// Expose globally for external access
+window.collectSubBriefs = collectSubBriefs;
+
+// ═══════════════════════════════════════════
+// Visual Direction (Cinematography) UI — Accordion
+// ═══════════════════════════════════════════
+let vdCollapsed = false;
+let openAccordion = null; // currently open category id
+const VIDEO_MODELS = ['veo3.1', 'veo3.1-fast', 'kling', 'sora2', 'seedance2'];
+
+// Map of sub_group labels to Korean display names
+const SUB_GROUP_KO = {
+  "Natural Light": "자연광",
+  "Window / Interior Natural": "실내",
+  "Studio": "스튜디오",
+  "Cinematic / Dramatic": "시네마틱",
+  "Colored / Creative": "크리에이티브"
+};
+
+// Category-to-tab mapping
+const CAMERA_CATS = ['shot_type', 'camera_angle', 'lens_character', 'color_temperature', 'lighting_style', 'color_grade', 'mood_atmosphere', 'texture_surface', 'composition', 'brand_reference'];
+const LOOK_CATS = [];
+const MOTION_CATS = ['camera_movement', 'transition', 'pacing', 'audio_mood'];
+const MODEL_CATS = ['model_gender', 'model_age', 'model_ethnicity', 'model_hair', 'model_style', 'model_expression'];
+
+// Preset gradient colors — keyed by actual preset IDs from cinematography.js
+const PRESET_GRADIENTS = {
+  'warm_minimal': 'linear-gradient(135deg, #d4b896 0%, #c8a882 40%, #b89b78 100%)',
+  'analog_film': 'linear-gradient(135deg, #d4a43e 0%, #c87a4a 50%, #a86030 100%)',
+  'cinematic_editorial': 'linear-gradient(135deg, #1a3050 0%, #2a6ea8 50%, #0c1820 100%)',
+  'minimal_flat_lay': 'linear-gradient(135deg, #e0d8d0 0%, #c8c0b8 50%, #a8a098 100%)',
+  'neon_maximalist': 'linear-gradient(135deg, #ff2d6b 0%, #6b1aff 50%, #00f0ff 100%)',
+};
+
+function initVD() {
+  const presetsEl = document.getElementById('vdPresets');
+  const cameraEl = document.getElementById('vdCameraCategories');
+  const lookEl = null; // Look tab removed
+  const motionEl = document.getElementById('vdMotionCategories');
+  const modelEl = document.getElementById('vdModelCategories');
+
+  // Render presets as mood board cards
+  const presets = cinematography.getPresets();
+  let presetsHTML = presets.map(p => {
+    const grad = PRESET_GRADIENTS[p.id] || 'linear-gradient(135deg, #2a2826, #1a1918)';
+    const paramCount = p.selections ? Object.keys(p.selections).length : 0;
+    return `<div class="preset-card" data-preset="${p.id}" onclick="applyVDPreset('${p.id}')" title="${p.description_ko || ''}">
+      <div class="preset-visual" style="background:${grad}"></div>
+      <div class="preset-info">
+        <div class="preset-name">${p.label_ko || p.label}</div>
+        <div class="preset-meta">${paramCount} params</div>
+      </div>
+    </div>`;
+  }).join('');
+  presetsHTML += `<div class="preset-card" onclick="resetVD()" style="cursor:pointer">
+    <div class="preset-visual" style="background:var(--bg-3);display:flex;align-items:center;justify-content:center;color:var(--text-4);font-size:11px">Reset</div>
+    <div class="preset-info"><div class="preset-name">Reset All</div><div class="preset-meta">clear</div></div>
+  </div>`;
+  presetsEl.innerHTML = presetsHTML;
+
+  // Render categories distributed across tabs
+  const categories = cinematography.getCategories();
+  const videoCategories = cinematography.getVideoCategories();
+
+  function renderSingleCat(cat, videoCats) {
+    let html = '';
+    const isVideo = videoCats.includes(cat.id);
+    const hasSubs = cat.sub_groups && cat.sub_groups.length > 0;
+
+    // Cat row (clickable header)
+    html += `<div class="cat-row" id="vd-row-${cat.id}" onclick="toggleAccordion('${cat.id}')"${isVideo ? ' data-video="true" style="display:none"' : ''}>`;
+    html += `<span class="cat-label">${cat.label_ko}</span>`;
+    html += `<span class="cat-value" id="vd-val-${cat.id}">Auto <span class="chevron">&#9660;</span></span>`;
+    html += `</div>`;
+
+    // Chips container (hidden by default)
+    html += `<div class="chips-container" id="vd-body-${cat.id}" style="display:none"${isVideo ? ' data-video="true"' : ''}>`;
+
+    if (cat.input_type === 'slider' && cat.slider_config) {
+      const sc = cat.slider_config;
+      html += `<div class="slider-section">`;
+      html += `<div class="slider-header"><span class="slider-label">Color Temperature</span><span class="slider-value" id="slider-val-${cat.id}">${sc.default}${sc.unit}</span></div>`;
+      html += `<div style="padding:4px 0"><input type="range" id="slider-${cat.id}" min="${sc.min}" max="${sc.max}" step="${sc.step}" value="${sc.default}" style="width:100%;accent-color:var(--red)" oninput="handleColorTempSlider(this.value)"></div>`;
+      html += `<div class="slider-ticks"><span class="slider-tick">2700K</span><span class="slider-tick">4000K</span><span class="slider-tick">5500K</span><span class="slider-tick">8000K</span></div>`;
+      html += `</div>`;
+      html += `<div class="chips">`;
+      html += `<button class="chip active" data-cat="${cat.id}" data-opt="none" onclick="selectVD('${cat.id}','none')">Auto</button>`;
+      for (const opt of cat.options) {
+        if (opt.id === 'none') continue;
+        html += `<button class="chip" data-cat="${cat.id}" data-opt="${opt.id}" onclick="selectColorTemp('${opt.id}', ${opt.value})">${opt.label_ko}</button>`;
+      }
+      html += `</div>`;
+    } else if (hasSubs) {
+      html += `<div class="chips"><button class="chip active" data-cat="${cat.id}" data-opt="none" onclick="selectVD('${cat.id}','none')">Auto</button></div>`;
+      for (const sg of cat.sub_groups) {
+        const sgLabel = SUB_GROUP_KO[sg] || sg;
+        html += `<div class="chip-group-label">${sgLabel}</div>`;
+        html += `<div class="chips">`;
+        for (const opt of cat.options.filter(o => o.sub_group === sg)) {
+          html += `<button class="chip" data-cat="${cat.id}" data-opt="${opt.id}" onclick="selectVD('${cat.id}','${opt.id}')">${opt.label_ko}</button>`;
+        }
+        html += `</div>`;
+      }
+    } else {
+      html += `<div class="chips">`;
+      for (const opt of cat.options) {
+        const isAuto = opt.id === 'none';
+        html += `<button class="chip${isAuto ? ' active' : ''}" data-cat="${cat.id}" data-opt="${opt.id}" onclick="selectVD('${cat.id}','${opt.id}')">${opt.label_ko}</button>`;
+      }
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  function renderCatGroup(cats, targetEl, groupTitle) {
+    let html = '';
+    if (groupTitle) html += `<div class="category-group-title">${groupTitle}</div>`;
+    for (const cat of categories.filter(c => cats.includes(c.id))) {
+      html += renderSingleCat(cat, videoCategories);
+    }
+    targetEl.innerHTML = html;
+  }
+
+  // Camera tab: structured groups matching mockup
+  const catGroups = [
+    { title: 'Framing', ids: ['shot_type', 'camera_angle', 'lens_character'] },
+    { title: 'Lighting', ids: ['color_temperature', 'lighting_style'] },
+    { title: 'Color & Mood', ids: ['color_grade', 'mood_atmosphere'] },
+    { title: 'Surface & Composition', ids: ['texture_surface', 'composition'] },
+    { title: 'Reference', ids: ['brand_reference'] },
+  ];
+  let cameraHTML = '';
+  for (const g of catGroups) {
+    cameraHTML += `<div class="category-group-title">${g.title}</div>`;
+    for (const cat of categories.filter(c => g.ids.includes(c.id))) {
+      cameraHTML += renderSingleCat(cat, videoCategories);
+    }
+  }
+  cameraEl.innerHTML = cameraHTML;
+
+  // Auto-open color temperature slider (always open)
+  const ctBody = document.getElementById('vd-body-color_temperature');
+  const ctRow = document.getElementById('vd-row-color_temperature');
+  if (ctBody) ctBody.style.display = '';
+  if (ctRow) ctRow.classList.add('expanded');
+  openAccordion = 'color_temperature';
+
+  // Look tab — empty, redirect to Camera
+  if (lookEl) lookEl.innerHTML = '<p style="font-size:12px;color:var(--text-3);padding:8px 0">모든 비주얼 설정은 Camera 탭에서 관리합니다.</p>';
+  renderCatGroup(MOTION_CATS, motionEl, 'Motion');
+
+  // Model categories with toggle
+  let modelHTML = `<div class="category-group-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Model</span>
+    <label style="font-size:10px;color:var(--text-4);cursor:pointer;display:flex;align-items:center;gap:4px;border-bottom:none;margin:0;padding:0">
+      <input type="checkbox" id="modelToggle" checked onchange="toggleModelCategories(this.checked)" style="accent-color:var(--red)"> ON
+    </label>
+  </div>`;
+  for (const cat of categories.filter(c => MODEL_CATS.includes(c.id))) {
+    modelHTML += `<div class="cat-row" id="vd-row-${cat.id}" onclick="toggleAccordion('${cat.id}')">`;
+    modelHTML += `<span class="cat-label">${cat.label_ko}</span>`;
+    modelHTML += `<span class="cat-value" id="vd-val-${cat.id}">Auto <span class="chevron">&#9660;</span></span>`;
+    modelHTML += `</div>`;
+    modelHTML += `<div class="chips-container" id="vd-body-${cat.id}" style="display:none"><div class="chips">`;
+    for (const opt of cat.options) {
+      const isAuto = opt.id === 'none';
+      modelHTML += `<button class="chip${isAuto ? ' active' : ''}" data-cat="${cat.id}" data-opt="${opt.id}" onclick="selectVD('${cat.id}','${opt.id}')">${opt.label_ko}</button>`;
+    }
+    modelHTML += `</div></div>`;
+  }
+  modelEl.innerHTML = modelHTML;
+
+  updateVDVideoVisibility();
+  updateVDUI();
+}
+
+// Model categories ON/OFF toggle
+let modelEnabled = true;
+window.toggleModelCategories = function(checked) {
+  modelEnabled = checked;
+  MODEL_CATS.forEach(id => {
+    const row = document.getElementById('vd-row-' + id);
+    const body = document.getElementById('vd-body-' + id);
+    if (row) row.style.display = checked ? '' : 'none';
+    if (body) body.style.display = 'none';
+    if (!checked) cinematography.setSelection(id, 'none');
+  });
+  // Also disable/enable the Details MODEL field
+  const sbSubject = document.getElementById('sbSubject');
+  if (sbSubject) {
+    sbSubject.disabled = !checked;
+    sbSubject.style.opacity = checked ? '1' : '0.3';
+  }
+  const label = document.querySelector('#modelToggle')?.parentElement;
+  if (label) label.lastChild.textContent = checked ? ' ON' : ' OFF';
+  if (!checked) updateVDUI();
+};
+
+window.toggleAccordion = function(catId) {
+  if (openAccordion === catId) {
+    // Close current
+    const body = document.getElementById('vd-body-' + catId);
+    const row = document.getElementById('vd-row-' + catId);
+    if (body) body.style.display = 'none';
+    if (row) row.classList.remove('expanded');
+    openAccordion = null;
+  } else {
+    // Close previous
+    if (openAccordion) {
+      const prevBody = document.getElementById('vd-body-' + openAccordion);
+      const prevRow = document.getElementById('vd-row-' + openAccordion);
+      if (prevBody) prevBody.style.display = 'none';
+      if (prevRow) prevRow.classList.remove('expanded');
+    }
+    // Open new
+    const body = document.getElementById('vd-body-' + catId);
+    const row = document.getElementById('vd-row-' + catId);
+    if (body) body.style.display = '';
+    if (row) row.classList.add('expanded');
+    openAccordion = catId;
+  }
+};
+
+function updateVDVideoVisibility() {
+  const hasVideo = selectedModels.some(m => VIDEO_MODELS.includes(m));
+  document.querySelectorAll('[data-video="true"]').forEach(el => {
+    el.style.display = hasVideo ? '' : 'none';
+  });
+}
+
+function updateVDUI() {
+  const selections = cinematography.getSelections();
+  const categories = cinematography.getCategories();
+
+  // Update chips (now using .chip class)
+  document.querySelectorAll('.chip[data-cat]').forEach(chip => {
+    const cat = chip.dataset.cat;
+    const opt = chip.dataset.opt;
+    if (!cat || !opt) return;
+    chip.classList.toggle('active', selections[cat] === opt);
+  });
+
+  // Update cat-row value labels
+  for (const cat of categories) {
+    const valEl = document.getElementById('vd-val-' + cat.id);
+    if (!valEl) continue;
+    const selectedId = selections[cat.id];
+    // Special case: color_temperature — show K value even if selection is 'none' but slider moved
+    if (cat.id === 'color_temperature' && selectedId === 'none' && colorTemp > 0) {
+      valEl.innerHTML = `${colorTemp}K <span class="chevron">&#9660;</span>`;
+      valEl.className = 'cat-value has-value';
+    } else if (selectedId === 'none') {
+      valEl.innerHTML = 'Auto <span class="chevron">&#9660;</span>';
+      valEl.className = 'cat-value';
+    } else {
+      const opt = cat.options.find(o => o.id === selectedId);
+      const label = opt ? opt.label_ko : selectedId;
+      valEl.innerHTML = `${label} <span class="chevron">&#9660;</span>`;
+      valEl.className = 'cat-value has-value';
+    }
+  }
+
+  // Update preset cards
+  const presets = cinematography.getPresets();
+  document.querySelectorAll('.preset-card[data-preset]').forEach(card => {
+    const preset = presets.find(p => p.id === card.dataset.preset);
+    if (!preset) return;
+    const isActive = Object.entries(preset.selections).every(([k, v]) => selections[k] === v);
+    card.classList.toggle('active', isActive);
+  });
+
+  // Update warnings
+  const warningsEl = document.getElementById('vdWarnings');
+  if (warningsEl) {
+    const warnings = cinematography.checkWarnings();
+    warningsEl.innerHTML = warnings.map(w => `<div style="font-size:10px;color:var(--amber);padding:4px 0">${w.message}</div>`).join('');
+  }
+
+  // Update active count in floating bar
+  const count = Object.values(selections).filter(v => v !== 'none').length;
+  const countEl = document.getElementById('floatingActiveCount');
+  if (countEl) countEl.textContent = count > 0 ? `${count} active` : '';
+}
+
+window.toggleVD = function() {
+  // VD is now distributed across tabs — no-op
+};
+
+window.selectVD = function(catId, optId) {
+  cinematography.setSelection(catId, optId);
+  console.log('[VD] setSelection:', catId, '→', optId, '| current:', JSON.stringify(cinematography.getSelections()));
+  updateVDUI();
+};
+
+// Color Temperature slider handler (Visual Direction category)
+window.handleColorTempSlider = function(value) {
+  const val = parseInt(value);
+  const label = document.getElementById('slider-val-color_temperature');
+  if (label) label.textContent = val + 'K';
+  // Also sync with the legacy colorTemp variable and slider
+  colorTemp = val;
+  const legacySlider = document.getElementById('colorTempSlider');
+  if (legacySlider) legacySlider.value = val;
+  window.updateColorTemp(val);
+  // Find nearest preset option
+  const presets = [2700, 3200, 4000, 5500, 6500, 8000];
+  const nearest = presets.reduce((a, b) => Math.abs(b - val) < Math.abs(a - val) ? b : a);
+  if (Math.abs(nearest - val) <= 100) {
+    selectColorTemp(nearest + 'k', nearest, true);
+  } else {
+    // Custom value — use none selection, colorTemp variable handles prompt
+    cinematography.setSelection('color_temperature', 'none');
+    updateVDUI();
+  }
+};
+
+window.selectColorTemp = function(optId, value, fromSlider) {
+  cinematography.setSelection('color_temperature', optId);
+  // Update VD slider position
+  const slider = document.getElementById('slider-color_temperature');
+  if (slider && !fromSlider) slider.value = value;
+  const label = document.getElementById('slider-val-color_temperature');
+  if (label) label.textContent = value + 'K';
+  // Sync with legacy colorTemp variable
+  colorTemp = value;
+  const legacySlider = document.getElementById('colorTempSlider');
+  if (legacySlider) legacySlider.value = value;
+  window.updateColorTemp(value);
+  // Highlight preset chip
+  document.querySelectorAll('[data-cat="color_temperature"]').forEach(c => {
+    c.classList.remove('selected', 'auto-selected');
+    if (c.dataset.opt === optId) c.classList.add('selected');
+  });
+  updateVDUI();
+};
+
+window.applyVDPreset = function(presetId) {
+  cinematography.applyPreset(presetId);
+  // Sync color temperature slider with preset value
+  const preset = cinematography.getPresets().find(p => p.id === presetId);
+  if (preset && preset.selections.color_temperature) {
+    const tempVal = parseInt(preset.selections.color_temperature);
+    if (tempVal) {
+      const slider = document.getElementById('slider-color_temperature');
+      if (slider) slider.value = tempVal;
+      const label = document.getElementById('slider-val-color_temperature');
+      if (label) label.textContent = tempVal + 'K';
+      colorTemp = tempVal;
+      const legacySlider = document.getElementById('colorTempSlider');
+      if (legacySlider) legacySlider.value = tempVal;
+      if (window.updateColorTemp) window.updateColorTemp(tempVal);
+    }
+  } else {
+    // Reset to default if preset has no color temp
+    const slider = document.getElementById('slider-color_temperature');
+    if (slider) slider.value = 5500;
+    const label = document.getElementById('slider-val-color_temperature');
+    if (label) label.textContent = '5500K';
+    colorTemp = 0;
+  }
+  updateVDUI();
+  updateVDVideoVisibility();
+};
+
+window.resetVD = function() {
+  cinematography.resetAll();
+  updateVDUI();
+};
+
+// Init on load
+initVD();
+
+window.setModelDuration = function(model, value) {
+  modelDurations[model] = value;
+  const valEl = document.getElementById('dur-val-' + model);
+  if (valEl) valEl.textContent = value + 's';
+};
+
+// ── Expose to global for onclick handlers ──
+window.selectModel = function(model) {
+  const idx = selectedModels.indexOf(model);
+  if (idx >= 0) {
+    selectedModels.splice(idx, 1); // deselect
+  } else if (selectedModels.length < 2) {
+    selectedModels.push(model); // add (max 2)
+  } else {
+    selectedModels.shift(); // remove oldest, add new
+    selectedModels.push(model);
+  }
+  if (selectedModels.length === 0) selectedModels = ['nano-banana-pro']; // fallback
+  document.querySelectorAll('.model-chip').forEach(c => {
+    c.classList.toggle('selected', selectedModels.includes(c.dataset.model));
+  });
+  // Update generate button text
+  const btn = document.getElementById('generateBtn');
+  if (!isGenerating) {
+    btn.textContent = selectedModels.length === 2 ? 'A/B Compare' : 'Generate';
+  }
+  // Update floating bar model label
+  const modelLabel = document.getElementById('floatingModelLabel');
+  if (modelLabel) {
+    if (selectedModels.length === 2) {
+      const l1 = MODEL_INFO[selectedModels[0]]?.label || selectedModels[0];
+      const l2 = MODEL_INFO[selectedModels[1]]?.label || selectedModels[1];
+      modelLabel.textContent = `${l1} vs ${l2}`;
+    } else {
+      modelLabel.textContent = MODEL_INFO[selectedModels[0]]?.label || selectedModels[0];
+    }
+  }
+  // Update reference zone UI for Kontext (editing mode)
+  const refText = document.querySelector('.ref-drop-text');
+  const modeRow = document.getElementById('refModeRow');
+  const isKontext = selectedModels.includes('flux-kontext');
+  if (refText && referenceImages.length === 0) {
+    if (isKontext) {
+      refText.innerHTML = '<strong>Base Image</strong> — 편집할 원본 이미지 드래그 또는 <span class="key">V</span> 붙여넣기';
+    } else {
+      refText.innerHTML = '레퍼런스 드래그 또는 <span class="key">V</span> 붙여넣기';
+    }
+  }
+  // Hide Scene/Object/Style buttons for Kontext — it's always editing the base image
+  if (modeRow) {
+    if (isKontext && referenceImages.length > 0) {
+      modeRow.style.display = 'none';
+    }
+  }
+  // Show/hide per-model duration sliders
+  const VIDEO_IDS = ['veo3.1', 'veo3.1-fast', 'veo3.1-flf', 'veo3.1-fast-flf', 'veo3.1-ref', 'kling', 'sora2', 'seedance2'];
+  VIDEO_IDS.forEach(vid => {
+    const durEl = document.getElementById('dur-' + vid);
+    if (durEl) durEl.style.display = selectedModels.includes(vid) ? 'flex' : 'none';
+  });
+  // Show FLF zone when FLF model selected; hide standard ref dropzone
+  const FLF_IDS = ['veo3.1-flf', 'veo3.1-fast-flf'];
+  const isFLF = selectedModels.some(m => FLF_IDS.includes(m));
+  const flfZone = document.getElementById('flfZone');
+  const refDropzoneWrap = document.querySelector('.ref-zone')?.closest('.ref-zone-wrap') || document.querySelector('.ref-zone-wrap');
+  if (flfZone) flfZone.style.display = isFLF ? '' : 'none';
+  // Update VD video category visibility
+  updateVDVideoVisibility();
+  updateResLabel();
+};
+
+window.updateResLabel = function() {
+  const el = document.getElementById('floatingResLabel');
+  if (!el || !window._MODEL_RESOLUTIONS) return;
+  const model = selectedModels[0] || 'nano-banana-pro';
+  const ar = selectedAR || '9:16';
+  const modelKey = model;
+  const info = window._MODEL_RESOLUTIONS[modelKey];
+  if (info && info.sizes[ar]) {
+    el.textContent = info.sizes[ar];
+  } else if (info) {
+    // Fallback to first available size
+    const firstSize = Object.values(info.sizes)[0];
+    el.textContent = firstSize || '';
+  } else {
+    el.textContent = '';
+  }
+};
+
+window.selectAR = function(ar) {
+  selectedAR = ar;
+  document.querySelectorAll('[data-ar]').forEach(b => {
+    b.classList.toggle('active', b.dataset.ar === ar);
+  });
+  // Update floating bar and cat-row label
+  const ratioLabel = document.getElementById('floatingRatioLabel');
+  if (ratioLabel) ratioLabel.textContent = ar;
+  const arValueLabel = document.getElementById('arValueLabel');
+  if (arValueLabel) arValueLabel.textContent = ar;
+  if (typeof updateARCanvas === 'function') updateARCanvas();
+  updateResLabel();
+};
+
+// ═══════════════════════════════════════════
+// EDIT MODE
+// ═══════════════════════════════════════════
+let editRefImageData = null;
+let editSelectedModel = 'nano-banana-pro';
+let editAnalysisData = null;
+
+window.switchMode = function(mode) {
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.querySelector('.layout').style.display = mode === 'main' ? '' : 'none';
+  document.getElementById('editLayout').style.display = mode === 'edit' ? '' : 'none';
+  document.querySelector('.floating-bar').style.display = mode === 'main' ? '' : 'none';
+};
+
+window.selectEditModel = function(model) {
+  editSelectedModel = model;
+  document.querySelectorAll('.edit-model-btn').forEach(b => b.classList.toggle('active', b.dataset.model === model));
+};
+
+// Enter edit mode with a specific image (from main mode result)
+window.enterEditWithImage = function(imageUrl) {
+  editRefImageData = imageUrl;
+  const preview = document.getElementById('editRefPreview');
+  const img = document.getElementById('editRefImg');
+  const dropzone = document.getElementById('editRefDropzone');
+  img.src = imageUrl;
+  preview.style.display = 'block';
+  dropzone.style.display = 'none';
+  switchMode('edit');
+};
+
+window.clearEditRef = function() {
+  editRefImageData = null;
+  document.getElementById('editRefPreview').style.display = 'none';
+  document.getElementById('editRefDropzone').style.display = '';
+};
+
+// Edit ref file upload (click)
+document.getElementById('editRefFileInput')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => enterEditWithImage(ev.target.result);
+  reader.readAsDataURL(file);
+});
+
+// Edit ref drag & drop
+const editDZ = document.getElementById('editRefDropzone');
+if (editDZ) {
+  editDZ.addEventListener('dragover', (e) => { e.preventDefault(); editDZ.classList.add('drag-over'); });
+  editDZ.addEventListener('dragleave', () => editDZ.classList.remove('drag-over'));
+  editDZ.addEventListener('drop', (e) => {
+    e.preventDefault(); editDZ.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => enterEditWithImage(ev.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Edit: Run analysis
+window.runEditAnalysis = async function() {
+  const brief = document.getElementById('editBriefInput').value.trim();
+  if (!brief) { alert('변경 사항을 입력하세요'); return; }
+  if (!editRefImageData) { alert('편집할 이미지를 첨부하세요'); return; }
+
+  const panel = document.getElementById('editAnalysisPanel');
+  panel.style.display = 'block';
+  panel.querySelector('.section-label').innerHTML = '<span>⏳</span> Claude 분석 중...';
+
+  const EDIT_AI_PROXY = 'https://odd-ai-proxy.it-751.workers.dev';
+  const analysisPrompt = `Analyze this edit request and categorize elements into KEEP (preserve exactly) and CHANGE (modify).
+
+User's edit request: "${brief}"
+
+Respond in this EXACT JSON format only, no other text:
+{"keep": ["element 1 description", "element 2 description"], "change": [{"from": "current state", "to": "desired state"}, {"from": "current", "to": "desired"}]}`;
+
+  try {
+    const key = localStorage.getItem('odd_ai_key') || 'USE_SERVER_KEY';
+    const r = await fetch(EDIT_AI_PROXY, {
+      method: 'POST',
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 500,
+        system: 'You are an image edit analyzer. Respond ONLY with valid JSON, no markdown, no explanation.',
+        messages: [{ role: 'user', content: analysisPrompt }]
+      })
+    });
+
+    if (!r.ok) {
+      const errData = await r.json().catch(() => ({}));
+      const msg = errData?.error?.message || errData?.error || r.statusText;
+      throw new Error(`Claude API 오류 (${r.status}): ${msg}`);
+    }
+
+    const data = await r.json();
+    const text = data.content?.[0]?.text?.trim() || '';
+    if (!text) throw new Error('Claude 응답이 비어있음');
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('JSON 파싱 실패: ' + text.slice(0, 80));
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!parsed.keep || !parsed.change) throw new Error('JSON 구조 오류');
+
+    editAnalysisData = parsed;
+    console.log('[Edit] ✅ Claude 분석 완료 — keep:', editAnalysisData.keep.length, 'change:', editAnalysisData.change.length);
+  } catch (e) {
+    console.error('[Edit] Analysis failed:', e.message);
+    panel.querySelector('.section-label').innerHTML = `<span>⚠️</span> 분석 실패: ${e.message}`;
+    editAnalysisData = {
+      keep: ['레퍼런스 이미지의 전체 구도 및 스타일'],
+      change: [{ from: '사용자 지정 요소', to: brief }]
+    };
+  }
+
+  renderEditAnalysis();
+};
+
+function renderEditAnalysis() {
+  const panel = document.getElementById('editAnalysisPanel');
+  panel.querySelector('.section-label').innerHTML = '<span>🔍</span> 변경 분석 결과';
+
+  const keepHtml = (editAnalysisData.keep || []).map((item, i) =>
+    `<div class="edit-analysis-item"><span style="color:var(--blue)">✓</span> ${item}<button class="move-btn" onclick="moveToChange(${i})">→ 변경</button></div>`
+  ).join('');
+
+  const changeHtml = (editAnalysisData.change || []).map((item, i) =>
+    `<div class="edit-analysis-item"><span style="color:var(--amber)">↻</span> ${item.from} → <strong style="color:var(--amber)">${item.to}</strong><button class="move-btn" onclick="moveToKeep(${i})">→ 유지</button></div>`
+  ).join('');
+
+  document.getElementById('editKeepList').innerHTML =
+    '<div style="font-size:10px;font-weight:600;color:var(--blue);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">🔒 유지 (고정)</div>' + keepHtml;
+  document.getElementById('editChangeList').innerHTML =
+    '<div style="font-size:10px;font-weight:600;color:var(--amber);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em">🔄 변경</div>' + changeHtml;
+}
+
+window.moveToChange = function(idx) {
+  const item = editAnalysisData.keep.splice(idx, 1)[0];
+  editAnalysisData.change.push({ from: item, to: '(변경 대상으로 이동됨)' });
+  renderEditAnalysis();
+};
+
+window.moveToKeep = function(idx) {
+  const item = editAnalysisData.change.splice(idx, 1)[0];
+  editAnalysisData.keep.push(item.from + ' (' + item.to + ')');
+  renderEditAnalysis();
+};
+
+window.editAnalysisRetry = function() {
+  document.getElementById('editAnalysisPanel').style.display = 'none';
+  editAnalysisData = null;
+};
+
+window.editAnalysisConfirm = async function() {
+  if (isGenerating) return; // M-6: guard against double-submit
+  const brief = document.getElementById('editBriefInput').value.trim();
+  const results = document.getElementById('editResults');
+  results.innerHTML = '';
+
+  // Build edit-specific combinedInput with keep/change analysis
+  let editInput = `=== EDIT MODE — PRESERVE/CHANGE ANALYSIS ===\n`;
+  editInput += `PRESERVE (do NOT change these elements from the reference image):\n`;
+  (editAnalysisData.keep || []).forEach(k => { editInput += `- ${k}\n`; });
+  editInput += `\nCHANGE (modify ONLY these elements):\n`;
+  (editAnalysisData.change || []).forEach(c => { editInput += `- ${c.from} → ${c.to}\n`; });
+  editInput += `\nUser's edit request: ${brief}\n`;
+
+  isGenerating = true;
+  const confirmBtn = document.querySelector('[onclick="editAnalysisConfirm()"]');
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = '생성 중...'; }
+
+  try {
+    const v = Date.now();
+    const { optimizePromptForModel } = await import('./js/prompt-optimizer-pipe.js?' + v);
+    const { generateAsset } = await import('./js/generators.js?' + v);
+    const { MODEL_INFO } = await import('./js/router-engine.js?' + v);
+
+    const info = MODEL_INFO[editSelectedModel] || {};
+    results.innerHTML = `<div class="glass-card"><div class="section-label">${info.icon || ''} ${info.label || editSelectedModel} 생성 중...</div><div style="text-align:center;padding:24px"><div class="spinner"></div></div></div>`;
+
+    const { prompt } = await optimizePromptForModel(editSelectedModel, editInput, {
+      hasReferenceImage: true, referenceMode: 'scene', rawBrief: brief
+    });
+
+    const result = await generateAsset(editSelectedModel, prompt, {
+      aspectRatio: selectedAR || '9:16',
+      referenceImage: editRefImageData,
+      referenceMode: 'scene',
+      referenceImages: [{ dataUrl: editRefImageData, mode: 'scene' }],
+      duration: modelDurations[editSelectedModel],
+    });
+
+    const media = result.type === 'video'
+      ? `<video src="${result.url}" controls playsinline autoplay muted loop style="width:100%;border-radius:8px"></video>`
+      : `<img src="${result.url}" style="width:100%;border-radius:8px">`;
+
+    results.innerHTML = `<div class="glass-card">
+      <div class="section-label">${info.icon || ''} ${info.label || editSelectedModel}</div>
+      ${media}
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="action-btn" onclick="enterEditWithImage('${result.url}')">이 이미지로 재편집</button>
+        <button class="action-btn" onclick="downloadAsset('${result.url}','edit_${Date.now()}.${result.type === 'video' ? 'mp4' : 'png'}')">↓</button>
+      </div>
+    </div>`;
+  } catch (e) {
+    results.innerHTML = `<div class="glass-card"><div style="color:var(--red);font-size:12px;padding:16px">${e.message}</div></div>`;
+  } finally {
+    // M-6: always restore button state
+    isGenerating = false;
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '확인 후 생성'; }
+  }
+};
+
+// Edit brief: Cmd+Enter → run analysis immediately
+// Auto-analysis: triggers 1.5s after user stops typing (if image loaded)
+let _editAnalysisTimer = null;
+document.getElementById('editBriefInput')?.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    clearTimeout(_editAnalysisTimer);
+    runEditAnalysis();
+  }
+});
+document.getElementById('editBriefInput')?.addEventListener('input', function() {
+  clearTimeout(_editAnalysisTimer);
+  if (!editRefImageData) return; // only auto-analyze when image is loaded
+  const brief = this.value.trim();
+  if (brief.length < 5) return; // skip very short input
+  _editAnalysisTimer = setTimeout(() => runEditAnalysis(), 1500);
+});
+
+window.openSettings = function() {
+  document.getElementById('keyHiggs').value = localStorage.getItem('odd_higgs_key') || '';
+  document.getElementById('keyOpenAI').value = localStorage.getItem('odd_openai_key') || '';
+  document.getElementById('keyFal').value = localStorage.getItem('odd_fal_key') || '';
+  document.getElementById('keyIdeogram').value = localStorage.getItem('odd_ideogram_key') || '';
+  document.getElementById('keyGemini').value = localStorage.getItem('odd_gemini_key') || '';
+  document.getElementById('keyClaude').value = localStorage.getItem('odd_ai_key') || '';
+  document.getElementById('brandContextToggle').checked = localStorage.getItem('odd_brand_context') === 'true';
+  renderLoraList();
+  document.getElementById('settingsOverlay').classList.add('open');
+};
+
+window.closeSettings = function() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+};
+
+window.saveSettings = function() {
+  const save = (id, key) => {
+    const v = document.getElementById(id).value.trim();
+    v ? localStorage.setItem(key, v) : localStorage.removeItem(key);
+  };
+  save('keyHiggs', 'odd_higgs_key');
+  save('keyOpenAI', 'odd_openai_key');
+  save('keyFal', 'odd_fal_key');
+  save('keyIdeogram', 'odd_ideogram_key');
+  save('keyGemini', 'odd_gemini_key');
+  save('keyClaude', 'odd_ai_key');
+  // Brand context toggle
+  const brandOn = document.getElementById('brandContextToggle')?.checked;
+  localStorage.setItem('odd_brand_context', brandOn ? 'true' : 'false');
+  updateModelDots();
+  closeSettings();
+};
+
+// ── LoRA Management ──
+let loraTrainingImages = [];
+const LORA_STORAGE_KEY = 'odd_pipe_loras';
+
+function getStoredLoras() {
+  try { return JSON.parse(localStorage.getItem(LORA_STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveStoredLoras(loras) {
+  localStorage.setItem(LORA_STORAGE_KEY, JSON.stringify(loras));
+}
+
+function renderLoraList() {
+  const el = document.getElementById('loraList');
+  if (!el) return;
+  const loras = getStoredLoras();
+  if (loras.length === 0) {
+    el.innerHTML = '<div style="font-size:10px;color:var(--text-4);padding:4px 0">학습된 LoRA가 없습니다</div>';
+    return;
+  }
+  el.innerHTML = loras.map((l, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-subtle)">
+      <input type="checkbox" ${l.active ? 'checked' : ''} onchange="toggleLora(${i}, this.checked)" style="accent-color:var(--red)">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--text-1)">${l.name}</div>
+        <div style="font-size:9px;color:var(--text-4)">trigger: ${l.trigger} | ${l.status}</div>
+      </div>
+      <button onclick="deleteLora(${i})" style="background:none;border:none;color:var(--text-4);cursor:pointer;font-size:12px">✕</button>
+    </div>
+  `).join('');
+}
+
+window.toggleLora = function(idx, active) {
+  const loras = getStoredLoras();
+  if (loras[idx]) { loras[idx].active = active; saveStoredLoras(loras); }
+};
+
+window.deleteLora = function(idx) {
+  const loras = getStoredLoras();
+  loras.splice(idx, 1);
+  saveStoredLoras(loras);
+  renderLoraList();
+};
+
+window.showLoraTrainer = function() {
+  document.getElementById('loraTrainerPanel').style.display = 'block';
+  loraTrainingImages = [];
+  document.getElementById('loraImageCount').textContent = '';
+  document.getElementById('loraName').value = '';
+  document.getElementById('loraTrigger').value = '';
+  document.getElementById('loraTrainingStatus').textContent = '';
+};
+
+window.hideLoraTrainer = function() {
+  document.getElementById('loraTrainerPanel').style.display = 'none';
+};
+
+window.handleLoraImages = function(files) {
+  for (const f of files) {
+    if (loraTrainingImages.length >= 50) break;
+    loraTrainingImages.push(f);
+  }
+  document.getElementById('loraImageCount').textContent = `${loraTrainingImages.length}/50 이미지 선택됨`;
+};
+
+window.startLoraTraining = async function() {
+  const name = document.getElementById('loraName').value.trim();
+  const trigger = document.getElementById('loraTrigger').value.trim();
+  if (!name || !trigger) return alert('LoRA 이름과 트리거 워드를 입력하세요');
+  if (loraTrainingImages.length < 9) return alert('최소 9장의 이미지가 필요합니다');
+
+  const statusEl = document.getElementById('loraTrainingStatus');
+  statusEl.textContent = '⏳ 이미지 업로드 중...';
+
+  try {
+    // Upload images to get public URLs
+    const imageUrls = [];
+    for (const file of loraTrainingImages) {
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+      const r = await fetch('https://odd-ai-proxy.it-751.workers.dev/upload-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+      if (r.ok) {
+        const data = await r.json();
+        if (data.url) imageUrls.push(data.url);
+      }
+      statusEl.textContent = `⏳ 이미지 업로드 중... (${imageUrls.length}/${loraTrainingImages.length})`;
+    }
+
+    statusEl.textContent = '⏳ fal.ai LoRA 학습 시작...';
+
+    const falKey = localStorage.getItem('odd_fal_key') || 'USE_SERVER_KEY';
+    const trainBody = {
+      images_data_url: imageUrls,
+      trigger_word: trigger,
+      steps: 1000,
+    };
+
+    const r = await fetch('https://odd-ai-proxy.it-751.workers.dev/fal/fal-ai/flux-2-trainer', {
+      method: 'POST',
+      headers: { 'x-fal-key': falKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify(trainBody),
+    });
+
+    if (!r.ok) throw new Error(await r.text());
+    const result = await r.json();
+
+    // Save LoRA to storage
+    const loras = getStoredLoras();
+    loras.push({
+      name,
+      trigger,
+      active: true,
+      status: result.request_id ? '학습 중...' : '완료',
+      requestId: result.request_id || null,
+      loraUrl: result.diffusers_lora_file?.url || null,
+      createdAt: new Date().toISOString(),
+    });
+    saveStoredLoras(loras);
+    renderLoraList();
+    hideLoraTrainer();
+    statusEl.textContent = '✅ 학습 요청 완료! 학습에 10-30분 소요됩니다.';
+  } catch(e) {
+    console.error('[LoRA] Training error:', e);
+    statusEl.textContent = '❌ 오류: ' + e.message;
+  }
+};
+
+window.handleStop = function() {
+  if (abortController) {
+    abortController.abort();
+    console.log('[UI] Generation stopped by user');
+  }
+  isGenerating = false;
+  abortController = null;
+  const btn = document.getElementById('generateBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  btn.disabled = false;
+  btn.style.display = '';
+  btn.textContent = selectedModels.length === 2 ? 'A/B Compare' : 'Generate';
+  btn.classList.remove('loading');
+  if (stopBtn) stopBtn.style.display = 'none';
+};
+
+window.handleGenerate = async function() {
+  const brief = document.getElementById('briefInput').value.trim();
+  if (!brief || isGenerating) return;
+
+  // FLF validation — both frames required
+  const FLF_MODELS = ['veo3.1-flf', 'veo3.1-fast-flf'];
+  if (selectedModels.some(m => FLF_MODELS.includes(m))) {
+    if (!flfFirstFrame || !flfLastFrame) {
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+      addCard(results, 'error', '⚠️ FLF 오류', '<div style="color:var(--amber);font-size:13px">시작 프레임과 끝 프레임을 모두 업로드해주세요.</div>', 'var(--amber)');
+      return;
+    }
+  }
+
+  isGenerating = true;
+  abortController = new AbortController();
+  const btn = document.getElementById('generateBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  btn.classList.add('loading');
+  btn.style.display = 'none';
+  if (stopBtn) stopBtn.style.display = '';
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+
+  try {
+    // Step 1: Determine models to use
+    let modelsToRun = [];
+
+    modelsToRun = selectedModels.map(m => ({ model: m, needsRef: false }));
+    if (modelsToRun.length === 2) {
+      addCard(results, 'router', '\u2694\uFE0F A/B Compare', `<div class="router-info">${modelsToRun.map(m => { const i = MODEL_INFO[m.model]; return `<span class="router-model">${i?.icon||''} ${i?.label||m.model}</span>`; }).join(' vs ')}</div>`, 'var(--orange)');
+    } else {
+      const info = MODEL_INFO[modelsToRun[0].model];
+      addCard(results, 'router', `${info?.icon || ''} ${info?.label || modelsToRun[0].model}`, 'Manual selection', info?.color || 'var(--t4)');
+    }
+
+    // Step 2: Build structured input from brief + sub-briefs + visual direction
+    addCard(results, 'prompt', '\u270D\uFE0F Prompt Optimization', '<div class="spinner"></div><div class="progress-text">프롬프트 최적화 중 (Claude \u2192 Gemini)...</div>', 'var(--blue)', true);
+
+    // Collect sub-briefs
+    const subBriefText = collectSubBriefs();
+    // Collect visual direction
+    const visualDirection = cinematography.buildVisualDirection();
+    // Collect placement directive
+    const placementDirective = window.getPlacementPrompt ? window.getPlacementPrompt() : '';
+
+    // Build STRUCTURED input for prompt optimizer with clear priority hierarchy
+    const ctPrompt = getColorTempPrompt();
+    let combinedInput = '';
+
+    // Section 1: CREATIVE INTENT — the user's main brief (HIGHEST PRIORITY)
+    combinedInput += '=== CREATIVE INTENT (최우선 — 이 섹션이 최종 프롬프트의 핵심 방향) ===\n';
+    combinedInput += brief + '\n\n';
+
+    // Section 2: SUBJECT DETAILS — structured detail fields
+    if (subBriefText) {
+      combinedInput += '=== SUBJECT DETAILS (구체적 설정) ===\n';
+      combinedInput += subBriefText + '\n\n';
+    }
+
+    // Section 3: CAMERA SETTINGS — VD categories (LOWER PRIORITY than creative intent)
+    if (visualDirection) {
+      combinedInput += '=== CAMERA SETTINGS (보조 설정 — CREATIVE INTENT와 충돌 시 CREATIVE INTENT 우선) ===\n';
+      combinedInput += visualDirection + '\n\n';
+    }
+
+    // Section 4: TECHNICAL OVERRIDES
+    if (placementDirective || ctPrompt) {
+      combinedInput += '=== TECHNICAL SETTINGS ===\n';
+      if (placementDirective) combinedInput += placementDirective + '\n';
+      if (ctPrompt) combinedInput += ctPrompt + '\n';
+      combinedInput += '\n';
+    }
+
+    // Add per-image reference mode info to combinedInput
+    if (referenceImages.length > 0) {
+      const refDesc = referenceImages.map((img, i) => `Image ${i+1}: ${img.mode} reference`).join(', ');
+      combinedInput += `\n[REFERENCE IMAGES: ${refDesc}]`;
+      if (referenceImages.length > 1) {
+        combinedInput += '\nIMPORTANT: Multiple reference images with different roles. ';
+        referenceImages.forEach((img, i) => {
+          if (img.mode === 'scene') combinedInput += `Image ${i+1} is the SCENE reference (keep composition, setting, mood). `;
+          if (img.mode === 'object') combinedInput += `Image ${i+1} is the OBJECT reference (use this exact object in the scene). `;
+          if (img.mode === 'style') combinedInput += `Image ${i+1} is the STYLE reference (match color grading, tone, and visual feel). `;
+        });
+      }
+    }
+
+    // Step 3: Generate — single or A/B parallel
+    const isAB = modelsToRun.length === 2;
+
+    function stripKontextPrefix(prompt) {
+      return prompt
+        .replace(/^Use the provided reference image as a style.*?atmosphere\.\s*/is, '')
+        .replace(/^Edit this image:\s*/i, '')
+        .replace(/^Match its overall visual feel.*?\.\s*/is, '')
+        .trim();
+    }
+
+    if (visualDirection) console.log('[VD] Visual direction included:', visualDirection.substring(0, 80) + '...');
+    if (subBriefText) console.log('[SB] Sub-briefs included:', subBriefText.substring(0, 80) + '...');
+
+    if (isAB) {
+      // A/B: Optimize both prompts in PARALLEL — one Claude call each, fired simultaneously
+      // Then show the prompt card ONCE with both results
+      const abContainer = document.createElement('div');
+      abContainer.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;';
+      abContainer.id = 'ab-container';
+      results.appendChild(abContainer);
+
+      modelsToRun.forEach((m, idx) => {
+        const info = MODEL_INFO[m.model];
+        const label = idx === 0 ? 'A' : 'B';
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.id = 'card-gen-' + label;
+        card.innerHTML = `<div class="result-header"><div class="result-dot" style="background:${info?.color || 'var(--t4)'}"></div><div class="result-label">${info?.icon||''} ${info?.label||m.model}</div><span class="result-badge">${label}</span></div><div class="result-body" style="text-align:center;padding:24px"><div class="spinner"></div><div class="progress-text">프롬프트 최적화 중...</div></div>`;
+        abContainer.appendChild(card);
+      });
+
+      // Optimize A and B in parallel — single prompt card update after both finish
+      const [resA, resB] = await Promise.all([
+        optimizePromptForModel(modelsToRun[0].model, combinedInput, { hasReferenceImage: referenceImages.length > 0, referenceMode, referenceImages, rawBrief: brief, duration: modelDurations[modelsToRun[0].model] }),
+        optimizePromptForModel(modelsToRun[1].model, combinedInput, { hasReferenceImage: referenceImages.length > 0, referenceMode, referenceImages, rawBrief: brief, duration: modelDurations[modelsToRun[1].model] }),
+      ]);
+
+      let pA = modelsToRun[0].model === 'flux-kontext' && referenceImages.length > 0 ? stripKontextPrefix(resA.prompt) : resA.prompt;
+      let pB = modelsToRun[1].model === 'flux-kontext' && referenceImages.length > 0 ? stripKontextPrefix(resB.prompt) : resB.prompt;
+      const abPrompts = [pA, pB];
+
+      const labelA = MODEL_INFO[modelsToRun[0].model]?.label || modelsToRun[0].model;
+      const labelB = MODEL_INFO[modelsToRun[1].model]?.label || modelsToRun[1].model;
+
+      // Single prompt card update — shows both A and B together
+      updateCard('prompt', `
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2)">
+            ✅ AI 최적화 완료 (모델별 프롬프트 2개)
+            <button class="prompt-toggle" onclick="this.closest('.result-body').querySelector('.prompt-ab-wrap').classList.toggle('open')" style="margin-left:auto">프롬프트 보기</button>
+          </div>
+          <div class="prompt-ab-wrap prompt-content">
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:4px">A — ${labelA} <span style="color:var(--text-4);font-weight:400">(${pA.length}자)</span></div>
+              <pre style="font-size:10px;white-space:pre-wrap;color:var(--text-3);max-height:200px;overflow-y:auto">${esc(pA)}</pre>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:4px">B — ${labelB} <span style="color:var(--text-4);font-weight:400">(${pB.length}자)</span></div>
+              <pre style="font-size:10px;white-space:pre-wrap;color:var(--text-3);max-height:200px;overflow-y:auto">${esc(pB)}</pre>
+            </div>
+          </div>
+        </div>`);
+
+      modelsToRun.forEach((m, idx) => {
+        const label = idx === 0 ? 'A' : 'B';
+        const card = document.getElementById('card-gen-' + label);
+        if (card) card.querySelector('.progress-text').textContent = '이미지 생성 중...';
+      });
+
+      const promises = modelsToRun.map(async (m, idx) => {
+        const label = idx === 0 ? 'A' : 'B';
+        const modelPrompt = abPrompts[idx];
+        try {
+        const isFLFModelAB = ['veo3.1-flf', 'veo3.1-fast-flf'].includes(m.model);
+        const result = await generateAsset(m.model, modelPrompt, {
+          aspectRatio: selectedAR,
+          referenceImage: referenceImages.length > 0 ? referenceImages[0].dataUrl : undefined,
+          referenceMode,
+          referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+          duration: modelDurations[m.model],
+          ...(isFLFModelAB && flfFirstFrame && flfLastFrame ? { firstFrameUrl: flfFirstFrame.dataUrl, lastFrameUrl: flfLastFrame.dataUrl } : {}),
+        });
+          const info = MODEL_INFO[m.model];
+          const media = result.type === 'video'
+            ? `<video src="${result.url}" controls playsinline autoplay muted loop style="width:100%;border-radius:8px"></video>`
+            : `<img src="${result.url}" alt="${label}" style="width:100%;border-radius:8px" loading="lazy">`;
+          const card = document.getElementById('card-gen-' + label);
+          if (card) {
+            card.querySelector('.result-body').innerHTML = media;
+            const memId = saveGeneration(brief, modelPrompt, m.model, result.url, result.type);
+            const ext = result.type === 'video' ? 'mp4' : 'png';
+            const dlFn = `downloadAsset('${result.url}','odd_pipe_${label}_${Date.now()}.${ext}')`;
+            card.insertAdjacentHTML('beforeend', `<div class="rating-row">
+              <button class="rate-btn" onclick="rateResult('${memId}','save',this)" title="프롬프트 학습에 반영">\u2B50 Save</button>
+              <button class="rate-btn" onclick="rateResult('${memId}','ok',this)" title="방향은 OK, 퀄리티 부족">\u{1F44C} 방향 OK</button>
+              <button class="rate-btn" onclick="rateResult('${memId}','flag',this)" title="이건 아님 — 모델 라우팅에만 반영">\u{1F6A9} Flag</button>
+              <button class="rate-btn" onclick="${dlFn}">\u2B07</button>
+              <button onclick="navigator.clipboard.writeText('${result.url}');this.textContent='Copied!'" class="rate-btn">\u{1F4CB} URL</button>
+            </div>`);
+          }
+          sessionHistory.unshift({ brief, model: m.model, url: result.url, type: result.type, time: new Date() });
+          return result;
+        } catch(err) {
+          const card = document.getElementById('card-gen-' + label);
+          if (card) card.querySelector('.result-body').innerHTML = `<div style="color:var(--red);font-size:13px">${esc(err.message)}</div>`;
+        }
+      });
+
+      await Promise.allSettled(promises);
+      renderHistory();
+
+    } else {
+      // Single model — optimize prompt then generate
+      const m = modelsToRun[0];
+      const info = MODEL_INFO[m.model];
+
+      const resOpt = await optimizePromptForModel(m.model, combinedInput, {
+        hasReferenceImage: referenceImages.length > 0,
+        referenceMode,
+        referenceImages,
+        rawBrief: brief,
+        duration: modelDurations[m.model],
+      });
+      let optimizedPrompt = resOpt.prompt;
+      if (m.model === 'flux-kontext' && referenceImages.length > 0) optimizedPrompt = stripKontextPrefix(optimizedPrompt);
+
+      updateCard('prompt', `
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:6px">✅ AI 최적화 완료</div>
+        <button class="prompt-toggle" onclick="this.nextElementSibling.classList.toggle('open')">프롬프트 보기</button>
+        <pre class="prompt-content" style="font-size:10px;white-space:pre-wrap;color:var(--text-3);max-height:200px;overflow-y:auto">${esc(optimizedPrompt)}</pre>`);
+
+      addCard(results, 'gen', `${info?.icon || '\u{1F3A8}'} Generating...`, '<div style="text-align:center;padding:24px"><div class="spinner"></div><div class="progress-text">' + (info?.label || m.model) + ' 에셋 생성 중...<br><span style="font-size:11px;color:var(--t5)">최대 2-3분 소요될 수 있습니다</span></div></div>', info?.color || 'var(--blue)');
+
+      const isFLFModel = ['veo3.1-flf', 'veo3.1-fast-flf'].includes(m.model);
+      const result = await generateAsset(m.model, optimizedPrompt, {
+        aspectRatio: selectedAR,
+        referenceImage: referenceImages.length > 0 ? referenceImages[0].dataUrl : (m.needsRef ? 'https://m-01.odd.us/landing/slide/1.jpg' : undefined),
+        referenceMode,
+        referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+        duration: modelDurations[m.model],
+        ...(isFLFModel && flfFirstFrame && flfLastFrame ? { firstFrameUrl: flfFirstFrame.dataUrl, lastFrameUrl: flfLastFrame.dataUrl } : {}),
+      });
+
+      const mediaHtml = result.type === 'video'
+        ? `<video src="${result.url}" controls playsinline autoplay muted loop style="width:100%;border-radius:8px"></video>`
+        : `<img src="${result.url}" alt="Generated asset" style="width:100%;border-radius:8px" loading="lazy">`;
+      updateCard('gen', mediaHtml, `${info?.label} — ${result.type}`);
+      const memId = saveGeneration(brief, optimizedPrompt, m.model, result.url, result.type);
+      addActions('gen', result.url, result.type, memId);
+
+      sessionHistory.unshift({ brief, model: m.model, url: result.url, type: result.type, time: new Date() });
+      renderHistory();
+    }
+
+  } catch (e) {
+    if (e.name === 'AbortError' || e.message === 'Generation stopped') {
+      addCard(results, 'stopped', '⏹ Stopped', '<div style="color:var(--text-3);font-size:13px">생성이 중지되었습니다.</div>', 'var(--text-4)');
+    } else {
+      addCard(results, 'error', '\u274C Error', `<div style="color:var(--red);font-size:13px">${esc(e.message)}</div>`, 'var(--red)');
+    }
+  } finally {
+    isGenerating = false;
+    abortController = null;
+    btn.disabled = false;
+    btn.style.display = '';
+    btn.textContent = selectedModels.length === 2 ? 'A/B Compare' : 'Generate';
+    btn.classList.remove('loading');
+    const stopBtn = document.getElementById('stopBtn');
+    if (stopBtn) stopBtn.style.display = 'none';
+  }
+};
+
+// ── UI Helpers ──
+function addCard(container, id, label, body, dotColor, isCenter) {
+  const card = document.createElement('div');
+  card.className = 'result-card' + (id === 'router' ? ' router-card' : '');
+  card.id = 'card-' + id;
+  card.innerHTML = `<div class="result-header"><div class="result-dot" style="background:${dotColor}"></div><div class="result-label">${label}</div></div><div class="result-body" ${isCenter ? 'style="text-align:center"' : ''}>${body}</div>`;
+  container.appendChild(card);
+}
+
+function updateCard(id, bodyHtml, badgeText) {
+  const card = document.getElementById('card-' + id);
+  if (!card) return;
+  const body = card.querySelector('.result-body');
+  if (body) { body.style.textAlign = 'left'; body.innerHTML = bodyHtml; }
+  if (badgeText) {
+    const header = card.querySelector('.result-header');
+    const existing = header.querySelector('.result-badge');
+    if (existing) existing.remove();
+    header.insertAdjacentHTML('beforeend', `<span class="result-badge">${badgeText}</span>`);
+  }
+}
+
+function addActions(id, url, type, memId) {
+  const card = document.getElementById('card-' + id);
+  if (!card) return;
+  const ext = type === 'video' ? 'mp4' : 'png';
+  const dlFn = `downloadAsset('${url}','odd_pipe_${Date.now()}.${ext}')`;
+  const utilBtns = type === 'image' ? `
+    <button class="rate-btn" onclick="runUpscale('${url}','${id}')" title="4x 업스케일 (AuraSR)">🔍 4x</button>
+    <button class="rate-btn" onclick="runRemoveBg('${url}','${id}')" title="배경 제거 (BiRefNet)">✂️ BG</button>
+  ` : '';
+  card.insertAdjacentHTML('beforeend', `<div class="rating-row">
+    <button class="rate-btn" onclick="rateResult('${memId}','save',this)" title="프롬프트 학습에 반영">\u2B50 Save</button>
+    <button class="rate-btn" onclick="rateResult('${memId}','ok',this)" title="방향은 OK, 퀄리티 부족">\u{1F44C} 방향 OK</button>
+    <button class="rate-btn" onclick="rateResult('${memId}','flag',this)" title="이건 아님">\u{1F6A9} Flag</button>
+    <button class="rate-btn" onclick="${dlFn}">\u2B07</button>
+    <button onclick="navigator.clipboard.writeText('${url}');this.textContent='Copied!'" class="rate-btn">\u{1F4CB} URL</button>
+    ${utilBtns}
+    <button class="rate-btn" onclick="enterEditWithImage('${url}')" style="margin-left:auto;border-color:var(--red);color:var(--red)" title="이 이미지를 기반으로 편집">✏️ Edit</button>
+  </div>`);
+}
+
+// ── Cross-origin download helper ──
+window.downloadAsset = async function(url, filename) {
+  try {
+    const r = await fetch(url);
+    const blob = await r.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename || 'odd_pipe_asset';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+  } catch(e) {
+    console.warn('[Download] Fetch-based download failed, opening in new tab:', e.message);
+    window.open(url, '_blank');
+  }
+};
+
+// ── Utility: 4x Upscale (AuraSR) ──
+window.runUpscale = async function(imageUrl, cardId) {
+  const btn = event.target;
+  const origText = btn.textContent;
+  btn.textContent = '⏳...';
+  btn.disabled = true;
+  try {
+    const { upscaleImage } = await import('./js/generators.js?' + Date.now());
+    const result = await upscaleImage(imageUrl);
+    // Replace image in card
+    const card = document.getElementById('card-' + cardId);
+    if (card) {
+      const img = card.querySelector('img');
+      if (img) img.src = result.url;
+    }
+    btn.textContent = '✅ 4x';
+  } catch(e) {
+    console.error('[Upscale] Error:', e);
+    btn.textContent = '❌';
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 2000);
+  }
+};
+
+// ── Utility: Background Removal (BiRefNet v2) ──
+window.runRemoveBg = async function(imageUrl, cardId) {
+  const btn = event.target;
+  const origText = btn.textContent;
+  btn.textContent = '⏳...';
+  btn.disabled = true;
+  try {
+    const { removeBackground } = await import('./js/generators.js?' + Date.now());
+    const result = await removeBackground(imageUrl);
+    // Replace image in card
+    const card = document.getElementById('card-' + cardId);
+    if (card) {
+      const img = card.querySelector('img');
+      if (img) img.src = result.url;
+    }
+    btn.textContent = '✅ BG';
+  } catch(e) {
+    console.error('[RemoveBG] Error:', e);
+    btn.textContent = '❌';
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 2000);
+  }
+};
+
+// ── Rating handler (3-tier: save / ok / flag) ──
+window.rateResult = function(memId, rating, btn) {
+  // Map 3-tier to memory system
+  // save = 'up' (full prompt learning)
+  // ok = 'direction' (style/tone only, not full prompt)
+  // flag = 'down' (model routing only, no prompt injection)
+  const memoryRating = rating === 'save' ? 'up' : rating === 'ok' ? 'direction' : 'down';
+  rateGeneration(memId, memoryRating);
+
+  // Update UI - highlight selected button
+  const row = btn.closest('.rating-row');
+  row.querySelectorAll('.rate-btn').forEach(b => b.classList.remove('active-save', 'active-ok', 'active-flag'));
+  btn.classList.add('active-' + rating);
+
+  // Feedback text
+  const feedbackMap = { save: '\u2B50 프롬프트 학습 반영됨', ok: '\u{1F44C} 방향성 참고됨', flag: '\u{1F6A9} 모델 라우팅에 반영됨' };
+  const feedbackEl = document.createElement('span');
+  feedbackEl.style.cssText = 'font-size:11px;color:var(--t4);margin-left:auto;';
+  feedbackEl.textContent = feedbackMap[rating];
+  const existing = row.querySelector('.rating-feedback');
+  if (existing) existing.remove();
+  feedbackEl.className = 'rating-feedback';
+  row.appendChild(feedbackEl);
+};
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderHistory() {
+  const section = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  if (!sessionHistory.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = sessionHistory.map(h => {
+    const info = MODEL_INFO[h.model] || {};
+    const thumb = h.type === 'video' ? '' : `<img class="history-thumb" src="${h.url}" loading="lazy">`;
+    return `<div class="history-item">${thumb || '<div class="history-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px">\u{1F3AC}</div>'}<div class="history-meta"><div class="history-brief">${esc(h.brief)}</div><div class="history-model">${info.icon || ''} ${info.label || h.model} \u00B7 ${h.time.toLocaleTimeString()}</div></div></div>`;
+  }).join('');
+}
+
+// ── Model status dots ──
+function updateModelDots() {
+  const avail = getAvailableModels();
+  Object.keys(avail).forEach(m => {
+    const el = document.getElementById('dot-' + m);
+    if (el) el.className = 'chip-dot' + (avail[m] ? ' on' : '');
+  });
+}
+
+// ══════════════════════════════════════════
+// Pipeline v2 — 실시간 상태 + 전수 표시 + 개별 평가
+// ══════════════════════════════════════════
+window.handlePipeline = async function() {
+  const theme = document.getElementById('briefInput').value.trim();
+  if (!theme) { alert('캠페인 테마를 입력하세요'); return; }
+  if (isGenerating) return;
+
+  isGenerating = true;
+  const btn = document.getElementById('pipelineBtn') || document.getElementById('generateBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '\u{1F504} Running...'; }
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+
+  // Status dashboard
+  results.innerHTML = `<div id="pipe-dashboard" class="result-card" style="border-color:rgba(139,92,246,.2)">
+    <div class="result-header"><div class="result-dot" style="background:var(--purple)"></div><div class="result-label">\u{1F504} Pipeline Status</div><span class="result-badge" id="pipe-timer">0s</span></div>
+    <div class="result-body"><div id="pipe-log" style="font-size:12px;color:var(--t3);line-height:2"></div></div>
+  </div>`;
+
+  const logEl = document.getElementById('pipe-log');
+  const timerEl = document.getElementById('pipe-timer');
+  const startTime = Date.now();
+  const timerInterval = setInterval(() => { timerEl.textContent = Math.round((Date.now()-startTime)/1000) + 's'; }, 1000);
+
+  function pipeLog(msg, type='info') {
+    const colors = { info:'var(--t3)', ok:'var(--green)', err:'var(--red)', warn:'var(--orange)' };
+    logEl.innerHTML += `<div style="color:${colors[type]||colors.info}">${new Date().toLocaleTimeString()} \u2014 ${msg}</div>`;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  const allOutputs = []; // collect ALL generated images
+
+  try {
+    // ── Step 1: Optimize prompts — ALL MODELS IN PARALLEL (M-7) ──
+    pipeLog('\u{1F4DD} 프롬프트 최적화 중 (Claude — 4개 모델 동시)...');
+    const models = ['nano-banana-pro','flux-max','flux-kontext','reve'];
+    const prompts = {};
+    // Build STRUCTURED input for pipeline (same priority hierarchy as handleGenerate)
+    const vdPipe = cinematography.buildVisualDirection();
+    const sbPipe = collectSubBriefs();
+    let pipeInput = '=== CREATIVE INTENT (최우선) ===\n' + theme + '\n\n';
+    if (sbPipe) pipeInput += '=== SUBJECT DETAILS ===\n' + sbPipe + '\n\n';
+    if (vdPipe) pipeInput += '=== CAMERA SETTINGS (보조 — CREATIVE INTENT 우선) ===\n' + vdPipe + '\n\n';
+
+    // Fire all 4 prompt optimization calls simultaneously
+    const promptResults = await Promise.allSettled(
+      models.map(m => optimizePromptForModel(m, pipeInput))
+    );
+    promptResults.forEach((res, idx) => {
+      const m = models[idx];
+      if (res.status === 'fulfilled') {
+        const { prompt, optimized } = res.value;
+        prompts[m] = prompt;
+        pipeLog(`\u2705 ${(MODEL_INFO[m]||{}).label||m} 프롬프트 준비 (${optimized ? 'AI최적화' : '원본'}, ${prompt.length}자${vdPipe ? ' +VD' : ''}${sbPipe ? ' +SB' : ''})`, 'ok');
+      } else {
+        prompts[m] = theme;
+        pipeLog(`\u26A0\uFE0F ${(MODEL_INFO[m]||{}).label||m} 프롬프트 실패 \u2192 원본 사용`, 'warn');
+      }
+    });
+
+    // ── Step 2: Generate with all models ──
+    pipeLog(`\u{1F3A8} ${models.length}개 모델로 동시 생성 시작...`);
+    const genPromises = models.map(async (m) => {
+      const info = MODEL_INFO[m] || {};
+      const label = info.label || m;
+      try {
+        pipeLog(`\u23F3 ${label} 생성 중...`);
+        const t0 = Date.now();
+        const result = await generateAsset(m, prompts[m], {
+          aspectRatio: selectedAR,
+          duration: modelDurations[m],
+          referenceImage: referenceImages.length > 0 ? referenceImages[0].dataUrl : undefined,
+          referenceMode: referenceImages.length > 0 ? referenceImages[0].mode : undefined,
+          referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+        });
+        const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+        pipeLog(`\u2705 ${label} 완료 (${elapsed}s)`, 'ok');
+        return { model: m, url: result.url, type: result.type, prompt: prompts[m], elapsed, status: 'ok' };
+      } catch(e) {
+        pipeLog(`\u274C ${label} 실패: ${e.message}`, 'err');
+        return { model: m, error: e.message, prompt: prompts[m], status: 'error' };
+      }
+    });
+
+    const genResults = await Promise.all(genPromises);
+    const succeeded = genResults.filter(r => r.status === 'ok');
+    const failed = genResults.filter(r => r.status === 'error');
+
+    pipeLog(`\n\u{1F4CA} 결과: ${succeeded.length}개 성공, ${failed.length}개 실패`, succeeded.length > 0 ? 'ok' : 'err');
+    clearInterval(timerInterval);
+    timerEl.textContent = Math.round((Date.now()-startTime)/1000) + 's (완료)';
+
+    // ── Step 3: Display ALL results grouped by model ──
+    if (succeeded.length === 0) {
+      pipeLog('\u26A0\uFE0F 모든 모델이 실패했습니다. API 키와 연결 상태를 확인하세요.', 'err');
+    } else {
+      // Model group header
+      const gridContainer = document.createElement('div');
+      gridContainer.style.cssText = 'margin-top:16px';
+
+      // Section title
+      gridContainer.innerHTML = `<div style="font-size:13px;color:var(--t4);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">모델별 결과 \u2014 \u2B50 Save / \u{1F44C} 방향OK / \u{1F6A9} Flag</div>`;
+
+      // Grid of all results
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px';
+
+      succeeded.forEach((r, idx) => {
+        const info = MODEL_INFO[r.model] || {};
+        const uid = 'pipe-' + Date.now() + '-' + idx;
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.id = uid;
+        card.innerHTML = `
+          <div class="result-header">
+            <div class="result-dot" style="background:${info.color||'var(--green)'}"></div>
+            <div class="result-label">${info.icon||''} ${info.label||r.model}</div>
+            <span class="result-badge">${r.elapsed}s</span>
+          </div>
+          <div class="result-body">
+            ${r.type==='video' ? `<video src="${r.url}" controls playsinline autoplay muted loop style="width:100%;border-radius:8px"></video>` : `<img src="${r.url}" style="width:100%;border-radius:8px;cursor:pointer" onclick="window.open('${r.url}','_blank')" loading="lazy">`}
+          </div>
+          <div style="padding:8px 16px 12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button onclick="pipRate('${uid}','${r.model}','save')" class="rate-btn" id="${uid}-save" title="프롬프트 학습 반영">\u2B50 Save</button>
+            <button onclick="pipRate('${uid}','${r.model}','ok')" class="rate-btn" id="${uid}-ok" title="방향 OK">\u{1F44C}</button>
+            <button onclick="pipRate('${uid}','${r.model}','flag')" class="rate-btn" id="${uid}-flag" title="이건 아님">\u{1F6A9}</button>
+            <button onclick="downloadAsset('${r.url}','odd_pipe_${r.model}_${Date.now()}.${r.type==='video'?'mp4':'png'}')" class="rate-btn" title="다운로드">\u2B07</button>
+            <button onclick="navigator.clipboard.writeText('${r.url}');this.textContent='Copied!'" class="rate-btn" title="URL 복사">\u{1F4CB} URL</button>
+            <button onclick="this.nextElementSibling.classList.toggle('open')" class="rate-btn" title="프롬프트 보기">\u{1F4CB}</button>
+            <div class="prompt-content" style="display:none;width:100%;margin-top:6px"><pre style="font-size:11px;color:var(--t4);white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.3);padding:8px;border-radius:6px">${esc(r.prompt)}</pre></div>
+          </div>`;
+        grid.appendChild(card);
+
+        // Store for rating
+        allOutputs.push({ uid, ...r, brief: theme });
+      });
+
+      // Failed models
+      failed.forEach(r => {
+        const info = MODEL_INFO[r.model] || {};
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.style.opacity = '0.5';
+        card.innerHTML = `<div class="result-header"><div class="result-dot" style="background:var(--red)"></div><div class="result-label">${info.icon||''} ${info.label||r.model}</div><span class="result-badge">실패</span></div><div class="result-body" style="padding:16px"><div style="font-size:12px;color:var(--red)">${esc(r.error)}</div></div>`;
+        grid.appendChild(card);
+      });
+
+      gridContainer.appendChild(grid);
+      results.appendChild(gridContainer);
+    }
+
+  } catch(e) {
+    pipeLog(`\u{1F4A5} Pipeline 에러: ${e.message}`, 'err');
+    clearInterval(timerInterval);
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    btn.textContent = '\u{1F504} Pipeline';
+  }
+
+  // Pipeline rating function
+  window._pipeOutputs = allOutputs;
+};
+
+// ── Pipeline individual rating ──
+window.pipRate = function(uid, model, rating) {
+  const output = window._pipeOutputs?.find(o => o.uid === uid);
+  if (!output) return;
+
+  // Visual feedback — highlight selected, clear others
+  ['save','ok','flag'].forEach(r => {
+    const b = document.getElementById(uid + '-' + r);
+    if (b) { b.classList.remove('active-save','active-ok','active-flag'); if (r === rating) b.classList.add('active-' + r); }
+  });
+
+  // Map 3-tier to memory: save=up, ok=direction, flag=down
+  const memoryRating = rating === 'save' ? 'up' : rating === 'ok' ? 'direction' : 'down';
+  const labels = { save: '\u2B50 프롬프트 학습 반영', ok: '\u{1F44C} 방향성 참고', flag: '\u{1F6A9} 모델 라우팅 반영' };
+
+  try {
+    const memId = output._memId || saveGeneration(output.brief, output.prompt, model, output.url, output.type || 'image');
+    output._memId = memId;
+    rateGeneration(memId, memoryRating);
+    const stats = getMemoryStats();
+    console.log(`[Pipeline] ${labels[rating]} \u2014 ${model} \u2014 total: ${stats.total}`);
+  } catch(e) {
+    console.warn('[Pipeline] Rating save failed:', e.message);
+  }
+};
+
+// ── Keyboard shortcut ──
+document.getElementById('briefInput').addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    handleGenerate();
+  }
+});
+
+// ══════════════════════════════════════════
+// Subject Placement — Drag & Resize
+// ══════════════════════════════════════════
+let placementEnabled = false;
+let subjectPlacement = null;
+
+window.togglePlacement = function() {
+  placementEnabled = !placementEnabled;
+  document.getElementById('placementToggle').checked = placementEnabled;
+  document.getElementById('placementWrap').style.display = placementEnabled ? 'block' : 'none';
+  document.getElementById('placementDesc').textContent = placementEnabled ? '드래그로 위치/크기 지정' : 'OFF';
+  if (!placementEnabled) subjectPlacement = null;
+};
+
+window.resetPlacement = function() {
+  const box = document.getElementById('subjectBox');
+  box.style.left = '25%'; box.style.top = '15%';
+  box.style.width = '50%'; box.style.height = '60%';
+  updatePlacementInfo();
+};
+
+function updateARCanvas() {
+  const canvas = document.getElementById('placementCanvas');
+  const arMap = { '9:16': '9/16', '1:1': '1/1', '4:5': '4/5', '16:9': '16/9' };
+  canvas.style.aspectRatio = arMap[selectedAR] || '9/16';
+}
+
+function updatePlacementInfo() {
+  const canvas = document.getElementById('placementCanvas');
+  const box = document.getElementById('subjectBox');
+  const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+  const bx = box.offsetLeft, by = box.offsetTop, bw = box.offsetWidth, bh = box.offsetHeight;
+
+  const xPct = Math.round(bx / cw * 100);
+  const yPct = Math.round(by / ch * 100);
+  const wPct = Math.round(bw / cw * 100);
+  const hPct = Math.round(bh / ch * 100);
+
+  // Position name
+  const xPos = xPct < 25 ? 'left' : xPct > 45 ? 'right' : 'center';
+  const yPos = yPct < 25 ? 'upper' : yPct > 50 ? 'lower' : 'middle';
+
+  document.getElementById('placementPosition').textContent = `위치: ${xPos}-${yPos}`;
+  document.getElementById('placementSize').textContent = `크기: ${wPct}% \u00D7 ${hPct}%`;
+
+  subjectPlacement = { xPct, yPct, wPct, hPct, xPos, yPos };
+}
+
+// Get placement as prompt text — natural language composition (no pixel math)
+window.getPlacementPrompt = function() {
+  if (!placementEnabled || !subjectPlacement) return '';
+  const p = subjectPlacement;
+
+  // ── Position → natural composition terms ──
+  const posMap = {
+    'left-upper': 'positioned in the upper-left, near the rule of thirds top-left intersection',
+    'center-upper': 'positioned in the upper-center of the frame',
+    'right-upper': 'positioned in the upper-right, near the rule of thirds top-right intersection',
+    'left-middle': 'positioned in the left third of the frame',
+    'center-middle': 'centered in the frame',
+    'right-middle': 'positioned in the right third of the frame',
+    'left-lower': 'positioned in the lower-left of the frame',
+    'center-lower': 'positioned in the lower-center of the frame',
+    'right-lower': 'positioned in the lower-right, near the rule of thirds bottom-right intersection',
+  };
+
+  // ── Size → framing/shot type (natural language, no percentages) ──
+  let framingDesc;
+  if (p.wPct > 80) {
+    framingDesc = p.hPct > 70
+      ? 'extreme close-up filling the frame'
+      : 'wide environmental framing with the subject spanning the frame horizontally';
+  } else if (p.wPct > 60) {
+    framingDesc = p.hPct > 80
+      ? 'close-up, head and shoulders visible'
+      : p.hPct > 50
+      ? 'medium close-up, upper body visible'
+      : 'medium shot, subject prominent in the frame';
+  } else if (p.wPct > 50) {
+    framingDesc = p.hPct > 70
+      ? 'medium shot, three-quarter body visible'
+      : 'medium shot with breathing room around the subject';
+  } else if (p.wPct > 30) {
+    framingDesc = p.hPct > 70
+      ? 'medium full shot, full body visible with some environment'
+      : 'full body shot with surrounding environment visible';
+  } else if (p.wPct > 15) {
+    framingDesc = 'wide shot, subject as a smaller element within the environment';
+  } else {
+    framingDesc = 'establishing wide shot, subject as a small element with generous negative space';
+  }
+
+  const posKey = `${p.xPos}-${p.yPos}`;
+  const posDesc = posMap[posKey] || 'positioned off-center in the frame';
+
+  return `COMPOSITION DIRECTIVE: ${framingDesc}, ${posDesc}.`;
+};
+
+// ── Drag logic ──
+(function() {
+  const canvas = document.getElementById('placementCanvas');
+  const box = document.getElementById('subjectBox');
+  const handle = document.getElementById('resizeHandle');
+  let mode = null; // 'move' or 'resize'
+  let startX, startY, startLeft, startTop, startW, startH;
+
+  function getPos(e) {
+    const t = e.touches ? e.touches[0] : e;
+    const r = canvas.getBoundingClientRect();
+    return { x: t.clientX - r.left, y: t.clientY - r.top, cw: r.width, ch: r.height };
+  }
+
+  function onStart(e, m) {
+    e.preventDefault(); e.stopPropagation();
+    mode = m;
+    const p = getPos(e);
+    startX = p.x; startY = p.y;
+    startLeft = box.offsetLeft; startTop = box.offsetTop;
+    startW = box.offsetWidth; startH = box.offsetHeight;
+  }
+
+  box.addEventListener('mousedown', e => { if (e.target === handle) return; onStart(e, 'move'); });
+  box.addEventListener('touchstart', e => { if (e.target === handle) return; onStart(e, 'move'); }, { passive: false });
+  handle.addEventListener('mousedown', e => onStart(e, 'resize'));
+  handle.addEventListener('touchstart', e => onStart(e, 'resize'), { passive: false });
+
+  // Also allow drawing new box by clicking on canvas
+  canvas.addEventListener('mousedown', e => {
+    if (e.target !== canvas) return;
+    const p = getPos(e);
+    box.style.left = p.x + 'px'; box.style.top = p.y + 'px';
+    box.style.width = '10px'; box.style.height = '10px';
+    startX = p.x; startY = p.y;
+    startLeft = p.x; startTop = p.y; startW = 10; startH = 10;
+    mode = 'resize';
+  });
+
+  function onMove(e) {
+    if (!mode) return;
+    e.preventDefault();
+    const p = getPos(e);
+    const dx = p.x - startX, dy = p.y - startY;
+
+    if (mode === 'move') {
+      let nl = Math.max(0, Math.min(p.cw - box.offsetWidth, startLeft + dx));
+      let nt = Math.max(0, Math.min(p.ch - box.offsetHeight, startTop + dy));
+      box.style.left = nl + 'px'; box.style.top = nt + 'px';
+    } else if (mode === 'resize') {
+      let nw = Math.max(30, Math.min(p.cw - box.offsetLeft, startW + dx));
+      let nh = Math.max(30, Math.min(p.ch - box.offsetTop, startH + dy));
+      box.style.width = nw + 'px'; box.style.height = nh + 'px';
+    }
+    updatePlacementInfo();
+  }
+
+  function onEnd() { mode = null; }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onEnd);
+
+  updatePlacementInfo();
+})();
+
+// ── Tooltip positioning — no longer needed, tooltips removed ──
+
+// ── Init ──
+updateModelDots();
+</script>
+<script>
+window.switchInspectorTab = function(idx) {
+  document.querySelectorAll('.inspector-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.inspector-tab-content').forEach((c, i) => c.classList.toggle('active', i === idx));
+};
+</script>
+</body>
+</html>
