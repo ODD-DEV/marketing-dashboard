@@ -491,16 +491,15 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     });
   }
 
-  /* ── Filter GA4 daily data by month/week ── */
+  /* ── 날짜 필터 (월 선택 시 해당 월의 모든 주차 기반) ── */
+  function isDateSelected(iso){
+    if(isAllMode) return true;
+    if(selectedWeeks.size>0) return selectedWeeks.has(getWeekSunday(iso));
+    return selectedMonths.has(getMonth(iso));
+  }
   function filterDaily(arr){
     if(!arr) return [];
-    return arr.filter(function(r){
-      var iso=ga4ToISO(r.date);
-      if(!isAllWeeks){var ws=getWeekSunday(iso);return selectedWeeks.has(ws);}
-      if(isAllMode) return true;
-      var mo=getMonth(iso);
-      return selectedMonths.has(mo);
-    });
+    return arr.filter(function(r){ return isDateSelected(ga4ToISO(r.date)); });
   }
 
   /* ── Trend badge ── */
@@ -663,8 +662,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var byCh={shopify:{orders:0,rev:0},shopify_direct:{orders:0,rev:0},amazon:{orders:0,rev:0},tiktok_shop:{orders:0,rev:0}};
     (ERP.orders||[]).forEach(function(o){
       if(o.s!=='sale'&&o.s!=='done') return;
-      if(!isAllWeeks){var ws=getWeekSunday(o.d);if(!selectedWeeks.has(ws)) return;}
-      else if(!isAllMode){var mo=getMonth(o.d);if(!selectedMonths.has(mo)) return;}
+      if(!isDateSelected(o.d)) return;
       result.orders++;
       result.rev+=o.t;
       var ch=o.ch||'';
@@ -685,9 +683,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     // GA4 ecommerce ATC + 구매 집계 (기간 필터)
     var ga4ATC=0,ga4Purchases=0;
     (DATA.ecommerce_daily||[]).forEach(function(e){
-      var iso=ga4ToISO(e.date);var mo=getMonth(iso);
-      if(!isAllMode&&!selectedMonths.has(mo))return;
-      if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+      var iso=ga4ToISO(e.date);
+      if(!isDateSelected(iso))return;
       ga4ATC+=(e.add_to_carts||0);
       ga4Purchases+=(e.purchases||0);
     });
@@ -754,9 +751,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var ecom=DATA.ecommerce_daily||[];
     ecom.forEach(function(e){
       var iso=ga4ToISO(e.date);
-      var mo=getMonth(iso);
-      if(!isAllMode && !selectedMonths.has(mo)) return;
-      if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws)) return;}
+      if(!isDateSelected(iso)) return;
       var ch=e.channel||'Unassigned';
       if(!channels[ch]) channels[ch]={sessions:0,users:0,new_users:0,engaged:0,durTotal:0,purchases:0,revenue:0,atc:0};
       channels[ch].purchases+=(e.purchases||0);
@@ -920,9 +915,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var pageMap={};
     raw.forEach(function(r){
       if(hasDate){
-        var iso=ga4ToISO(r.date);var mo=getMonth(iso);
-        if(!isAllMode&&!selectedMonths.has(mo))return;
-        if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+        var iso=ga4ToISO(r.date);
+        if(!isDateSelected(iso))return;
       }
       var pg=r.page||r.path||'';
       if(!pageMap[pg]) pageMap[pg]={sessions:0,engaged:0,durTotal:0,purchases:0,revenue:0};
@@ -990,9 +984,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var regionMap={};
     raw.forEach(function(r){
       if(hasDate){
-        var iso=ga4ToISO(r.date);var mo=getMonth(iso);
-        if(!isAllMode&&!selectedMonths.has(mo))return;
-        if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+        var iso=ga4ToISO(r.date);
+        if(!isDateSelected(iso))return;
       }
       var reg=r.region||r.country||'Unknown';
       if(!regionMap[reg]) regionMap[reg]={sessions:0,users:0};
@@ -1066,9 +1059,8 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     var pageMap={};
     raw.forEach(function(r){
       if(hasDate){
-        var iso=ga4ToISO(r.date);var mo=getMonth(iso);
-        if(!isAllMode&&!selectedMonths.has(mo))return;
-        if(!isAllWeeks){var ws=getWeekSunday(iso);if(!selectedWeeks.has(ws))return;}
+        var iso=ga4ToISO(r.date);
+        if(!isDateSelected(iso))return;
       }
       var pg=r.path||r.title||'';
       if(!pageMap[pg]) pageMap[pg]={views:0,engTotal:0,durTotal:0,count:0};
