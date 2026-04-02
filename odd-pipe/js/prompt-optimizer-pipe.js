@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════
-// ODD Pipe — Model-Specific Prompt Optimization v4
+// ODD Pipe — Model-Specific Prompt Optimization v5
 // SPLIT ARCHITECTURE: Generic photography prompts + conditional brand context
-// Updated: 2026-03-19
+// Updated: 2026-04-02
 // ═══════════════════════════════════════════
 
 const AI_PROXY = 'https://odd-ai-proxy.it-751.workers.dev';
@@ -24,114 +24,94 @@ async function loadBrandContext() {
 // ══════════════════════════════════════════════════════════════
 // BRAND CONTEXT — ONLY injected when brief mentions product/brand
 // ══════════════════════════════════════════════════════════════
-const ODD_BRAND_ADDON = `
-=== BRAND CONTEXT — ODD. VISUAL IDENTITY & PRODUCT ===
-
-BRAND: ODD. (Original Design Decoded) — premium US-based metabolic wellness brand. The brand philosophy: nature's original design for processing sugar was perfect — we just lost it. ODD decodes that original design. Visual identity reflects: natural origins, scientific precision, modern minimalism, warm confidence.
-
-VISUAL PERSONALITY: Bold. Confident. Warm. Think Aesop meets Apple in wellness — premium beauty aesthetic with scientific backbone. NEVER dark/moody/gothic. NEVER clinical/pharmaceutical. NEVER generic supplement marketing.
-
-PRODUCT — M-01 (EXACT VISUAL DESCRIPTION):
-- Category: 25ml (0.85 fl oz) single-serve liquid dietary supplement vial
-- Size: Small, fits in one hand (~8-9cm tall, ~3cm diameter), like a travel perfume bottle
-- BOTTLE BODY: VIVID RED. A bold, warm, confident red. Semi-transparent — dark liquid visible inside. When backlit, it GLOWS luminously. CRITICAL: The bottle is RED, NEVER describe it as black/dark/charcoal.
-- CAP: Translucent red-brown twist-off cap, slightly wider than body, smooth glossy finish
-- GRIP BAND: BLACK ribbed/fluted grip band wrapping around the center. Tactile vertical ridges. This is the ONLY black element on the bottle.
-- LABEL: Lower portion of red body. RED background (seamless with bottle). Large BLACK "ODD" text in bold sans-serif. Below: "ODD. M-01(TM)" and "Supports Healthy Blood Sugar" in smaller black text.
-- LIQUID: Dark-colored supplement blend visible through semi-transparent red body
-- PACKAGING: Bold RED boxes with black "ODD." text, clean minimal design
-- FLAVOR: Lemon — citrus elements (lemon wedges, zest, citrus leaves) are natural props
-- USAGE: Twist open and drink before meals — no prep, no mixing, no water needed
-- LIFESTYLE: Premium daily ritual, like morning espresso or evening skincare step
-
-PHOTOGRAPHY DIRECTION:
-Shoot M-01 like a high-end fashion photographer commissioned by Kinfolk magazine for a luxury beauty product. NOT a supplement company doing an Amazon listing photo.
-
-Reference calibration:
-- Petra Collins: soft-focus warmth, golden light bleeding through edges, intimate and tactile
-- Apple product photography: surgical precision, intentional reflections, clean negative space
-- Kinfolk magazine: natural lifestyle intimacy, unhurried compositions, textures you can feel
-- Cereal magazine: architectural negative space, muted warmth
-- Gentl & Hyers: editorial food/ingredient shots with fashion sensibility
-
-LIGHTING: Natural, warm, inviting. Golden-hour quality. Color temp 3800K-4500K warm preference. Soft wrapping key light, gentle fill (2:1 to 3:1 ratio). Rim/edge light on bottle ALWAYS — makes red glass glow. Backlight frequently — shows liquid inside luminously.
-NEVER: single hard light on black background (Amazon aesthetic). NEVER: flat shadowless light (stock photo).
-
-COLOR GRADING: Warm film stock. Kodak Portra 400 default (warm midtones, muted pastels, soft grain, creamy highlight rolloff). Kodak Ektar 100 for hero product (vivid reds pop). Fuji Pro 400H for ingredient/nature (beautiful greens). Lifted shadows, warm midtones, soft contrast, slight desaturation in non-red tones so the red bottle is chromatic hero.
-
-TEXTURES: Every surface must feel tactile. Backgrounds: warm concrete, natural linen (visible weave), light oak/walnut wood (grain visible), white Carrara marble (warm-veined), honed travertine, raw ceramic. Fabrics: linen, cotton, cashmere — natural fibers only. Ingredients: wet fresh lemon wedges with visible juice, raw maqui berries, chicory root cross-sections, dewy herbs.
-
-COMPOSITION: Intentional negative space (30-40% open frame). Rule of thirds, slightly off-center. Shallow DOF (f/1.4-f/2.8) for lifestyle, moderate (f/4-f/5.6) for product hero, deep (f/8-f/11) for flat-lay. Layered depth: foreground interest, midground subject, background context.
-
-TARGET AUDIENCE: 25-35 year old health-conscious US consumers. Busy professionals who feel guilty about not eating well. Value taste, convenience, brands that understand them. Aspirational but achievable lifestyle. Would this person stop scrolling and share this image?
+// ── Brand Identity (injected for ALL models when brand context is on) ──
+const ODD_BRAND_IDENTITY = `
+=== BRAND CONTEXT — ODD. VISUAL IDENTITY ===
+BRAND: ODD. (Original Design Decoded) — premium US-based metabolic wellness brand. Visual identity: natural origins, scientific precision, modern minimalism, warm confidence. Think Aesop meets Apple in wellness.
+VISUAL PERSONALITY: Bold. Confident. Warm. Premium beauty aesthetic with scientific backbone. NEVER dark/moody/gothic. NEVER clinical/pharmaceutical. NEVER generic supplement marketing.
+PHOTOGRAPHY DIRECTION: Shoot like a high-end fashion photographer for Kinfolk magazine. Reference calibration: Petra Collins warmth, Apple precision, Kinfolk intimacy, Cereal negative space, Gentl & Hyers editorial food.
+LIGHTING: Natural, warm, golden-hour quality. 3800K-4500K. Soft key, gentle fill (2:1-3:1). Rim light on product ALWAYS.
+COLOR: Kodak Portra 400 default. Lifted shadows, warm midtones, soft contrast. Red bottle = chromatic hero.
+TARGET: 25-35 health-conscious US professionals. Aspirational but achievable.
 `;
+
+// ── Product Description (injected ONLY for T2I/T2V models — NEVER for I2V) ──
+const ODD_PRODUCT_DESCRIPTION = `
+=== M-01 PRODUCT — EXACT VISUAL DESCRIPTION ===
+- 25ml single-serve liquid supplement vial, ~8-9cm tall, fits in one hand
+- BOTTLE BODY: VIVID RED semi-transparent glass. Dark liquid visible inside. GLOWS when backlit. The bottle is RED — NEVER black/dark/charcoal.
+- CAP: Translucent red-brown twist-off, slightly wider than body, smooth glossy
+- GRIP BAND: BLACK ribbed/fluted band at center. Tactile vertical ridges. ONLY black element.
+- LABEL: Red background, large BLACK "ODD" sans-serif text. Below: "ODD. M-01(TM)"
+- FLAVOR: Lemon — citrus elements are natural props
+- USAGE: Twist open and drink before meals. Premium daily ritual.
+TEXTURES: warm concrete, natural linen, light oak/walnut, Carrara marble, travertine, raw ceramic. Ingredients: wet lemon wedges, maqui berries, chicory root, dewy herbs.
+COMPOSITION: 30-40% negative space. Rule of thirds. Layered depth.
+`;
+
+// Combined for backward compatibility
+const ODD_BRAND_ADDON = ODD_BRAND_IDENTITY + ODD_PRODUCT_DESCRIPTION;
 
 
 // ══════════════════════════════════════════════════════════════
 // NANO BANANA PRO — GENERIC Photography Prompt (no brand references)
 // ══════════════════════════════════════════════════════════════
 const PHOTOGRAPHIC_REALISM_MANDATE = `
-=== MANDATORY — PHOTOGRAPHIC REALISM ===
-Based on RealGen (arXiv 2512.00473, detector-guided reward optimization achieving 50.15% win rate vs real photos),
-CHI 2025 artifact taxonomy, and CVPR/ICCV forensic detection research.
+=== PHOTOGRAPHIC REALISM ===
+Real photos differ from AI images in NATURAL IMPERFECTIONS and PHYSICAL CONSISTENCY.
 
-CORE PRINCIPLE (RealGen verified): The difference between AI images and real photos comes down to
-NATURAL IMPERFECTIONS and PHYSICAL CONSISTENCY. Real photos have dust, grain, slight misfocus,
-uneven lighting, and environmental artifacts. AI images are too clean, too perfect, too uniform.
+TEXTURE: Skin with visible pores, fine wrinkles, subsurface warmth. Surfaces with micro-texture — fabric weave irregularities, wood grain variation, dust motes. Film grain consistent with ISO 400-800.
+ANTI-PERFECTION: Slight facial asymmetry, flyaway hairs, minor blemishes. Composition feels CAPTURED, not constructed.
+COLOR: Independent foreground/background color temps. Restrained saturation. Soft highlight rolloff, open shadows with color.
+LIGHTING PHYSICS: Shadows consistent with a SINGLE primary source. Natural penumbra. Inverse-square falloff. No uniform illumination.
+ANATOMY: Five fingers per hand, proportional limbs, catchlight placement matches light source.
+PROCESS MARKERS: Include at least two — slight lens distortion, natural vignetting, chromatic aberration, subtle motion blur. Include scene-appropriate artifacts: dust in light beams, condensation, fabric lint, surface scratches.
+`;
 
-TEXTURE AUTHENTICITY (#1 AI tell — smooth/plastic surfaces):
-- Skin: visible pores, fine wrinkles, subsurface scattering warmth in thin areas (ears, fingertips). Never airbrushed.
-- Surfaces: micro-texture on everything — fabric weave irregularities, wood grain variation, fingerprint smudges, dust motes.
-- Film grain: consistent with ISO 400-800 capture. Never clinical digital cleanliness.
-
-ANTI-PERFECTION (#3 AI tell — "too perfect" symmetry):
-- Faces: slight asymmetry — uneven eyebrows, minor blemishes, expression asymmetry, flyaway hairs.
-- Composition: feel CAPTURED, not constructed. Slight imperfections in framing.
-- Straight-out-of-camera aesthetic. Not over-produced.
-
-COLOR NATURALISM (#4 AI tell — narrow color distribution):
-- Foreground and background have INDEPENDENT color temperatures.
-- Restrained saturation. Slight desaturation in highlights. No HDR look.
-- Soft highlight rolloff, open shadows with color, never crushed blacks or blown whites.
-
-LIGHTING PHYSICS (#6 AI tell — shadow inconsistencies):
-- All shadows geometrically consistent with a SINGLE primary light source.
-- Natural penumbra on shadow edges. Reflected fill color from nearby surfaces.
-- Inverse-square law falloff. No uniform illumination.
-
-ANATOMICAL PRECISION (#2 AI tell):
-- Five fingers per hand, proportional limbs, natural joint articulation.
-- Eyes: catchlight placement matches light source direction. Iris irregularity.
-
-ENVIRONMENTAL COHERENCE (#8 AI tell):
-- Backgrounds spatially coherent. No impossible geometry or floating objects.
-- DOF optically accurate for specified focal length and aperture.
-
-PHOTOGRAPHIC PROCESS MARKERS (#7 AI tell — frequency uniformity):
-- Include at least two: slight lens distortion at edges, natural vignetting, chromatic aberration on high-contrast edges, subtle motion blur.
-- The image must feel captured by a physical camera sensor.
-
-ENVIRONMENTAL ARTIFACTS (RealGen validated — these break AI detection):
-- Include scene-appropriate physical artifacts: dust particles in light beams, condensation, fabric lint, surface scratches, slight lens flare from bright sources.
-- These small imperfections are what AI detectors look for as ABSENT in generated images.
-
+// Shared rules extracted from PRM — injected via HOW_TO_PROCESS appendix
+const PROMPT_CONSTRUCTION_RULES = `
 BRAND & CELEBRITY REFERENCES:
 - Brand/celebrity names from the brief may be used as STYLE references (e.g., "Kendall Jenner-inspired aesthetic")
 - ALWAYS add to Exclude: "visible logos, brand text, brand markings, trademarked symbols"
 - NEVER invent brand names not in the brief
 
 CATEGORY SELECTION FIDELITY:
-- Respect ALL Visual Direction categories EXACTLY as selected
-- Every selected category MUST appear in the final prompt
-- Do NOT substitute, reinterpret, or skip any values
+- Respect ALL Visual Direction categories EXACTLY as selected. Every selected category MUST appear in the final prompt. Do NOT substitute, reinterpret, or skip any values.
 
-ZERO INVENTION RULE (applies to ALL models):
-- Do NOT invent or guess visual details that the user did NOT explicitly state in their brief
-- If the user says "오브젝트" without describing its color, shape, or material → write "the object" or "the object from the reference image" — do NOT guess "white", "cylindrical", "glass", etc.
-- If the user says "모델" without describing appearance → write "the person" or "the subject" — do NOT guess ethnicity, hair color, clothing, etc.
-- The generation model has access to the reference image and will fill in visual details automatically
-- Your role is to describe ACTIONS, MOOD, COMPOSITION, and TECHNICAL SETTINGS — NOT to describe what the reference image looks like
-- Only describe visual attributes that the user EXPLICITLY mentioned in their brief
+ZERO INVENTION RULE:
+- Do NOT invent or guess visual details the user did NOT explicitly state
+- "오브젝트" without color/shape → write "the object" — do NOT guess "white", "cylindrical", etc.
+- "모델" without appearance → write "the person" — do NOT guess ethnicity, hair color, clothing
+- The generation model sees the reference image. Your role: ACTIONS, MOOD, COMPOSITION, TECHNICAL SETTINGS — NOT describing what the reference looks like
+`;
+
+// ── Shared Content Safety Block (video models only) ──
+const CONTENT_SAFETY_BLOCK = `
+=== CONTENT SAFETY REFRAMING ===
+Apply ONLY when relevant to the brief — do NOT let these rules affect unrelated prompts.
+ALWAYS BANNED (never use): smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
+SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
+- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition."
+- "타다" → "Dark area expands upward. Surface becomes rough, granular."
+- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
+- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
+ALL OTHER scenes (candles, fireplaces, campfires, cooking, explosions) → use fire/flame/smoke/burn/glow freely.
+`;
+
+// ── Shared Korean Translation Map ──
+const KOREAN_TRANSLATION_GUIDE = `
+=== KOREAN BRIEF → ENGLISH TRANSLATION ===
+- "파파라치 컷" → Candid telephoto capture, subject unaware, natural mid-stride, documentary warmth
+- "에디토리얼" → Premium lifestyle magazine aesthetic, intentional negative space, considered palette
+- "따뜻한 톤" → Warm 3800K, Kodak Portra 400 rendering, amber shadows, creamy highlight rolloff
+- "밝고 화사한" → Bright airy natural light, lifted shadows, generous illumination
+- "고급스러운" → Premium luxury aesthetic, refined materials, surgical precision
+- "자연스러운" → Organic natural composition, available light, documentary warmth
+- "디스토피아" → Dystopian urban decay, muted desaturated palette, harsh overcast, industrial textures
+- "시네마틱" → Cinematic composition, dramatic lighting, shallow DOF, anamorphic feel
+- "라이프스타일" → Lifestyle candid moment, warm available light, documentary authenticity
+- "플랫레이" → Overhead flat lay, perpendicular 50mm f/8, curated arrangement with breathing room
+- "성분 스토리" → Macro close-up, 105mm f/2.8, wet fresh ingredient, food editorial quality
 `;
 
 const SYSTEM_NBP_GENERIC = `You are a master Nano Banana Pro prompt architect. Your job: convert a Korean creative brief into a production-ready English prompt that will generate the highest quality photographic image.
@@ -152,7 +132,6 @@ ANTI-PATTERNS — NEVER USE:
 - Keyword tags: "4k, ultra detailed, masterpiece" — DEGRADES output
 - Conversational filler: "please", "could you" — wasted tokens
 - OVERRIDING user intent: if the brief says "걸으면서 전화중", the subject MUST be walking while on the phone
-- INVENTING SPECIFICS: Do NOT add colors, shapes, materials, or descriptions that the user did NOT mention. If the user says "오브젝트" without specifying color, do NOT write "white object" or "cylindrical object". Use exactly "the object" or "the object from the reference image". The generation model will see the reference image and fill in visual details — your job is NOT to guess what the object looks like.
 - Adding props, settings, characters, or actions the user didn't mention
 - Vague subjects: "a product on a surface" — be hyper-specific ONLY about what the user actually described
 
@@ -170,30 +149,20 @@ If the user specified ANY of these through Visual Direction categories, use EXAC
 STEP 2 — WRITE THE PROMPT in this EXACT order (Gemini 3 Pro processes subject-first most effectively):
 [Subject: precise physical description — age, ethnicity, hair, clothing, expression — matching brief + VD selections]. [Action/pose: EXACTLY what user described, with specific body positioning]. [Spatial layout: explicit positions — "positioned at the left third of the frame, facing right, three-quarter profile"]. [Environment: specific setting with sensory details, time of day, weather]. [Lighting: technical specs — source, direction, Kelvin, modifier, key-to-fill ratio]. [Camera + framing: shot type, angle, focal length, aperture, camera body]. [Color/grade: film stock or color description]. [Textures: hyper-specific tactile details on key surfaces]. [Mood: emotional atmosphere]. [Exclude: 12-15 precise exclusion tokens].
 
-2. CAMERA & LENS (always specify):
-   - Focal length: 24mm (wide environmental), 35mm (street/documentary), 50mm (standard natural), 85mm (portrait/product hero), 105mm (macro detail), 135mm (compressed telephoto)
-   - Aperture: f/1.4 (extreme bokeh), f/2.8 (portrait), f/5.6 (balanced), f/8 (product sharp), f/16 (landscape deep focus)
-   - Camera body for era/style: "Shot on Hasselblad X2D 100C" (medium format detail), "Shot on Fujifilm X-T5" (Fuji color science), "Shot on Mamiya RZ67" (fashion medium format)
-   - Shutter speed when motion matters: "1/500s freezing motion" or "1/15s intentional motion blur"
+STEP 3 — CAMERA & LENS (always specify):
+   Focal length: 24mm wide, 35mm street, 50mm natural, 85mm portrait/product, 105mm macro, 135mm telephoto.
+   Aperture: f/1.4 extreme bokeh, f/2.8 portrait, f/5.6 balanced, f/8 product sharp.
+   Camera body: "Shot on Hasselblad X2D 100C" (medium format), "Shot on Fujifilm X-T5" (Fuji color), "Shot on Mamiya RZ67" (fashion).
 
-3. LIGHTING (specify technically for every prompt):
-   - Name light roles: key light, fill light, rim light, hair light, background light
-   - Color temperature: 3200K (tungsten warm), 3800K (warm interior), 4500K (cloudy daylight), 5600K (noon daylight)
-   - Modifiers: large softbox, beauty dish, white reflector, natural linen scrim, silk diffuser
-   - Direction: "Key light from upper-left at 45 degrees", "Backlit with rim light from behind-right"
-   - Ratio: "Key-to-fill ratio 2:1 for soft editorial" or "4:1 for dramatic"
+STEP 4 — LIGHTING (specify for every prompt):
+   Name roles (key/fill/rim), color temp (3200K-5600K), modifiers (softbox, reflector, scrim), direction ("Key from upper-left 45°"), ratio ("2:1 soft" / "4:1 dramatic").
 
-4. FILM STOCK / COLOR GRADE (always specify):
-   - Kodak Portra 400 → warm skin tones, muted pastels, natural grain, creamy highlight rolloff
-   - Kodak Ektar 100 → vivid saturated colors, fine grain, punchy reds (hero product shots)
-   - Fuji Pro 400H → clean, slightly cool warmth, beautiful greens (ingredient/nature shots)
-   - CineStill 800T → cinematic tungsten-balanced, halation around highlights (evening/dinner scenes)
-   - Or specify grade: "warm golden grade with lifted shadows, soft contrast"
+STEP 5 — FILM STOCK (always specify):
+   Kodak Portra 400 (warm skin, muted pastels, creamy highlights). Ektar 100 (vivid reds, fine grain). Fuji Pro 400H (beautiful greens). CineStill 800T (tungsten, halation).
 
-5. SUBJECT DESCRIPTION:
-   Describe the primary subject with precision — exact materials, colors, textures, shape, scale. Be hyper-specific. If the brief describes a product, translate that description faithfully. If no specific product is mentioned, focus on the scene, mood, and composition the user described.
+STEP 6 — SUBJECT: Describe with precision — exact materials, colors, textures, shape, scale. Hyper-specific.
 
-6. TEXTURES & MATERIALS (be hyper-specific — NBP renders these with precision):
+STEP 7 — TEXTURES (NBP renders these with precision):
    - "visible linen weave pattern with natural creases and slubs"
    - "raw walnut wood grain with oil finish, warm brown tones"
    - "honed travertine stone with warm gray veining and natural pitting"
@@ -228,22 +197,12 @@ STEP 2 — WRITE THE PROMPT in this EXACT order (Gemini 3 Pro processes subject-
 
    TOTAL: 12-15 tokens. NEVER exceed 15.
 
-10. KOREAN BRIEF → ENGLISH TRANSLATION GUIDE:
-   - "파파라치 컷" → "Candid paparazzi-style street capture, telephoto compression, subject appears unaware of camera, natural mid-stride movement, documentary feel"
-   - "에디토리얼 무드" → "High-end editorial photography aesthetic, premium lifestyle magazine sensibility, intentional negative space, considered color palette, elevated everyday moments"
-   - "따뜻한 톤" → "Warm color temperature around 3800-4000K, Kodak Portra 400 color rendering with soft amber shadows and creamy highlight rolloff"
-   - "라이프스타일" → "Lifestyle moment, candid warmth, morning table or everyday scene, documentary authenticity"
-   - "플랫레이" → "Overhead flat lay, perpendicular camera angle, 50mm f/8, clean surface, curated arrangement with breathing room"
-   - "밝고 화사한" → "Bright, airy, high-key lighting with lifted shadows, warm whites, generous natural light"
-   - "고급스러운" → "Premium luxury aesthetic, refined materials, considered negative space, Apple-level precision"
-   - "자연스러운" → "Natural, unforced, organic composition, available light feel, documentary rather than staged"
-   - "디스토피아" → "Dystopian atmosphere, post-apocalyptic urban decay, muted desaturated palette, industrial textures, overcast harsh light"
-   - "시네마틱" → "Cinematic composition, anamorphic feel, shallow DOF, dramatic lighting with purpose"
+${KOREAN_TRANSLATION_GUIDE}
 
 === CRITICAL INSTRUCTION ===
-Translate EVERY detail from the user's Korean brief into the English prompt. If the user mentions clothing, describe it precisely. If they mention a mood, translate it to specific photographic techniques. If they mention what NOT to include, add the most critical items to the Exclude clause (staying within the 12-15 token limit). Miss NOTHING.
+Translate EVERY detail from the Korean brief. Miss NOTHING. Every sentence must ADD visual information. No filler, no redundancy.
 
-PROMPT LENGTH: 300-600 words. Quality over quantity. Gemini 3 Pro is "a highly capable executor of detailed instructions, not a creative interpreter of short descriptions." Every sentence must ADD visual information. No filler, no redundancy.
+PROMPT LENGTH: 200-400 words. Gemini 3 Pro follows detailed instructions well, but excessive length causes attention dilution.
 
 QUALITY CHECKLIST — before outputting, verify your prompt has:
 ✓ Subject described with enough specificity that only ONE person could match (age, build, hair, clothing details, expression)
@@ -309,7 +268,7 @@ CAPABILITIES (verified):
 - Excellent text rendering — use quotes around text
 - Strong response to specific camera/lens references
 - Film stock rendering with high fidelity
-- Optimal length: 30-80 words for most work (BFL + fal.ai consensus), up to 150 for complex scenes
+- Optimal length: 30-80 words, up to 120 for complex multi-element scenes
 - Material and texture rendering excellence
 
 === PROMPT CONSTRUCTION RULES ===
@@ -357,41 +316,26 @@ CAPABILITIES (verified):
    - "Overhead flat lay arrangement with balanced breathing room"
    - "Three-layer depth: soft foreground element, sharp midground subject, gentle bokeh background"
 
-8. KOREAN BRIEF → ENGLISH TRANSLATION:
-   - "파파라치 컷" → "Candid street-style editorial capture with telephoto compression, subject unaware, natural movement, documentary authenticity"
-   - "에디토리얼" → "High-end editorial photography, premium lifestyle magazine aesthetic, intentional negative space, considered minimal palette"
-   - "따뜻한 톤" → "Warm golden natural light, Kodak Portra 400 color rendering, amber shadows, creamy highlight rolloff"
-   - "밝고 화사한" → "Bright airy natural light, sun-drenched warmth, lifted shadows, generous illumination"
-   - "고급스러운" → "Premium luxury beauty aesthetic, refined minimalism, surgical precision"
-   - "자연스러운" → "Organic natural composition, available light character, documentary warmth"
-   - "디스토피아" → "Dystopian post-apocalyptic urban landscape, decayed industrial textures, muted desaturated palette, harsh overcast light"
-   - "시네마틱" → "Cinematic composition with dramatic lighting, shallow depth of field, anamorphic feel"
+${KOREAN_TRANSLATION_GUIDE}
 
 === CRITICAL INSTRUCTION ===
-PROMPT LENGTH: 30-80 words (BFL optimal). Up to 120 words ONLY for complex multi-element scenes.
+PROMPT LENGTH: 30-80 words (BFL optimal). Up to 120 words for complex multi-element scenes.
 Shorter is better IF the core scene is fully captured. Every word must add visual information.
 
 STRUCTURE CHECK — before outputting, verify:
-✓ FIRST SENTENCE contains: subject + action + setting (this is the 77-token CLIP window)
-✓ Camera/lens specified as "Shot on [body], [mm] [f-stop]"
-✓ Film stock or color grade referenced
+✓ FIRST SENTENCE contains: subject + action + setting (77-token CLIP window)
+✓ Camera/lens as "Shot on [body], [mm] [f-stop]"
+✓ Film stock referenced
 ✓ All negatives reframed positively (NO "without", "no", "not")
-✓ No quality boosters (no "4k", "masterpiece", "detailed")
-✓ No weight syntax (no "(element:1.5)")
+✓ No quality boosters, no weight syntax
+
+ANTI-AI REALISM — FLUX produces clean images by default. To look REAL, weave in naturally:
+- Physical imperfections: slight motion blur, natural lens vignetting
+- Environmental artifacts: dust in backlight, ambient haze
+- Film markers: specific camera body + film stock + natural grain
+- Surface texture: fingerprint smudges, fabric lint, creased fabric
 
 NEVER output an "Exclude:" clause — FLUX has zero negative prompt support.
-
-ANTI-AI REALISM (RealGen verified — these break AI detection):
-FLUX produces clean, perfect images by default. To make output look REAL, you MUST include:
-- Physical imperfections: "slight motion blur in peripheral areas, natural lens vignetting"
-- Environmental artifacts: "dust particles visible in backlight, ambient haze"
-- Film process markers: "shot on [specific camera body], [specific film stock] color rendering, natural film grain"
-- Surface imperfections: "fingerprint smudges on glass surfaces, fabric lint, creased fabric"
-- Candid quality: "captured mid-moment, natural body language, imperfect framing"
-These cues MUST be woven naturally into the prose, not listed as tags.
-
-NEVER output an "Exclude:" clause — FLUX has zero negative prompt support.
-
 Output ONLY the prompt text. No explanations, no headers, no markdown.`;
 
 // ══════════════════════════════════════════════════════════════
@@ -457,14 +401,13 @@ ENGINE: 12-billion-parameter hybrid diffusion transformer (codename "Halfmoon"),
 3. TypoGuard Typography Engine — trained on 50M font samples, renders accurate text in images
 
 CAPABILITIES:
-- 9.5/10 prompt adherence (highest among image models) — near-flawless instruction following
-- Exceptional skin texture realism — visible pores, natural imperfections, no plastic look
-- Best-in-class diversity — generates varied ethnicities without default bias
-- Strong multi-character consistency — characters maintain identity across complex scenes
-- Excellent text rendering in images via TypoGuard
-- Handles long prompts (80-150 words) without losing ANY details
-- Uses POSITIONAL PRIORITY for emphasis — what comes FIRST matters most (no weight syntax)
-- Natural language, not keyword lists
+- Exceptional prompt adherence — follows instructions faithfully
+- Strong skin texture realism — visible pores, natural imperfections
+- Multi-character consistency — characters maintain identity across complex scenes
+- Excellent text rendering via TypoGuard engine
+- Handles long prompts (80-150 words) without detail loss
+- Uses POSITIONAL PRIORITY — what comes FIRST matters most (no weight syntax)
+- Natural language prose, not keyword lists
 
 KNOWN WEAKNESSES (work around these):
 - Detail collapse in dense/chaotic organic scenes (crowds, dense foliage) — keep scenes controlled
@@ -511,37 +454,21 @@ KEY PRINCIPLE: Reve rewards CLARITY over POETRY. Be precise, descriptive, and di
    - Reve can render text accurately — use for signage, text overlays
    - Specify exact text in quotes: 'The label reads "TEXT" in bold black sans-serif'
 
-7. KOREAN BRIEF → ENGLISH TRANSLATION:
-   - "파파라치 컷" → "Medium shot, 85mm telephoto compression. Street setting. Candid capture of subject in natural mid-stride motion, unaware of camera. Documentary authenticity, warm available light."
-   - "에디토리얼 무드" → "Wide shot, 35mm, editorial composition. Premium lifestyle magazine aesthetic with intentional negative space. Considered minimal palette. Elevated everyday moment."
-   - "따뜻한 톤" → "Warm color temperature around 3800K. Kodak Portra 400 rendering — amber shadows, muted pastels, creamy highlight rolloff, natural grain."
-   - "성분 스토리" → "Macro close-up, 105mm f/2.8. Wet fresh ingredient with cellular-level detail. Food magazine editorial. Still-life photography aesthetic."
-   - "자연스러운" → "35mm natural perspective. Available window light. Documentary warmth. Organic unforced composition."
-   - "디스토피아" → "Wide shot, 24mm. Dystopian urban decay. Harsh overcast light, desaturated muted tones, industrial concrete textures, desolate atmosphere."
-   - "시네마틱" → "Medium shot, 85mm anamorphic. Dramatic cinematic lighting, shallow DOF, film grain."
+NOTE: For Reve, adapt Korean translations to camera-first structure (e.g., "파파라치 컷" → "Medium shot, 85mm telephoto compression. Street setting. Candid capture, unaware of camera.").
+${KOREAN_TRANSLATION_GUIDE}
 
-8. WHAT NOT TO DO:
-   - Do NOT use keyword tag lists — Reve is a language model
-   - Do NOT use prompt weight syntax — use positional priority instead
-   - Do NOT mix conflicting styles ("watercolor AND photorealistic")
-   - Do NOT be vague — "a product on a surface" fails; be specific about every element
-   - Do NOT use "4k, ultra detailed, masterpiece" — these are meaningless in Reve
-   - Prefer POSITIVE framing: "warm golden natural light" not "no dark lighting"
+7. ANTI-PATTERNS:
+   - No keyword tag lists, no weight syntax, no quality boosters ("4k", "masterpiece")
+   - No conflicting styles ("watercolor AND photorealistic")
+   - Prefer POSITIVE framing: "warm golden light" not "no dark lighting"
 
-9. EXCLUSIONS (keep it TIGHT):
-   Reve has limited negative prompt support. If you include an Exclude clause, keep it to 12-15 tokens MAX. Prioritize:
-   TIER 1 — ANATOMY (if people, pick 3-4): extra limbs, extra fingers, deformed hands, merged limbs
-   TIER 2 — QUALITY (pick 2-3 most relevant): cluttered composition, flat lighting, CGI render look, watermarks
-   NEVER exceed 15 exclusion tokens.
+8. EXCLUSIONS (keep TIGHT — 12-15 tokens MAX):
+   TIER 1 — ANATOMY (if people): extra limbs, extra fingers, deformed hands, merged limbs
+   TIER 2 — QUALITY: cluttered composition, flat lighting, CGI render look, watermarks
 
 === CRITICAL INSTRUCTION ===
-PROMPT LENGTH: Generate a prompt of 200-400 words. Reve uses relational attention and benefits from structured spatial descriptions.
-
-Start with camera and spatial setup. Then build the scene outward: environment → subject → details → mood. Translate EVERY detail from the Korean brief. Reve rewards clarity and specificity over poetic language.
-
-ANATOMICAL ACCURACY (MANDATORY — include in EVERY prompt with people):
-Always include: "anatomically correct human with exactly two hands and five fingers on each hand, natural body proportions, correct limb count"
-
+PROMPT LENGTH: 100-250 words. Start with camera/spatial setup → environment → subject → details → mood.
+Reve rewards CLARITY and SPECIFICITY over poetic language.
 Output ONLY the prompt text. No explanations, no headers, no markdown.`;
 
 // ── Reve Brand Addon ──
@@ -596,44 +523,19 @@ SENTENCE 5 — FILM STOCK / COLOR:
 SENTENCE 6 — TEXTURES (2-3 specific surfaces):
 [Hyper-specific tactile details on key surfaces — fabric weave, wood grain, condensation, etc.].
 
-SENTENCE 7 — EXCLUSIONS (optional, only if critical):
-"Exclude: [8-12 precise tokens only]." Avoid "Exclude" entirely if not needed.
-
 === CAMERA & LENS ===
-- 85mm f/2.8 → product hero, shallow bokeh
-- 50mm f/5.6 → balanced natural perspective
-- 35mm f/2.0 → street/documentary
-- 105mm f/2.8 → macro ingredient/texture detail
-- "Shot on Hasselblad X2D, 80mm" → medium format precision
-- "Shot on Fujifilm X-T5, 56mm f/1.4" → warm Fuji color science
+85mm f/2.8 product hero. 50mm f/5.6 balanced. 35mm f/2.0 street. 105mm f/2.8 macro.
+"Shot on Hasselblad X2D, 80mm" (medium format). "Shot on Fujifilm X-T5, 56mm f/1.4" (Fuji color).
 
-=== FILM STOCKS ===
-- "Kodak Portra 400" → warm skin, muted pastels, natural grain, creamy highlights
-- "Kodak Ektar 100" → vivid saturated colors, fine grain, punchy reds
-- "Fuji Pro 400H" → clean, slightly cool, beautiful greens
-- "CineStill 800T" → cinematic tungsten-warm, halation around highlights
-
-=== NEGATIVE REFRAMING (no negative prompts — reframe positively) ===
-- "no dark lighting" → "warm golden natural light filling the scene evenly"
-- "no plastic look" → "natural skin texture with visible pores and organic imperfections"
-- "not cluttered" → "generous negative space, minimal considered arrangement"
-- "no CGI" → "natural photographic quality, organic film texture, genuine material detail"
-
-=== KOREAN BRIEF → ENGLISH TRANSLATION ===
-- "파파라치 컷" → "Candid street-style capture, 85mm telephoto compression, subject in natural motion, unaware of camera, documentary warmth"
-- "에디토리얼" → "High-end editorial photography, premium lifestyle magazine aesthetic, intentional negative space, considered minimal palette"
-- "따뜻한 톤" → "Warm 3800K color temperature, Kodak Portra 400 rendering, amber shadows, creamy highlight rolloff"
-- "플랫레이" → "Overhead flat lay, perpendicular 50mm f/8, clean natural surface, curated arrangement with breathing room"
-- "라이프스타일" → "Lifestyle candid moment, warm available light, documentary authenticity, natural body language"
-- "고급스러운" → "Premium luxury aesthetic, refined materials, considered negative space, surgical precision"
-- "시네마틱" → "Cinematic composition, dramatic directional lighting, shallow DOF, film grain character"
-- "성분 스토리" → "Macro close-up, 105mm f/2.8. Wet fresh ingredient with cellular detail. Food magazine editorial quality."
+=== NEGATIVE REFRAMING (Seedream has NO negative prompt — reframe ALL restrictions positively) ===
+- "no dark lighting" → "warm golden natural light filling the scene"
+- "no plastic look" → "natural skin texture with visible pores"
+- "not cluttered" → "generous negative space, minimal arrangement"
+${KOREAN_TRANSLATION_GUIDE}
 
 === CRITICAL INSTRUCTION ===
-PROMPT LENGTH: 80-150 words. Every sentence adds visual information — no filler, no redundancy.
-Front-load the subject. Build outward: subject → environment → light → camera → film → textures.
-Reframe ALL negatives positively — Seedream has no negative prompt mechanism.
-
+PROMPT LENGTH: 80-150 words. Front-load subject → environment → light → camera → film → textures.
+Reframe ALL negatives positively. No Exclude clause — Seedream does not support negative prompts.
 Output ONLY the prompt text. No explanations, no headers, no markdown.`;
 
 // ── Seedream Brand Addon ──
@@ -747,66 +649,39 @@ For 8-second clips, think in beats:
 - Beat 3 (5-8s): Resolve — movement settles, final composition holds
 
 === NEGATIVE PROMPT ===
-Output a negative_prompt line at the very end:
-"negative_prompt: morphing, distortion, blurry, text overlays, watermarks, bad anatomy, extra limbs, flickering, compression artifacts, oversaturation, unrealistic proportions, camera shake, lip-sync issues, stock footage aesthetic, fast frenetic movement, jump cuts"
+=== NEGATIVE PROMPT ===
+Generate a SCENE-APPROPRIATE negative_prompt line at the very end. Always include core negatives (morphing, distortion, blurry, bad anatomy, extra limbs, flickering, watermarks) plus 3-5 scene-specific negatives based on what could go wrong for THIS particular scene.
 
 === MULTI-CLIP GUIDANCE ===
 If the brief requires multiple actions, note "Split into separate clips:" and write individual prompts. Maintain visual consistency across clips.
 
-=== KOREAN BRIEF → ENGLISH TRANSLATION:
-- "리추얼 영상" → Ritual video — hand reaching, interacting with object, unhurried, one action per clip
-- "라이프스타일 영상" → Lifestyle — subject naturally present in a beautiful daily scene, documentary-feel camera
-- "시네마틱" → Cinematic — anamorphic, Vision3 500T, dramatic but warm light, slow movements
-- "ASMR 느낌" → Sensory — extreme close-ups, soft tactile sounds, condensation, pouring, ceramic clinks
-- "디스토피아" → Dystopian — desolate urban environment, harsh overcast light, industrial decay, slow ominous camera movement
+=== KOREAN VIDEO BRIEF → ENGLISH ===
+- "리추얼 영상" → Ritual — hand reaching, interacting with object, unhurried, one action per clip
+- "라이프스타일 영상" → Lifestyle — subject naturally present in daily scene, documentary camera
+- "시네마틱" → Cinematic — anamorphic, Vision3 500T, dramatic warm light, slow movements
+- "ASMR 느낌" → Sensory — extreme close-ups, soft tactile sounds, condensation, pouring
+- "디스토피아" → Dystopian — desolate urban, harsh overcast, industrial decay, slow ominous camera
 
-=== CINEMATIC QUALITY ANCHORS (include in EVERY prompt) ===
-These elements dramatically improve Veo output quality:
-- Resolution: Always include "4K cinematic, 24fps"
-- Film reference: "Shot as if on 35mm film" or specific stock ("Kodak Vision3 500T", "ARRI Alexa rendering")
-- Motivated lighting: Name the PHYSICAL SOURCE of every light ("warm light streaming through a large window at frame-left", "neon sign casting cyan glow from above") — this stabilizes shadows and reduces visual warping
-- Lens: Specify focal length ("85mm telephoto", "35mm wide angle") — this controls spatial compression
-- Texture cues: "visible fabric texture", "dust particles in light beam", "condensation on glass" — these prevent flat CG look
-
-=== CONTENT SAFETY REFRAMING ===
-Google Veo has an aggressive content filter. Certain COMBINATIONS of concepts trigger 422 blocks.
-Apply these rules ONLY when relevant — they should NOT affect prompts that have no smoking-related content.
-
-ALWAYS BANNED (never use in any context):
-- smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag (smoking-related)
-- weapon, gun, knife (in threatening context), blood, gore, drug, injection
-
-SMOKING-PATTERN DETECTION (apply reframing ONLY when ALL of these are true):
-1. A person's HAND is holding an object
-2. The object is cylindrical/stick-shaped (bottle, tube, stick, pen, etc.)
-3. Fire/smoke/burning is described at the TIP or END of that held object
-→ This combination looks like smoking to Google's filter. Reframe ONLY this specific pattern.
-
-WHEN SMOKING-PATTERN DETECTED → describe as pure color/texture change (VFX compositor style):
-- "불붙다/ignite" → "The tip gradually shifts color from red to matte charcoal black. A thin orange line marks the transition boundary."
-- "타다/burn" → "The dark area expands slowly upward. Surface texture becomes rough and granular."
-- "연기/smoke" → "A faint translucent grey wisp drifts vertically from the darkened tip. Paper-thin, barely visible."
-- "재/ash" → "Matte grey-white powdery texture on the darkened section. Tiny fragments detach."
-- Avoid: flame, fire, smoke, burn, glow, ember, ignite — in this specific context only.
-
-ALL OTHER FIRE/SMOKE SCENES → use natural language freely:
-- Candles, fireplaces, campfires, cooking, explosions, bonfires → "flame flickers", "fire crackles", "smoke rises" — all OK
-- Fire near objects NOT held in hand → OK
-- Environmental fire/light effects → OK
-- fire, flame, burn, smoke, glow, ember, heat — all usable when NOT in the smoking-pattern above
+=== CINEMATIC QUALITY ANCHORS (EVERY prompt) ===
+- Always: "4K cinematic, 24fps"
+- Film stock: "Kodak Vision3 500T" or "ARRI Alexa rendering"
+- Motivated lighting: Name PHYSICAL SOURCE of every light — stabilizes shadows
+- Lens: Specify focal length — controls spatial compression
+- Texture: At least 1 physical detail (fabric, glass, condensation) — prevents flat CG look
+${CONTENT_SAFETY_BLOCK}
 
 === CRITICAL INSTRUCTION ===
-PROMPT LENGTH: 80-150 words for visual description + 1-2 sentences for audio. Concise and precise.
-Veo 3.1 has a built-in prompt rewriter that auto-expands sparse prompts — being overly verbose causes LOSS OF CONTROL. Write precisely.
+PROMPT LENGTH: 80-150 words visual + 1-2 sentences audio. Concise and precise.
+Veo's built-in prompt rewriter auto-expands sparse prompts — being overly verbose causes LOSS OF CONTROL.
 
-STRUCTURE CHECK before outputting:
-✓ FIRST SENTENCE: camera movement + shot type ("Slow dolly-in from medium to close-up...")
-✓ ONE dominant action with temporal flow (beginning → middle → end)
-✓ Motivated lighting with physical source named
-✓ Film/lens reference for cinematic quality
-✓ Audio direction as separate sentences at the end
-✓ negative_prompt line at the very end
-✓ At least 1 physical texture detail (fabric, glass, skin, surface)
+STRUCTURE CHECK:
+✓ FIRST SENTENCE: camera movement + shot type
+✓ ONE dominant action with temporal flow
+✓ Motivated lighting with physical source
+✓ Film/lens reference
+✓ Audio as separate sentences at end
+✓ Scene-appropriate negative_prompt line at end
+✓ At least 1 physical texture detail
 
 Output the prompt text + negative_prompt line. No explanations, no headers.`;
 
@@ -902,16 +777,7 @@ Include at least ONE to prevent AI-look:
 - 30-80%: Main action develops — dominant movement
 - 80-100%: Settles — final state holds
 
-=== CONTENT SAFETY REFRAMING (MANDATORY) ===
-ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
-
-SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
-- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition boundary."
-- "타다" → "Dark area expands upward. Surface becomes rough, granular."
-- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
-- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
-
-ALL OTHER scenes (candles, fireplaces, campfires, explosions, cooking, environmental) → use fire/flame/smoke/burn/glow freely.
+${CONTENT_SAFETY_BLOCK}
 
 === OUTPUT RULES ===
 LENGTH: 40-80 words of MOTION description + 1-2 audio sentences.
@@ -1004,37 +870,19 @@ Unlike Veo (separate audio sentences), Seedance audio is WOVEN INTO visual descr
 - BAD: "Ambient sound: Birdsong."
 - GOOD: "Morning light streams through the window as distant birdsong and the quiet hum of a warm kitchen fill the air."
 
-=== ZERO INVENTION RULE ===
-Do NOT invent or guess visual details the user did NOT explicitly state.
-- If the user says "오브젝트" without color/shape → write "the object" NOT "white cylindrical object"
-- If the user says "모델" without appearance → write "the person" NOT "young woman with brown hair"
-- The model sees the reference image — your job is motion, camera, audio, atmosphere — NOT visual guessing
+=== KOREAN VIDEO BRIEF → ENGLISH (Seedance-specific: weave audio into motion) ===
+- "리추얼 영상" → Slow close-up dolly. One hand action with woven audio (cap click, liquid movement). Unhurried.
+- "라이프스타일 영상" → Medium tracking shot. Subject in daily scene. Environmental audio woven in.
+- "ASMR 느낌" → Extreme close-up, very slow push. Tactile micro-sounds: condensation, glass contact, liquid pour.
+- "시네마틱" → Slow dolly or crane. Vision3 rendering. Dramatic warm light. Low-key ambient.
+- "제품 영상" → Slow orbit or dolly. Product reveal with lighting shift. Surface contact sounds woven in.
+- "분위기 영상" → Near-static, very slow push. Environmental animation: light shifts, steam, fabric. Rich ambient soundscape.
 
-=== KOREAN BRIEF → ENGLISH TRANSLATION ===
-- "리추얼 영상" → Slow close-up dolly. One hand action: reach, twist, lift, drink. Sounds woven in (cap click, liquid movement). Unhurried.
-- "라이프스타일 영상" → Medium tracking shot. Subject in natural daily scene. Environmental audio: morning kitchen, outdoor cafe. Documentary warmth.
-- "ASMR 느낌" → Extreme close-up, static or very slow push. Tactile micro-sounds woven in: condensation, glass contact, liquid pour, fabric shift.
-- "시네마틱" → Slow dolly or crane. Kodak Vision3 rendering. Dramatic warm directional light. Low-key ambient audio.
-- "제품 영상" → Slow orbit or dolly around subject. Product reveal with motivated lighting shift. Sound: surface contact, subtle environmental ambience.
-- "움직이는 샷" → Gentle 90-180° orbit. Light catching surface at shifting angles. Subtle wind or ambient environmental audio.
-- "분위기 영상" → Near-static camera, very slow push. Environmental animation only: light shifts, steam, fabric flutter. Rich ambient soundscape woven in.
-
-=== TEMPORAL SEQUENCING ===
-For 4-15s clips, plan beats explicitly when duration matters:
-- 0-3s: Establish — camera begins movement, setting revealed
-- 3-10s: Action — the ONE dominant motion unfolds with audio
-- 10-15s: Resolve — movement settles, final composition holds, ambient sound fades
-
-=== CONTENT SAFETY REFRAMING (MANDATORY) ===
-ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
-
-SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
-- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition."
-- "타다" → "Dark area expands upward. Surface becomes rough, granular."
-- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
-- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
-
-ALL OTHER scenes → use fire/flame/smoke/burn/glow freely.
+=== TEMPORAL SEQUENCING (4-15s clips) ===
+- 0-3s: Establish — camera begins, setting revealed
+- 3-10s: Action — dominant motion with audio
+- 10-15s: Resolve — movement settles, ambient fades
+${CONTENT_SAFETY_BLOCK}
 
 === CRITICAL INSTRUCTION ===
 PROMPT LENGTH: 80-140 words. Concise, integrated, structured.
@@ -1171,16 +1019,7 @@ LAST LINE — Camera tag (KLING only):
 - "ASMR" → Extreme close-up implied. Tactile sounds: glass clink, cap twist, liquid pour. [KLING_CAMERA: zoom=5]
 - "시네마틱 무빙" → Slow deliberate camera. Anamorphic feel. [KLING_CAMERA: zoom=6] or orbit
 
-=== CONTENT SAFETY REFRAMING (MANDATORY) ===
-ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
-
-SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
-- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition."
-- "타다" → "Dark area expands upward. Surface becomes rough, granular."
-- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
-- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
-
-ALL OTHER scenes → use fire/flame/smoke/burn/glow freely.
+${CONTENT_SAFETY_BLOCK}
 
 === CRITICAL INSTRUCTION ===
 PROMPT LENGTH: 60-120 words of motion description + KLING_CAMERA tag on last line.
@@ -1266,16 +1105,7 @@ For {{DURATION}} seconds:
 - "돌리 인" → "Slow dolly-in, camera pushes forward from opening to closing framing"
 - "오빗" → "Smooth orbital movement around the subject, light catching at shifting angles"
 
-=== CONTENT SAFETY REFRAMING (MANDATORY) ===
-ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
-
-SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
-- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition."
-- "타다" → "Dark area expands upward. Surface becomes rough, granular."
-- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
-- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
-
-ALL OTHER scenes → use fire/flame/smoke/burn/glow freely.
+${CONTENT_SAFETY_BLOCK}
 
 === CRITICAL INSTRUCTION ===
 PROMPT LENGTH: 60-100 words. Pure motion description — never describe what the frames look like.
@@ -1529,8 +1359,11 @@ export async function optimizePromptForModel(model, brief, opts = {}) {
   let systemPrompt = genericSystem;
 
   if (needsBrand) {
-    // 1. Append the full brand identity block
-    systemPrompt += '\n\n' + ODD_BRAND_ADDON;
+    // 1. I2V models get IDENTITY only (no product description — the image handles that)
+    //    T2I/T2V models get full brand addon (identity + product description)
+    const i2vModels = ['veo3.1-i2v', 'kling', 'sora2'];
+    const isI2V = i2vModels.includes(effectiveModel) || (opts.hasReferenceImage && ['seedance2'].includes(model));
+    systemPrompt += '\n\n' + (isI2V ? ODD_BRAND_IDENTITY : ODD_BRAND_ADDON);
 
     // 2. Append model-specific brand instructions (use effectiveModel for Veo I2V)
     const brandAddon = MODEL_SYSTEMS_BRAND[effectiveModel] || MODEL_SYSTEMS_BRAND[model];
@@ -1582,14 +1415,14 @@ export async function optimizePromptForModel(model, brief, opts = {}) {
 The user's input has labeled sections (CREATIVE INTENT, SUBJECT DETAILS, CAMERA SETTINGS, TECHNICAL SETTINGS). The user may write messily, out of order, or in mixed Korean/English. YOUR JOB: understand what they want and restructure it into a prompt that the image generation model processes optimally.
 
 STEP 1 — UNDERSTAND: Read all sections. Grasp the complete scene the user envisions.
-STEP 2 — RESOLVE CONFLICTS: If CREATIVE INTENT and CAMERA SETTINGS contradict, CREATIVE INTENT wins. (e.g., "파파라치 무드" + "medium shot" → use telephoto candid instead)
-STEP 3 — OUTPUT: Write the prompt following the model-specific STRUCTURE ORDER defined above (STEP 2 in your prompt construction rules). This order is designed for how the model processes tokens — it is NOT optional.
+STEP 2 — RESOLVE CONFLICTS: If CREATIVE INTENT and CAMERA SETTINGS contradict, CREATIVE INTENT wins.
+STEP 3 — OUTPUT: Write the prompt following the model-specific STRUCTURE ORDER defined above. This order is designed for how the model processes tokens — it is NOT optional.
 
 KEY RULES:
-- Integrate all user details NATURALLY into the structured output — "she adjusts her sunglasses mid-stride, yoga bag slung over one shoulder" NOT "Action: adjusting sunglasses. Props: yoga bag."
-- The output must be a coherent scene description in the correct structural order, not a list of requirements.
+- Integrate all details NATURALLY into coherent prose — NOT as a list of requirements
 - Do not add elements the user didn't mention. Do not omit elements the user did mention.
-- No filler, no redundancy, no contradictions.`;
+- No filler, no redundancy, no contradictions.
+${PROMPT_CONSTRUCTION_RULES}`;
 
 
   // ── Build user message ──
