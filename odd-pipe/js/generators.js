@@ -99,10 +99,53 @@ async function resolveRefImage(refInput) {
   return refInput;
 }
 
-// Upload image to fal.ai storage via proxy — returns a fal.media URL accessible by fal.ai APIs
+// Upload image to fal.ai storage — direct presigned upload (fast, no base64 through proxy)
 async function uploadToFalStorage(base64DataUri) {
   try {
-    console.log('[RefImage] Uploading to fal.ai storage via proxy...');
+    // Parse base64 data URI
+    const match = base64DataUri.match(/^data:(image\/[a-z+]+);base64,(.+)$/i);
+    if (!match) { console.warn('[RefImage] Invalid base64 format'); return null; }
+    const mimeType = match[1];
+    const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+    const fileName = `upload_${Date.now()}.${ext}`;
+
+    // Step 1: Get presigned URL from proxy (lightweight, no image data)
+    console.log('[RefImage] Getting presigned upload URL...');
+    const initR = await fetch(AI_PROXY + '/fal-upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-fal-key': keys.fal() },
+      body: JSON.stringify({ content_type: mimeType, file_name: fileName }),
+    });
+    if (!initR.ok) throw new Error('presigned URL failed: ' + initR.status);
+    const { upload_url, file_url } = await initR.json();
+    if (!upload_url || !file_url) throw new Error('No upload_url in response');
+
+    // Step 2: Direct PUT to fal.ai storage (binary, bypasses proxy)
+    console.log('[RefImage] Direct uploading to fal.ai storage...');
+    const binary = atob(match[2]);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    const putR = await fetch(upload_url, {
+      method: 'PUT',
+      headers: { 'Content-Type': mimeType },
+      body: bytes,
+    });
+    if (!putR.ok) throw new Error('PUT upload failed: ' + putR.status);
+
+    console.log('[RefImage] Uploaded to fal.ai storage:', file_url.substring(0, 80));
+    return file_url;
+  } catch (e) {
+    console.warn('[RefImage] Direct upload failed, falling back to proxy:', e.message);
+    // Fallback: old proxy method
+    return uploadToFalStorageViaProxy(base64DataUri);
+  }
+}
+
+// Fallback: full base64 upload through proxy (slow but reliable)
+async function uploadToFalStorageViaProxy(base64DataUri) {
+  try {
+    console.log('[RefImage] Fallback: uploading via proxy...');
     const r = await fetch(AI_PROXY + '/fal-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-fal-key': keys.fal() },
@@ -110,15 +153,13 @@ async function uploadToFalStorage(base64DataUri) {
     });
     if (!r.ok) throw new Error('fal storage upload failed: ' + r.status);
     const data = await r.json();
-    // fal.ai storage returns { url, file_name, content_type, ... }
     const fileUrl = data.url || data.file_url;
     if (fileUrl) {
-      console.log('[RefImage] Uploaded to fal.ai storage:', fileUrl.substring(0, 80));
+      console.log('[RefImage] Uploaded via proxy:', fileUrl.substring(0, 80));
       return fileUrl;
     }
-    console.warn('[RefImage] fal.ai storage response has no url:', JSON.stringify(data).substring(0, 200));
   } catch (e) {
-    console.warn('[RefImage] fal.ai storage upload failed:', e.message);
+    console.warn('[RefImage] Proxy upload also failed:', e.message);
   }
   return null;
 }
@@ -631,7 +672,9 @@ async function falT2V(endpoint, modelId, prompt, opts = {}) {
 
   // ── Resolution per model ──
   if (isVeo) {
-    body.resolution = '1080p'; // Veo: supports 720p/1080p — use max
+    body.resolution = '1080p'; // Veo: supports 720p/1080p/4k — use 1080p
+    body.safety_tolerance = 6; // Most permissive (1-6) — avoid unnecessary 422 from content filter
+    body.generate_audio = true;  // Enable native audio generation
   }
   if (isSeedance) {
     body.resolution = '720p'; // Seedance: max 720p for both T2V and I2V
@@ -702,14 +745,15 @@ async function falT2V(endpoint, modelId, prompt, opts = {}) {
     const mode = opts.referenceMode || 'scene';
 
     if (isVeo) {
-      // Veo I2V: strip negative_prompt line (causes 422 on quality model — it's embedded text, not a param)
-      // Do NOT prepend "Recreate the EXACT same scene" — Veo I2V already has the starting frame.
-      // "Recreate" signals T2V intent and confuses the I2V endpoint → 422 Client Error.
-      let veoPrompt = (body.prompt || prompt)
-        .replace(/\n?negative_prompt:.*$/im, '')  // strip embedded negative_prompt line
-        .trim();
+      // Veo I2V: extract negative_prompt from text → send as separate body param
+      let veoPrompt = body.prompt || prompt;
+      const npMatch = veoPrompt.match(/\n?negative_prompt:\s*(.+)$/im);
+      if (npMatch) {
+        body.negative_prompt = npMatch[1].trim();
+        veoPrompt = veoPrompt.replace(/\n?negative_prompt:.*$/im, '').trim();
+      }
       body.prompt = veoPrompt;
-      console.log('[Generator] Veo I2V — stripped negative_prompt, no modePrefix. Prompt length:', veoPrompt.length);
+      console.log('[Generator] Veo I2V — prompt:', veoPrompt.length, 'chars', npMatch ? '+ negative_prompt param' : '(no negative_prompt)');
     } else {
       // Non-Veo (Kling, Seedance): modePrefix already handled above for Kling, apply for others
       if (!isKling) {
@@ -800,6 +844,7 @@ async function falFLF(endpoint, modelId, prompt, opts = {}) {
     duration,
     resolution: '1080p',
     generate_audio: true,
+    safety_tolerance: 6,
   };
 
   console.log('[Generator] fal.ai FLF:', modelId, '→', endpoint, '| dur:', duration);
@@ -859,6 +904,7 @@ async function falRef2V(endpoint, modelId, prompt, opts = {}) {
     duration,
     resolution: '1080p',
     generate_audio: true,
+    safety_tolerance: 6,
   };
 
   console.log('[Generator] fal.ai Ref2V:', modelId, '→', endpoint, '| refs:', imageUrls.length, '| dur:', duration);
@@ -924,7 +970,8 @@ export function getAvailableModels() {
   return {
     'nano-banana-pro': true, 'flux-max': h, 'flux-kontext': h || f, 'reve': h,
     'flux-2-pro': f, 'seedream': f,
-    'veo3.1': f, 'veo3.1-fast': f, 'seedance2': f, 'kling': f, 'sora2': h,
+    'veo3.1': f, 'veo3.1-fast': f, 'veo3.1-flf': f, 'veo3.1-fast-flf': f, 'veo3.1-ref': f,
+    'seedance2': f, 'kling': f, 'sora2': h,
   };
 }
 
@@ -1061,6 +1108,12 @@ async function pollFal(requestId, key, endpoint, genResponse) {
       // Step 2: Status is COMPLETED — fetch result
       const rr = await fetch(resultUrl, { headers: pollHeaders });
       if (!rr.ok) {
+        if (rr.status === 422) {
+          // 422 on result fetch = content filter blocked the output
+          const errBody = await rr.text().catch(() => '');
+          console.error('[pollFal] COMPLETED but result blocked (422):', errBody.substring(0, 300));
+          throw new Error('fal.ai: 생성은 완료됐지만 콘텐츠 필터에 의해 결과가 차단되었습니다. 프롬프트를 수정해 주세요.');
+        }
         console.warn('[pollFal] result fetch HTTP', rr.status, '— retrying');
         continue;
       }

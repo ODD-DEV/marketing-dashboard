@@ -1884,6 +1884,7 @@ function handleGoogleAuth(response) {
             <button class="edit-model-btn" data-model="flux-2-pro" onclick="selectEditModel('flux-2-pro')">FLUX.2 Pro</button>
             <button class="edit-model-btn" data-model="flux-kontext" onclick="selectEditModel('flux-kontext')">Kontext</button>
             <button class="edit-model-btn" data-model="seedream" onclick="selectEditModel('seedream')">Seedream</button>
+            <button class="edit-model-btn" data-model="reve" onclick="selectEditModel('reve')">Reve</button>
           </div>
         </div>
         <div>
@@ -1891,7 +1892,9 @@ function handleGoogleAuth(response) {
           <div style="display:flex;gap:5px;flex-wrap:wrap" id="editVideoModels">
             <button class="edit-model-btn" data-model="veo3.1" onclick="selectEditModel('veo3.1')">Veo 3.1</button>
             <button class="edit-model-btn" data-model="veo3.1-fast" onclick="selectEditModel('veo3.1-fast')">Veo 3.1 Fast</button>
+            <button class="edit-model-btn" data-model="veo3.1-ref" onclick="selectEditModel('veo3.1-ref')">Veo Ref</button>
             <button class="edit-model-btn" data-model="kling" onclick="selectEditModel('kling')">Kling 3.0</button>
+            <button class="edit-model-btn" data-model="sora2" onclick="selectEditModel('sora2')">Sora 2</button>
             <button class="edit-model-btn" data-model="seedance2" onclick="selectEditModel('seedance2')">Seedance 2</button>
           </div>
         </div>
@@ -2110,8 +2113,8 @@ window.clearFlfFrame = function(slot) {
 };
 
 // FLF drag-and-drop
-['flfFirstDropzone', 'flfLastDropzone'].forEach(id => {
-  document.addEventListener('DOMContentLoaded', function() {
+function initFlfDragDrop() {
+  ['flfFirstDropzone', 'flfLastDropzone'].forEach(id => {
     const zone = document.getElementById(id);
     if (!zone) return;
     const slot = id.includes('First') ? 'first' : 'last';
@@ -2122,12 +2125,15 @@ window.clearFlfFrame = function(slot) {
       zone.style.opacity = '';
       const file = e.dataTransfer.files[0];
       if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = ev => window.handleFlfFile({ target: { files: [file] } }, slot);
       window.handleFlfFile({ target: { files: [file] } }, slot);
     });
   });
-});
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initFlfDragDrop);
+} else {
+  initFlfDragDrop();
+}
 
 let sessionHistory = [];
 let abortController = null; // For stopping generation
@@ -2289,7 +2295,7 @@ window.collectSubBriefs = collectSubBriefs;
 // ═══════════════════════════════════════════
 let vdCollapsed = false;
 let openAccordion = null; // currently open category id
-const VIDEO_MODELS = ['veo3.1', 'veo3.1-fast', 'kling', 'sora2', 'seedance2'];
+const VIDEO_MODELS = ['veo3.1', 'veo3.1-fast', 'veo3.1-flf', 'veo3.1-fast-flf', 'veo3.1-ref', 'kling', 'sora2', 'seedance2'];
 
 // Map of sub_group labels to Korean display names
 const SUB_GROUP_KO = {
@@ -2941,15 +2947,19 @@ window.editAnalysisConfirm = async function() {
     const info = MODEL_INFO[editSelectedModel] || {};
     results.innerHTML = `<div class="glass-card"><div class="section-label">${info.icon || ''} ${info.label || editSelectedModel} 생성 중...</div><div style="text-align:center;padding:24px"><div class="spinner"></div></div></div>`;
 
+    const isKontext = editSelectedModel === 'flux-kontext';
+    const isVideoModel = (MODEL_INFO[editSelectedModel]?.type === 'video');
+    const editRefMode = isKontext ? 'kontext_edit' : (isVideoModel ? 'i2v' : 'scene');
+
     const { prompt } = await optimizePromptForModel(editSelectedModel, editInput, {
-      hasReferenceImage: true, referenceMode: 'scene', rawBrief: brief
+      hasReferenceImage: true, referenceMode: editRefMode, rawBrief: brief
     });
 
     const result = await generateAsset(editSelectedModel, prompt, {
       aspectRatio: selectedAR || '9:16',
       referenceImage: editRefImageData,
-      referenceMode: 'scene',
-      referenceImages: [{ dataUrl: editRefImageData, mode: 'scene' }],
+      referenceMode: editRefMode,
+      referenceImages: [{ dataUrl: editRefImageData, mode: editRefMode }],
       duration: modelDurations[editSelectedModel],
     });
 
@@ -3313,6 +3323,21 @@ window.handleGenerate = async function() {
       const labelA = MODEL_INFO[modelsToRun[0].model]?.label || modelsToRun[0].model;
       const labelB = MODEL_INFO[modelsToRun[1].model]?.label || modelsToRun[1].model;
 
+      // Build image status indicator
+      const hasRef = referenceImages.length > 0;
+      const isFLFRun = modelsToRun.some(m => ['veo3.1-flf','veo3.1-fast-flf'].includes(m.model));
+      const isVideoModel = modelsToRun.some(m => MODEL_INFO[m.model]?.type === 'video');
+      let imgStatusHtml = '';
+      if (isFLFRun && flfFirstFrame && flfLastFrame) {
+        imgStatusHtml = `<div style="font-size:11px;color:var(--green);margin-top:4px">📷 시작/끝 프레임 첨부됨 — FLF 모드</div>`;
+      } else if (hasRef && isVideoModel) {
+        imgStatusHtml = `<div style="font-size:11px;color:var(--green);margin-top:4px">📷 레퍼런스 이미지 첨부됨 — I2V 모드 (이미지가 시작 프레임으로 사용됩니다)</div>`;
+      } else if (hasRef) {
+        imgStatusHtml = `<div style="font-size:11px;color:var(--green);margin-top:4px">📷 레퍼런스 이미지 첨부됨 (${referenceImages[0].mode} reference)</div>`;
+      } else if (isVideoModel) {
+        imgStatusHtml = `<div style="font-size:11px;color:var(--text-4);margin-top:4px">📷 이미지 없음 — T2V 모드 (텍스트만으로 생성)</div>`;
+      }
+
       // Single prompt card update — shows both A and B together
       updateCard('prompt', `
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -3320,6 +3345,7 @@ window.handleGenerate = async function() {
             ✅ AI 최적화 완료 (모델별 프롬프트 2개)
             <button class="prompt-toggle" onclick="this.closest('.result-body').querySelector('.prompt-ab-wrap').classList.toggle('open')" style="margin-left:auto">프롬프트 보기</button>
           </div>
+          ${imgStatusHtml}
           <div class="prompt-ab-wrap prompt-content">
             <div style="margin-bottom:12px">
               <div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:4px">A — ${labelA} <span style="color:var(--text-4);font-weight:400">(${pA.length}자)</span></div>
@@ -3335,7 +3361,12 @@ window.handleGenerate = async function() {
       modelsToRun.forEach((m, idx) => {
         const label = idx === 0 ? 'A' : 'B';
         const card = document.getElementById('card-gen-' + label);
-        if (card) card.querySelector('.progress-text').textContent = '이미지 생성 중...';
+        if (card) {
+          const mIsVideo = MODEL_INFO[m.model]?.type === 'video';
+          card.querySelector('.progress-text').textContent = (hasRef && mIsVideo)
+            ? 'I2V 생성 중 (이미지 업로드 → 영상)...'
+            : '에셋 생성 중...';
+        }
       });
 
       const promises = modelsToRun.map(async (m, idx) => {
@@ -3345,9 +3376,9 @@ window.handleGenerate = async function() {
         const isFLFModelAB = ['veo3.1-flf', 'veo3.1-fast-flf'].includes(m.model);
         const result = await generateAsset(m.model, modelPrompt, {
           aspectRatio: selectedAR,
-          referenceImage: referenceImages.length > 0 ? referenceImages[0].dataUrl : undefined,
-          referenceMode,
-          referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+          referenceImage: isFLFModelAB ? undefined : (referenceImages.length > 0 ? referenceImages[0].dataUrl : undefined),
+          referenceMode: isFLFModelAB ? undefined : referenceMode,
+          referenceImages: isFLFModelAB ? undefined : (referenceImages.length > 0 ? referenceImages : undefined),
           duration: modelDurations[m.model],
           ...(isFLFModelAB && flfFirstFrame && flfLastFrame ? { firstFrameUrl: flfFirstFrame.dataUrl, lastFrameUrl: flfLastFrame.dataUrl } : {}),
         });
@@ -3395,19 +3426,38 @@ window.handleGenerate = async function() {
       let optimizedPrompt = resOpt.prompt;
       if (m.model === 'flux-kontext' && referenceImages.length > 0) optimizedPrompt = stripKontextPrefix(optimizedPrompt);
 
+      // Image status for single model
+      const sHasRef = referenceImages.length > 0;
+      const sIsFLF = ['veo3.1-flf','veo3.1-fast-flf'].includes(m.model);
+      const sIsVideo = MODEL_INFO[m.model]?.type === 'video';
+      let sImgStatus = '';
+      if (sIsFLF && flfFirstFrame && flfLastFrame) {
+        sImgStatus = `<div style="font-size:11px;color:var(--green);margin-top:4px">📷 시작/끝 프레임 첨부됨 — FLF 모드</div>`;
+      } else if (sHasRef && sIsVideo) {
+        sImgStatus = `<div style="font-size:11px;color:var(--green);margin-top:4px">📷 레퍼런스 이미지 첨부됨 — I2V 모드 (이미지가 시작 프레임으로 사용됩니다)</div>`;
+      } else if (sHasRef) {
+        sImgStatus = `<div style="font-size:11px;color:var(--green);margin-top:4px">📷 레퍼런스 이미지 첨부됨 (${referenceImages[0].mode} reference)</div>`;
+      } else if (sIsVideo) {
+        sImgStatus = `<div style="font-size:11px;color:var(--text-4);margin-top:4px">📷 이미지 없음 — T2V 모드</div>`;
+      }
+
       updateCard('prompt', `
         <div style="font-size:12px;color:var(--text-2);margin-bottom:6px">✅ AI 최적화 완료</div>
+        ${sImgStatus}
         <button class="prompt-toggle" onclick="this.nextElementSibling.classList.toggle('open')">프롬프트 보기</button>
         <pre class="prompt-content" style="font-size:10px;white-space:pre-wrap;color:var(--text-3);max-height:200px;overflow-y:auto">${esc(optimizedPrompt)}</pre>`);
 
-      addCard(results, 'gen', `${info?.icon || '\u{1F3A8}'} Generating...`, '<div style="text-align:center;padding:24px"><div class="spinner"></div><div class="progress-text">' + (info?.label || m.model) + ' 에셋 생성 중...<br><span style="font-size:11px;color:var(--t5)">최대 2-3분 소요될 수 있습니다</span></div></div>', info?.color || 'var(--blue)');
+      const genProgressText = sHasRef && sIsVideo
+        ? (info?.label || m.model) + ' I2V 생성 중 (이미지 업로드 → 영상 생성)...<br><span style="font-size:11px;color:var(--t5)">최대 5-12분 소요</span>'
+        : (info?.label || m.model) + ' 에셋 생성 중...<br><span style="font-size:11px;color:var(--t5)">최대 2-3분 소요될 수 있습니다</span>';
+      addCard(results, 'gen', `${info?.icon || '\u{1F3A8}'} Generating...`, '<div style="text-align:center;padding:24px"><div class="spinner"></div><div class="progress-text">' + genProgressText + '</div></div>', info?.color || 'var(--blue)');
 
       const isFLFModel = ['veo3.1-flf', 'veo3.1-fast-flf'].includes(m.model);
       const result = await generateAsset(m.model, optimizedPrompt, {
         aspectRatio: selectedAR,
-        referenceImage: referenceImages.length > 0 ? referenceImages[0].dataUrl : (m.needsRef ? 'https://m-01.odd.us/landing/slide/1.jpg' : undefined),
-        referenceMode,
-        referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+        referenceImage: isFLFModel ? undefined : (referenceImages.length > 0 ? referenceImages[0].dataUrl : (m.needsRef ? 'https://m-01.odd.us/landing/slide/1.jpg' : undefined)),
+        referenceMode: isFLFModel ? undefined : referenceMode,
+        referenceImages: isFLFModel ? undefined : (referenceImages.length > 0 ? referenceImages : undefined),
         duration: modelDurations[m.model],
         ...(isFLFModel && flfFirstFrame && flfLastFrame ? { firstFrameUrl: flfFirstFrame.dataUrl, lastFrameUrl: flfLastFrame.dataUrl } : {}),
       });

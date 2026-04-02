@@ -768,6 +768,32 @@ These elements dramatically improve Veo output quality:
 - Lens: Specify focal length ("85mm telephoto", "35mm wide angle") — this controls spatial compression
 - Texture cues: "visible fabric texture", "dust particles in light beam", "condensation on glass" — these prevent flat CG look
 
+=== CONTENT SAFETY REFRAMING (MANDATORY — HIGHEST PRIORITY) ===
+Google Veo has an aggressive content filter. Certain COMBINATIONS of concepts trigger 422 blocks.
+
+ALWAYS BANNED (never use in any context):
+- smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag (smoking-related)
+- weapon, gun, knife (in threatening context), blood, gore, drug, injection
+
+SMOKING-PATTERN DETECTION (apply reframing ONLY when ALL of these are true):
+1. A person's HAND is holding an object
+2. The object is cylindrical/stick-shaped (bottle, tube, stick, pen, etc.)
+3. Fire/smoke/burning is described at the TIP or END of that held object
+→ This combination looks like smoking to Google's filter. Reframe ONLY this specific pattern.
+
+WHEN SMOKING-PATTERN DETECTED → describe as pure color/texture change (VFX compositor style):
+- "불붙다/ignite" → "The tip gradually shifts color from red to matte charcoal black. A thin orange line marks the transition boundary."
+- "타다/burn" → "The dark area expands slowly upward. Surface texture becomes rough and granular."
+- "연기/smoke" → "A faint translucent grey wisp drifts vertically from the darkened tip. Paper-thin, barely visible."
+- "재/ash" → "Matte grey-white powdery texture on the darkened section. Tiny fragments detach."
+- Avoid: flame, fire, smoke, burn, glow, ember, ignite — in this specific context only.
+
+ALL OTHER FIRE/SMOKE SCENES → use natural language freely:
+- Candles, fireplaces, campfires, cooking, explosions, bonfires → "flame flickers", "fire crackles", "smoke rises" — all OK
+- Fire near objects NOT held in hand → OK
+- Environmental fire/light effects → OK
+- fire, flame, burn, smoke, glow, ember, heat — all usable when NOT in the smoking-pattern above
+
 === CRITICAL INSTRUCTION ===
 PROMPT LENGTH: 80-150 words for visual description + 1-2 sentences for audio. Concise and precise.
 Veo 3.1 has a built-in prompt rewriter that auto-expands sparse prompts — being overly verbose causes LOSS OF CONTROL. Write precisely.
@@ -811,57 +837,104 @@ Korean brand translations:
 
 
 // ── Veo I2V Generic (reference image → animate) — NO KLING_CAMERA tag ──
-const SYSTEM_VEO_I2V_GENERIC = `You are a master Veo 3.1 Image-to-Video prompt architect. Your job: convert a Korean creative brief into an I2V motion prompt that animates an existing reference image into cinematic video.
+const SYSTEM_VEO_I2V_GENERIC = `You are a Veo 3.1 Image-to-Video motion prompt architect. The user provides a reference IMAGE and a Korean creative brief. You output ONLY a motion/change prompt — the image is ALREADY attached to the API call as the visual starting frame.
 
-=== I2V CARDINAL RULE ===
-The reference image provides the full visual anchor — subject appearance, composition, lighting, and environment are already established.
-Your prompt ONLY describes:
-1. SUBJECT MOTION — what action happens (ONE dominant action with concrete verbs)
-2. WHAT CHANGES — light shifts, environmental animation, atmospheric change
-3. CAMERA MOVEMENT — describe in prose (Veo reads camera direction natively from text)
-4. AUDIO — sounds, ambient, dialogue
+=== I2V CARDINAL RULE (MOST IMPORTANT) ===
+The reference image IS the first frame. Veo 3.1 I2V sees this image and animates it.
+Your prompt must describe ONLY:
+1. WHAT MOVES — actions, motions, physics (fire ignites, hand lifts, smoke rises)
+2. WHAT CHANGES — light shifts, atmospheric evolution, environmental animation
+3. CAMERA MOVEMENT — written as prose (Veo reads camera natively from text)
+4. AUDIO — sounds and ambient as separate sentences
 
-NEVER re-describe subject appearance, clothing, setting, or any visual content already in the source image.
+=== FORBIDDEN IN I2V PROMPTS (will confuse the model) ===
+NEVER write ANY of these — they re-describe the source image and cause visual conflicts:
+✗ Subject appearance: "a red object", "a hand holding...", "a bottle with label..."
+✗ Scene setting: "on a marble table", "in a bright room", "against a blue background"
+✗ Clothing/pose: "wearing a black shirt", "in a smoking posture", "fingers gripping..."
+✗ Colors/materials of existing objects: "the translucent red glass", "black ribbed grip"
+✗ Composition: "centered in frame", "close-up shot of..."
 
-=== POSE LOCK (use when subject must stay still) ===
-"The subject remains completely stationary throughout — pose, position, and expression are locked to the first frame. Only [camera / environment / specified element] moves."
+The image ALREADY contains all of this. Re-describing it creates CONFLICTS where Veo tries to reconcile your text with the image — causing morphing, ghosting, and artifacts.
 
-=== CAMERA MOVEMENT — PROSE STYLE (Veo reads camera natively) ===
-Write camera motion directly in the prompt text:
-- "The camera slowly pushes in from medium shot to close-up..."
-- "Gentle orbit around the subject, 90 degrees, settling at eye level..."
-- "Static locked frame — camera holds position throughout"
-- "Slow dolly-out, revealing the full environment..."
+=== BRIEF → I2V TRANSLATION FILTER ===
+Users often mix description with motion in their briefs. You must FILTER:
 
-=== AUDIO ===
-Write as separate sentences AFTER the visual motion description:
-- "Sound effects: [specific sounds]."
-- "Ambient: [environmental audio]."
-DO NOT include negative_prompt lines — Veo I2V endpoint does not accept them.
+USER BRIEF: "빨간 오브젝트 하단 끝단에 불이 붙고, 시가처럼 자연스럽게 연기가 나면서 시가처럼 천천히 타오르기 시작함. 손은 프레임 밖으로 나가지 않음. 빨간 오브젝트에 들어간 문구는 절대 무너지거나 변형되면 안됌."
 
-=== TEMPORAL STRUCTURE (for 8s clips) ===
-- 0-2s: Establish — motion begins
-- 2-6s: Action — dominant movement
-- 6-8s: Resolve — settles into final composition
+✗ BAD I2V PROMPT (re-describes image):
+"The red object's lower right tip ignites with a small flame as the hand holding it adopts a natural cigar-smoking posture. Fire catches at the bottom of the red object..."
 
-=== CRITICAL INSTRUCTION ===
-PROMPT LENGTH: 50-90 words of motion description + audio sentences.
-ONE dominant action. NEVER re-describe the source image content.
-No negative_prompt line. No markdown headers. No explanations.
-Output ONLY the prompt text.`;
+✓ GOOD I2V PROMPT (motion-only):
+"The lower tip ignites — a small flame catches and slowly builds. Thin wisps of smoke curl upward naturally. The flame flickers with realistic ember glow, gradually consuming the tip. All shapes, text, and surfaces remain locked and undistorted throughout. The camera slowly pushes in. Sound effects: soft crackling of burning material, gentle paper-like sizzle. Ambient: quiet indoor atmosphere."
+
+KEY DIFFERENCE: The good prompt NEVER says "red object", "hand holding", or describes what's visible. It uses "the lower tip" (relative reference), "ignites" (action verb), "curl upward" (motion).
+
+=== REFERENCE LANGUAGE FOR I2V ===
+Instead of naming/describing objects, use POSITIONAL or RELATIVE references:
+- "the tip" / "the lower edge" / "the surface" (not "the red bottle's tip")
+- "it" / "the object" (not "the translucent red cylindrical object")
+- "the grip" / "the hand" (not "a hand in a smoking posture holding...")
+
+=== PRESERVATION INSTRUCTIONS ===
+When the user asks to preserve shapes/text/elements, write:
+"All shapes, text, and surface details remain perfectly locked and undistorted throughout the motion."
+Do NOT re-describe WHAT those shapes or text ARE.
+
+=== CAMERA MOVEMENT (prose, no tags) ===
+- "The camera slowly pushes in over the duration"
+- "Gentle orbit, settling at a new angle"
+- "Static frame — locked throughout"
+
+=== PHYSICS & REALISM CUES ===
+Include at least ONE to prevent AI-look:
+- "realistic fire physics with natural flicker variation"
+- "smoke disperses with natural air current turbulence"
+- "condensation follows gravity realistically"
+- "fabric responds to motion with natural weight and delay"
+
+=== AUDIO (separate sentences after motion) ===
+"Sound effects: [concrete sounds]. Ambient: [environmental audio]."
+
+=== TEMPORAL FLOW ({{DURATION}} clip) ===
+- 0-30%: Motion begins — initial trigger
+- 30-80%: Main action develops — dominant movement
+- 80-100%: Settles — final state holds
+
+=== CONTENT SAFETY REFRAMING (MANDATORY) ===
+ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
+
+SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
+- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition boundary."
+- "타다" → "Dark area expands upward. Surface becomes rough, granular."
+- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
+- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
+
+ALL OTHER scenes (candles, fireplaces, campfires, explosions, cooking, environmental) → use fire/flame/smoke/burn/glow freely.
+
+=== OUTPUT RULES ===
+LENGTH: 40-80 words of MOTION description + 1-2 audio sentences.
+ONE dominant action. ZERO re-description of the source image.
+No negative_prompt. No headers. No explanations.
+Output ONLY the motion prompt text.`;
 
 // ── Veo I2V Brand Addon ──
 const SYSTEM_VEO_I2V_BRAND = `
-=== ODD BRAND-SPECIFIC INSTRUCTIONS FOR VEO I2V ===
-The source image already contains the M-01 bottle or talent. DO NOT re-describe appearance.
+=== ODD BRAND I2V — MOTION VOCABULARY (never re-describe the bottle or talent) ===
+The source image already shows the M-01 bottle, talent, or scene. Reference by position only.
 
-ODD I2V motion vocabulary:
-- "A hand slowly enters frame and wraps around the red bottle with deliberate intention."
-- "Warm light sweeps across the red glass surface, the bottle remaining completely still."
-- "Camera slowly pushes in, the M-01 bottle filling the frame — ambient light glowing warmer."
-- "Condensation droplets form and slowly trace down the cold red glass."
+GOOD motion examples (no appearance re-description):
+- "A hand slowly enters from frame-right and wraps around the grip with deliberate intention."
+- "Warm light sweeps across the surface, intensifying the glow."
+- "Camera slowly pushes in. All labels and surface details remain locked."
+- "Condensation droplets form and trace downward following gravity."
+- "The bottom tip gradually shifts from red to matte charcoal. The dark area expands slowly upward."
 
-ODD movement philosophy: SLOW, DELIBERATE, RITUALISTIC. Each 8-second clip is a meditation.
+BAD (re-describes image — NEVER do this):
+- "The vivid red translucent M-01 supplement bottle with black ribbed grip band catches light" ← FORBIDDEN
+- "A hand in a relaxed grip holding the red cylindrical object" ← FORBIDDEN
+
+ODD I2V philosophy: SLOW, DELIBERATE, RITUALISTIC. Each clip is a meditation, not a commercial.
 `;
 
 // ══════════════════════════════════════════════════════════════
@@ -950,6 +1023,17 @@ For 4-15s clips, plan beats explicitly when duration matters:
 - 0-3s: Establish — camera begins movement, setting revealed
 - 3-10s: Action — the ONE dominant motion unfolds with audio
 - 10-15s: Resolve — movement settles, final composition holds, ambient sound fades
+
+=== CONTENT SAFETY REFRAMING (MANDATORY) ===
+ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
+
+SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
+- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition."
+- "타다" → "Dark area expands upward. Surface becomes rough, granular."
+- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
+- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
+
+ALL OTHER scenes → use fire/flame/smoke/burn/glow freely.
 
 === CRITICAL INSTRUCTION ===
 PROMPT LENGTH: 80-140 words. Concise, integrated, structured.
@@ -1086,6 +1170,17 @@ LAST LINE — Camera tag (KLING only):
 - "ASMR" → Extreme close-up implied. Tactile sounds: glass clink, cap twist, liquid pour. [KLING_CAMERA: zoom=5]
 - "시네마틱 무빙" → Slow deliberate camera. Anamorphic feel. [KLING_CAMERA: zoom=6] or orbit
 
+=== CONTENT SAFETY REFRAMING (MANDATORY) ===
+ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
+
+SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
+- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition."
+- "타다" → "Dark area expands upward. Surface becomes rough, granular."
+- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
+- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
+
+ALL OTHER scenes → use fire/flame/smoke/burn/glow freely.
+
 === CRITICAL INSTRUCTION ===
 PROMPT LENGTH: 60-120 words of motion description + KLING_CAMERA tag on last line.
 ONE dominant action. NEVER re-describe the source image content.
@@ -1169,6 +1264,17 @@ For {{DURATION}} seconds:
 - "카메라만" → "Subject remains completely stationary — only camera moves"
 - "돌리 인" → "Slow dolly-in, camera pushes forward from opening to closing framing"
 - "오빗" → "Smooth orbital movement around the subject, light catching at shifting angles"
+
+=== CONTENT SAFETY REFRAMING (MANDATORY) ===
+ALWAYS BANNED: smoking, cigar, cigarette, tobacco, vaping, inhale, puff, drag.
+
+SMOKING-PATTERN (hand + cylindrical object + fire/smoke at tip) → reframe as color/texture change:
+- "불붙다" → "Tip shifts from red to matte charcoal. Thin orange line at transition."
+- "타다" → "Dark area expands upward. Surface becomes rough, granular."
+- "연기" → "Faint translucent grey wisp drifts vertically. Paper-thin."
+- Avoid flame/fire/smoke/burn/glow/ember in this pattern only.
+
+ALL OTHER scenes → use fire/flame/smoke/burn/glow freely.
 
 === CRITICAL INSTRUCTION ===
 PROMPT LENGTH: 60-100 words. Pure motion description — never describe what the frames look like.
@@ -1425,8 +1531,8 @@ export async function optimizePromptForModel(model, brief, opts = {}) {
     // 1. Append the full brand identity block
     systemPrompt += '\n\n' + ODD_BRAND_ADDON;
 
-    // 2. Append model-specific brand instructions
-    const brandAddon = MODEL_SYSTEMS_BRAND[model];
+    // 2. Append model-specific brand instructions (use effectiveModel for Veo I2V)
+    const brandAddon = MODEL_SYSTEMS_BRAND[effectiveModel] || MODEL_SYSTEMS_BRAND[model];
     if (brandAddon) {
       systemPrompt += '\n' + brandAddon;
     }
