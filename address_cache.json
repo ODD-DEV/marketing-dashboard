@@ -940,5 +940,11 @@
   "state": "CA",
   "zip": "94024",
   "country": "US"
+ },
+ "SO3070170": {
+  "city": "Barnstable",
+  "state": "MA",
+  "zip": "02648",
+  "country": "US"
  }
 }
