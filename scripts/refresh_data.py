@@ -355,6 +355,17 @@ def fetch_recharge_subscriptions(config):
         resp = http_request(f"{base}{endpoint}", headers=headers)
         return json.loads(resp.read())
 
+    def count_subscription_orders(sub_id):
+        """ReCharge /orders 엔드포인트로 해당 구독의 실제 발생 주문(=성공 결제) 수를 반환.
+        실패 시 None — 호출측에서 fallback 처리.
+        skipped/draft 같은 미래 charge는 orders로 안 잡히므로 정확."""
+        try:
+            odata = rc_get(f"/orders?subscription_id={sub_id}&limit=250")
+            return len(odata.get("orders", []))
+        except Exception as e:
+            print(f"[RECHARGE] count_orders({sub_id}) failed: {e}")
+            return None
+
     customers = {}
     try:
         cdata = rc_get("/customers?limit=250")
@@ -378,30 +389,36 @@ def fetch_recharge_subscriptions(config):
                     next_fmt = next_dt[:10]
             else:
                 next_fmt = "-"
-            # 결제 회차: 월 차이 기반 계산 (charge_interval_frequency=1은 월간 의미)
+            # 결제 회차: ReCharge /orders API로 실제 발생 주문 수 조회.
+            # cc = (지금까지 성공 결제 수) + 1 (다음 결제 = N+1번째).
+            # skipped 회차는 orders에 안 잡히므로 정확. API 실패 시 월 차이 기반 fallback.
             charge_count = 1
-            try:
-                cr_date = datetime.strptime(s.get("created_at", "")[:10], "%Y-%m-%d")
-                freq = int(s.get("charge_interval_frequency", 1) or 1)
-                unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
-                if next_dt:
-                    nxt = datetime.strptime(next_dt[:10], "%Y-%m-%d")
-                    if "month" in unit:
-                        months_diff = (nxt.year - cr_date.year) * 12 + (nxt.month - cr_date.month)
-                        charge_count = max(1, months_diff // freq)
+            actual_orders = count_subscription_orders(s["id"])
+            if actual_orders is not None:
+                charge_count = actual_orders + 1
+            else:
+                try:
+                    cr_date = datetime.strptime(s.get("created_at", "")[:10], "%Y-%m-%d")
+                    freq = int(s.get("charge_interval_frequency", 1) or 1)
+                    unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
+                    if next_dt:
+                        nxt = datetime.strptime(next_dt[:10], "%Y-%m-%d")
+                        if "month" in unit:
+                            months_diff = (nxt.year - cr_date.year) * 12 + (nxt.month - cr_date.month)
+                            charge_count = max(1, months_diff // freq)
+                        else:
+                            total_days = (nxt - cr_date).days
+                            charge_count = max(1, total_days // freq)
                     else:
-                        total_days = (nxt - cr_date).days
-                        charge_count = max(1, total_days // freq)
-                else:
-                    now = datetime.now()
-                    if "month" in unit:
-                        months_diff = (now.year - cr_date.year) * 12 + (now.month - cr_date.month)
-                        charge_count = max(1, months_diff // freq + 1)
-                    else:
-                        days_active = (now - cr_date).days
-                        charge_count = max(1, days_active // freq + 1)
-            except:
-                pass
+                        now = datetime.now()
+                        if "month" in unit:
+                            months_diff = (now.year - cr_date.year) * 12 + (now.month - cr_date.month)
+                            charge_count = max(1, months_diff // freq + 1)
+                        else:
+                            days_active = (now - cr_date).days
+                            charge_count = max(1, days_active // freq + 1)
+                except:
+                    pass
             active.append({"n": cust.get("name", s.get("email", "Unknown")), "email": s.get("email", ""), "amt": s.get("price", 0), "next": next_fmt, "next_raw": next_dt[:10] if next_dt else "", "product": s.get("product_title", ""), "created": s.get("created_at", "")[:10], "sub_id": s.get("id"), "customer_id": s.get("customer_id"), "cc": charge_count})
         print(f"[RECHARGE] {len(active)} active subscriptions")
     except Exception as e:
@@ -424,16 +441,22 @@ def fetch_recharge_subscriptions(config):
             email = s.get("email", "")
             if email in ("test@test.com", "baek@hanah1.com"):
                 continue
-            freq = int(s.get("charge_interval_frequency", 1) or 1)
-            unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
-            if "month" in unit and days > 0:
-                try:
-                    months_diff = (d2.year - d1.year) * 12 + (d2.month - d1.month)
-                    charge_count = max(1, months_diff // freq + 1)
-                except:
-                    charge_count = max(1, days // 30 + 1)
+            # 결제 회차: 취소된 구독은 ReCharge /orders로 실제 결제 횟수만 반영.
+            # API 실패 시 월 차이 기반 fallback.
+            actual_orders = count_subscription_orders(s["id"])
+            if actual_orders is not None:
+                charge_count = max(1, actual_orders)
             else:
-                charge_count = max(1, days // max(freq, 30) + 1) if days > 0 else 1
+                freq = int(s.get("charge_interval_frequency", 1) or 1)
+                unit = (s.get("order_interval_unit") or s.get("charge_interval_unit") or "month").lower()
+                if "month" in unit and days > 0:
+                    try:
+                        months_diff = (d2.year - d1.year) * 12 + (d2.month - d1.month)
+                        charge_count = max(1, months_diff // freq + 1)
+                    except:
+                        charge_count = max(1, days // 30 + 1)
+                else:
+                    charge_count = max(1, days // max(freq, 30) + 1) if days > 0 else 1
             cancelled.append({"n": cust.get("name", email), "email": email, "reason": s.get("cancellation_reason", ""), "created": created, "cancelled": cancelled_at, "days": days, "product": s.get("product_title", ""), "sub_id": s.get("id"), "customer_id": s.get("customer_id"), "cc": charge_count})
         print(f"[RECHARGE] {len(cancelled)} cancelled subscriptions")
     except Exception as e:
