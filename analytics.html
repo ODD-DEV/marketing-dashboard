@@ -702,9 +702,9 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     });
     var avgDuration=durationCount?totDuration/durationCount:0;
     var engRate=totSessions?(totEngaged/totSessions*100):0;
-    var convRate=totSessions?(erp.orders/totSessions*100):0;
-    var aov=erp.orders?(erp.rev/erp.orders):0;
     var sh=erp.shopify,am=erp.amazon,tk=erp.tiktok;
+    var convRate=totSessions?(sh.orders/totSessions*100):0;
+    var aov=erp.orders?(erp.rev/erp.orders):0;
 
     var h='<div class="hero-kpi">';
     h+='<div class="hero-kpi-tag">Sales Analytics · ODD.</div>';
@@ -719,7 +719,7 @@ tr.has-purchase:hover td{background:rgba(10,132,255,.08)}
     h+='</div>';
 
     h+='<div class="metric-tiles" style="margin-top:2px">';
-    h+='<div class="m-tile"><div class="m-tile-label">전환율</div><div class="m-tile-value" style="color:var(--orange)">'+pct(convRate)+'</div><div class="m-tile-sub">주문 ÷ 세션 (odd.us)</div></div>';
+    h+='<div class="m-tile"><div class="m-tile-label">전환율</div><div class="m-tile-value" style="color:var(--orange)">'+pct(convRate)+'</div><div class="m-tile-sub">Shopify 주문 ÷ 세션</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">세션</div><div class="m-tile-value" style="color:var(--t1)">'+num(totSessions)+'</div><div class="m-tile-sub">GA4 총 세션</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">사용자</div><div class="m-tile-value" style="color:var(--purple)">'+num(totUsers)+'</div><div class="m-tile-sub">신규 '+num(totNewUsers)+'</div></div>';
     h+='<div class="m-tile"><div class="m-tile-label">참여율</div><div class="m-tile-value" style="color:var(--pink)">'+pct(engRate)+'</div><div class="m-tile-sub">체류 '+fmtDur(avgDuration)+'</div></div>';
