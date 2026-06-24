@@ -1054,5 +1054,11 @@
   "state": "ON",
   "zip": "L5H 4K9",
   "country": "CA"
+ },
+ "SO4126011": {
+  "city": "Berkeley",
+  "state": "CA",
+  "zip": "94704-1713",
+  "country": "US"
  }
 }
