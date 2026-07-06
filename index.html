@@ -1181,12 +1181,28 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 auth.getRedirectResult().catch(() => {});
 
-function signInWithGoogle() {
+// 인증 에러 화면: auth-gate 안에 메시지 + 재로그인 버튼 표시 (메시지는 textContent로 주입해 HTML-safe)
+function showAuthError(msg) {
+  const gate = document.getElementById('auth-gate');
+  if (!gate) return;
+  gate.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#000;color:#fff;padding:24px;text-align:center">'
+    + '<div id="auth-error" style="color:#ff6b6b;font-size:15px;line-height:1.6"></div>'
+    + '<button id="auth-retry" style="padding:10px 22px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;cursor:pointer;font-size:14px">다른 계정으로 로그인</button>'
+    + '</div>';
+  document.getElementById('auth-error').textContent = msg;
+  document.getElementById('auth-retry').addEventListener('click', () => { authRejected = false; signInWithGoogle(true); });
+  gate.style.display = 'block';
+}
+// 도메인 거부 직후 onAuthStateChanged(null)이 다시 자동 리다이렉트하는 루프 방지 플래그
+let authRejected = false;
+
+function signInWithGoogle(forceSelect) {
   const provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ hd: 'hanah1.com' });
-  auth.signInWithRedirect(provider).catch(err => {
-    document.getElementById('auth-error').textContent = '로그인에 실패했습니다. 다시 시도해주세요.';
-    document.getElementById('auth-error').style.display = 'block';
+  const params = { hd: 'hanah1.com' };
+  if (forceSelect) params.prompt = 'select_account';
+  provider.setCustomParameters(params);
+  auth.signInWithRedirect(provider).catch(() => {
+    showAuthError('로그인에 실패했습니다. 다시 시도해주세요.');
   });
 }
 function signOut() { auth.signOut().then(() => location.reload()); }
@@ -1198,9 +1214,9 @@ auth.onAuthStateChanged(user => {
   if (user) {
     const email = user.email || '';
     if (!email.endsWith('@hanah1.com')) {
-      document.getElementById('auth-error').textContent = '@hanah1.com 계정만 접속할 수 있습니다.';
-      document.getElementById('auth-error').style.display = 'block';
-      auth.signOut();
+      authRejected = true;
+      auth.signOut().catch(() => {});
+      showAuthError('@hanah1.com 계정만 접속할 수 있습니다. (현재 로그인: ' + email + ')');
       return;
     }
     gate.style.display = 'none';
@@ -1218,6 +1234,7 @@ auth.onAuthStateChanged(user => {
     }).catch(() => {});
   } else {
     content.style.display = 'none';
+    if (authRejected) return;
     signInWithGoogle();
   }
 });
